@@ -1,21 +1,59 @@
 # APEX — Circuit Workshop
 
-A browser circuit editor and driving playground. Draw and reshape closed circuits, adjust road width, choose between three cars, and drive with lap timing.
+**[Open the website](https://deepinkgroup.github.io/apex-circuit-workshop/)**
+
+Build a racing circuit and test it in your browser. APEX combines a visual track editor with an arcade driving playground. No account, installation, or server is required.
+
+## Features
+
+- Drag track points, draw your own closed circuit, move the start line, adjust road width, and smooth corners.
+- Three starter circuits and three vehicles with different acceleration, speed, steering, and grip.
+- Drive with keyboard or touch controls; use the follow camera and handbrake to find your line.
+- Fixed-step physics, gradual steering, off-road friction, tire marks, and speed in km/h.
+- Sequential checkpoints, invalid lap detection, session results, and car-specific best times.
+- Race your best lap ghost; the most recent best ghost survives a browser reload.
+- Undo/redo, automatic draft recovery, a saved-circuit garage, and JSON import/export.
+- Responsive layouts and an expanded canvas.
 
 ## Run locally
 
-Requires Node.js. No dependencies or build step.
+Requires Node.js 22 or later. No packages need to be installed.
 
 ```sh
 npm run dev
 ```
 
-Open http://127.0.0.1:5173. `dist/` is the complete static website and can be served by any static host.
+Open http://127.0.0.1:5173. Set the `PORT` environment variable to choose another port. The `dist/` directory is the complete static website.
 
 ## Controls
 
-- Build: drag points; V move, P add points, E remove points, S place start, H pan. Ctrl/Cmd+Z undo; Ctrl/Cmd+Shift+Z or Ctrl+Y redo. Mouse wheel zooms. Three points close a circuit.
-- Drive: WASD or arrow keys; Space pauses; R resets to the start. Touch controls are provided for mobile devices.
-- Circuit saves, draft recovery, and car-specific lap records use browser localStorage. Export/import JSON from My circuits to move layouts between devices.
+| Action | Keyboard |
+| --- | --- |
+| Accelerate / brake and reverse | W / S or up / down arrows |
+| Steer | A / D or left / right arrows |
+| Handbrake | Shift |
+| Pause / resume | Space |
+| Reset car | R |
+| Follow camera / circuit overview | C |
+| Move / add / erase points | V / P / E |
+| Place start line / pan canvas | S / H in Build mode |
+| Undo / redo | Ctrl or Cmd + Z / Shift + Z; Ctrl + Y |
 
-Lap timing requires driving through the circuit's checkpoints in order, in the direction indicated by the start arrow. Changing circuit geometry or the car starts a separate lap record. Off-track driving reduces speed and grip.
+Mouse wheel zooms the editor. Mobile devices have steering, pedal, and handbrake buttons.
+
+Stay on the asphalt and pass all seven checkpoints in order, following the start arrow. Leaving the road for more than 0.4 seconds invalidates that lap. You can finish the lap and start a clean attempt. Resetting the car restarts the current lap.
+
+## Data
+
+Circuits, draft recovery, best times, and the latest best ghost are stored in this browser with localStorage. They are not uploaded to GitHub or shared with other visitors. Export a JSON circuit to move it to another device or keep a backup. Export current works even before saving to the garage.
+
+The physics are designed for an arcade driving experience. Track distances, widths, and speed use the same scale: 0.2 meters per world unit.
+
+## Checks and deployment
+
+```sh
+npm run check
+npm test
+```
+
+The tests cover circuit geometry, lap completion and shortcut detection, acceleration, off-road friction, and reversing. Every push to `main` runs these checks and deploys `dist/` to GitHub Pages through `.github/workflows/pages.yml`.

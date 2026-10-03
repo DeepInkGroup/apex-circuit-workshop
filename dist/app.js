@@ -1,3 +1,4 @@
+import {buildGeometry, pointOnTrack, closestOnTrack, LapTracker, stepVehicle, METERS_PER_UNIT} from './engine.js';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -21,6 +22,9 @@ const icons = {
   upload:'<path d="M4 15v6h16v-6M12 16V3m-5 5 5-5 5 5"/>',
   download:'<path d="M4 15v6h16v-6M12 3v13m-5-5 5 5 5-5"/>',
   trash:'<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>',
+  camera:'<rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="4"/><path d="m8 6 1-3h6l1 3"/>',
+  restart:'<path d="M3 10a9 9 0 1 1 1 7M3 3v7h7"/>',
+  ghost:'<path d="M4 21V10a8 8 0 0 1 16 0v11l-4-3-4 3-4-3Z"/><path d="M9 10h.01M15 10h.01"/>',
 };
 function icon(name) { return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name] || ''}</svg>`; }
 $$('[data-icon]').forEach(el => el.innerHTML = icon(el.dataset.icon));
@@ -49,18 +53,21 @@ function validateTrack(data) {
   if(!data || !Array.isArray(data.points) || data.points.length>150 || data.points.some(p=>!p || !Number.isFinite(p.x) || !Number.isFinite(p.y) || p.x<0 || p.x>WORLD.w || p.y<0 || p.y>WORLD.h)) return null;
   return {name:typeof data.name==='string'?data.name.slice(0,40)||'Untitled Circuit':'Untitled Circuit',points:data.points.map(p=>({x:p.x,y:p.y})),width:clamp(Number(data.width)||12,8,20),smooth:data.smooth!==false,line:!!data.line,start:Number.isFinite(data.start)?((data.start%1)+1)%1:0,preset:['club','technical','speedway'].includes(data.preset)?data.preset:null,car:vehicles[data.car]?data.car:'club',id:typeof data.id==='string'?data.id:null};
 }
-let track=validateTrack(readStorage(DRAFT,null)) || presetTrack('club');
+const recoveredDraft=validateTrack(readStorage(DRAFT,null));
+let track=recoveredDraft || presetTrack('club');
 let library=readStorage(STORAGE,[]);
 if(!Array.isArray(library))library=[];
 library=library.filter(t=>validateTrack(t)&&t.points.length>=3).slice(0,100);
-let undoStack=[], redoStack=[], tool='move', mode='build', dirty=false;
+let undoStack=[], redoStack=[], tool='move', mode='build', dirty=!!recoveredDraft && !library.some(t=>JSON.stringify(validateTrack(t))===JSON.stringify(track));
 let samples=[], sampleSegments=[], cumulative=[], length=0, roadWidth=track.width*5, activePoint=-1, hoverPoint=-1;
 let showGrid=true, view={zoom:1,panX:0,panY:0}, drag=null, widthBefore=null;
 let cssW=0,cssH=0,dpr=1,scale=1,offsetX=0,offsetY=0;
 const canvas=$('#track-canvas'),ctx=canvas.getContext('2d');
 let car={x:0,y:0,angle:0,speed:0,vx:0,vy:0}, keys=new Set(), paused=false, countdown=0;
-let elapsed=0,lap=1,best=null,lastProgress=0,checkpoint=1,marks=[],ghost=[],currentGhost=[],messageUntil=0;
-let lapSignature='',recordKey='',lastGhostStamp=0;
+let elapsed=0,lap=1,best=null,marks=[],ghost=[],currentGhost=[],messageUntil=0;
+let recordKey='',lastGhostStamp=0,geometry=buildGeometry(track.points,track.smooth);
+const lapTracker=new LapTracker();
+let sessionLaps=[],followCamera=window.matchMedia('(pointer: coarse)').matches,showGhost=true,editorView=null;
 const records = readStorage('apex-records-v1',{});
 let recordData=records && typeof records==='object' && !Array.isArray(records)?records:{};
 
@@ -72,38 +79,16 @@ function draftSave() {if(storageAvailable)writeStorage(DRAFT,track);}
 function commit() { rebuild();syncUI();draftSave(); }
 function undo() {if(mode==='drive'||!undoStack.length)return;redoStack.push(snapshot());track=undoStack.pop();dirty=true;commit();}
 function redo() {if(mode==='drive'||!redoStack.length)return;undoStack.push(snapshot());track=redoStack.pop();dirty=true;commit();}
-function catmull(a,b,c,d,t) {const t2=t*t,t3=t2*t;return {x:.5*(2*b.x+(-a.x+c.x)*t+(2*a.x-5*b.x+4*c.x-d.x)*t2+(-a.x+3*b.x-3*c.x+d.x)*t3),y:.5*(2*b.y+(-a.y+c.y)*t+(2*a.y-5*b.y+4*c.y-d.y)*t2+(-a.y+3*b.y-3*c.y+d.y)*t3)};}
 function rebuild() {
-  const pts=track.points,n=pts.length;samples=[];sampleSegments=[];cumulative=[];length=0;roadWidth=track.width*5;
-  if(n<3){samples=clone(pts);return;}
-  for(let i=0;i<n;i++){
-    const a=pts[(i+n-1)%n],b=pts[i],c=pts[(i+1)%n],d=pts[(i+2)%n];
-    const steps=Math.max(10,Math.ceil(dist(b,c)/5));
-    for(let j=0;j<steps;j++){const t=j/steps;samples.push(track.smooth?catmull(a,b,c,d,t):{x:b.x+(c.x-b.x)*t,y:b.y+(c.y-b.y)*t});sampleSegments.push(i);}
-  }
-  for(let i=0;i<samples.length;i++){cumulative.push(length);length+=dist(samples[i],samples[(i+1)%samples.length]);}
+  geometry=buildGeometry(track.points,track.smooth);
+  samples=geometry.samples;sampleSegments=geometry.segments;cumulative=geometry.cumulative;length=geometry.length;
+  roadWidth=track.width/METERS_PER_UNIT;
 }
-function pointAt(fraction) {
-  if(!samples.length)return {x:500,y:370,angle:0,index:0};
-  const l=(((fraction%1)+1)%1)*length;
-  let lo=0,hi=cumulative.length-1;
-  while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(cumulative[mid]<=l)lo=mid;else hi=mid-1;}
-  const a=samples[lo],b=samples[(lo+1)%samples.length],seg=dist(a,b),t=seg?(l-cumulative[lo])/seg:0;
-  return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,angle:Math.atan2(b.y-a.y,b.x-a.x),index:lo};
-}
-function nearest(p) {
-  let bestD=Infinity,result={distance:Infinity,progress:0,index:0};
-  for(let i=0;i<samples.length;i++){
-    const a=samples[i],b=samples[(i+1)%samples.length],dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy;
-    const t=l2?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l2,0,1):0;
-    const x=a.x+t*dx,y=a.y+t*dy,ds=(p.x-x)**2+(p.y-y)**2;
-    if(ds<bestD){bestD=ds;result={distance:Math.sqrt(ds),progress:length?(cumulative[i]+Math.sqrt(l2)*t)/length:0,index:i,x,y};}
-  }
-  return result;
-}
+const pointAt = fraction => pointOnTrack(geometry,fraction);
+const nearest = p => closestOnTrack(geometry,p);
 function relativeProgress(progress) {return ((progress-track.start+1)%1);}
 function syncUI() {
-  $('#track-name').value=track.name;$('#length-stat').innerHTML=`${(length*.6/1000).toFixed(2)} <small>km</small>`;
+  $('#track-name').value=track.name;$('#length-stat').innerHTML=`${(length*METERS_PER_UNIT/1000).toFixed(2)} <small>km</small>`;
   $('#points-stat').textContent=track.points.length;$('#width-range').value=track.width;$('#width-value').textContent=`${track.width} m`;
   $('#width-range').style.background=`linear-gradient(to right,var(--orange) ${(track.width-8)/12*100}%,#e3e5db ${(track.width-8)/12*100}%)`;
   $('#smooth-toggle').checked=track.smooth;$('#line-toggle').checked=track.line;
@@ -120,7 +105,13 @@ function syncUI() {
   updateUndo();
 }
 function setTool(value) {if(mode==='drive')return;tool=value;$$('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===value));canvas.style.cursor=value==='pan'?'grab':value==='move'?'default':'crosshair';$('#canvas-hint span').textContent=({move:'Drag the points. Shape your circuit.',draw:'Click to add a point to your circuit.',erase:'Click a point to remove it.',start:'Click the track to place your start line.',pan:'Drag to move your canvas.'})[value];}
-function updateTransform() {scale=Math.min(cssW/WORLD.w,cssH/WORLD.h)*view.zoom;offsetX=(cssW-WORLD.w*scale)/2+view.panX;offsetY=(cssH-WORLD.h*scale)/2+view.panY;$('#zoom-reset').textContent=`${Math.round(view.zoom*100)}%`;}
+function updateTransform() {
+  scale=Math.min(cssW/WORLD.w,cssH/WORLD.h)*view.zoom;
+  offsetX=(cssW-WORLD.w*scale)/2+view.panX;offsetY=(cssH-WORLD.h*scale)/2+view.panY;
+  if(mode==='drive'&&followCamera){scale=Math.max(Math.min(cssW,cssH)/420,1);offsetX=cssW/2-(car.x+Math.cos(car.angle)*35)*scale;offsetY=cssH/2-(car.y+Math.sin(car.angle)*35)*scale;}
+  $('#zoom-reset').textContent=`${Math.round(view.zoom*100)}%`;
+  $('.scale-label').innerHTML=`${Math.round(40/scale*METERS_PER_UNIT)} m <span>╞════╡</span>`;
+}
 function resize() {const r=canvas.getBoundingClientRect();cssW=r.width;cssH=r.height;dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(cssW*dpr);canvas.height=Math.round(cssH*dpr);updateTransform();}
 new ResizeObserver(resize).observe($('#canvas-wrap'));
 function screenToWorld(e) {const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left-offsetX)/scale,y:(e.clientY-r.top-offsetY)/scale};}
@@ -134,7 +125,7 @@ function scenery() {
   ctx.fillStyle='#d3d8c1';ctx.globalAlpha=.55;
   trees.forEach(([x,y,r])=>{ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
   ctx.strokeStyle='#d6dbca';ctx.lineWidth=1;ctx.setLineDash([3,5]);ctx.strokeRect(66,68,870,604);ctx.setLineDash([]);
-  ctx.fillStyle='#a4ac94';ctx.font='8px "DM Sans",sans-serif';ctx.textAlign='left';ctx.fillText('APEX / PRIVATE PROVING GROUND',80,690);ctx.textAlign='right';ctx.fillText('EST. 2026',924,690);
+  ctx.fillStyle='#a4ac94';ctx.font='8px "DM Sans",sans-serif';ctx.textAlign='left';ctx.fillText('APEX / YOUR PROVING GROUND',80,690);ctx.textAlign='right';ctx.fillText('EST. 2026',924,690);
 }
 function drawTrack() {
   if(track.points.length<3){strokePath('#a9b19a',2,track.points,false);return;}
@@ -181,7 +172,7 @@ function draw() {
   if(mode==='build')drawHandles();
   else{
     ctx.lineWidth=2;ctx.lineCap='round';marks.forEach(m=>{ctx.strokeStyle=`rgba(37,44,34,${m.a})`;ctx.beginPath();ctx.moveTo(m.x1,m.y1);ctx.lineTo(m.x2,m.y2);ctx.stroke();});
-    if(ghost.length && !paused){let gi=0;while(gi<ghost.length-2&&ghost[gi+1].t<elapsed)gi++;if(ghost[gi] && elapsed<=ghost[ghost.length-1].t)drawCar(ghost[gi],.23);}
+    if(showGhost && ghost.length && !paused){let gi=0;while(gi<ghost.length-2&&ghost[gi+1].t<elapsed)gi++;if(ghost[gi] && elapsed<=ghost[ghost.length-1].t)drawCar(ghost[gi],.23);}
     drawCar(car);
   }
   ctx.restore();
@@ -263,78 +254,94 @@ $('#import-file').onchange=async()=>{
   try{const imported=validateTrack(JSON.parse(await file.text()));if(!imported||imported.points.length<3)throw new Error();imported.id=crypto.randomUUID?crypto.randomUUID():String(Date.now());imported.updatedAt=new Date().toISOString();if(library.length>=100){toast('Your garage is full. Remove a circuit before importing.');return;}const next=[imported,...library];if(writeStorage(STORAGE,next)){library=next;renderLibrary();syncUI();toast('Circuit imported. Open it to start driving.');}}catch{toast('Invalid circuit file. Choose an exported APEX circuit JSON.');}finally{$('#import-file').value='';}
 };
 $('#fullscreen-btn').onclick=()=>{const expanded=$('.studio').classList.toggle('expanded');$('#fullscreen-btn').setAttribute('aria-label',expanded?'Exit expanded canvas':'Expand canvas');$('#fullscreen-btn').title=expanded?'Exit expanded canvas':'Expand canvas';};
+$('#export-current').onclick=()=>{
+  if(track.points.length<3){toast('Add at least three points before exporting.');return;}
+  const url=URL.createObjectURL(new Blob([JSON.stringify({format:'apex-circuit',version:1,...snapshot()},null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download=`${track.name.replace(/[^a-z0-9]+/gi,'-').toLowerCase()||'circuit'}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
 
-function signature() {const data=JSON.stringify({points:track.points.map(p=>[Math.round(p.x*10),Math.round(p.y*10)]),width:track.width,smooth:track.smooth,start:track.start,car:track.car});let hash=2166136261;for(let i=0;i<data.length;i++){hash^=data.charCodeAt(i);hash=Math.imul(hash,16777619);}return 'track-'+(hash>>>0).toString(36);}
-function resetCar() {const p=pointAt(track.start+.009);car={x:p.x,y:p.y,angle:p.angle,speed:0,vx:0,vy:0};elapsed=0;checkpoint=1;lastProgress=.009;currentGhost=[];lastGhostStamp=0;keys.clear();marks=[];}
+function signature() {const data=JSON.stringify({physics:2,points:track.points.map(p=>[Math.round(p.x*10),Math.round(p.y*10)]),width:track.width,smooth:track.smooth,start:track.start,car:track.car});let hash=2166136261;for(let i=0;i<data.length;i++){hash^=data.charCodeAt(i);hash=Math.imul(hash,16777619);}return 'track-'+(hash>>>0).toString(36);}
+function resetCar() {const p=pointAt(track.start+.009);car={x:p.x,y:p.y,angle:p.angle,speed:0,vx:0,vy:0,steering:0};elapsed=0;lapTracker.reset();currentGhost=[];lastGhostStamp=0;keys.clear();marks=[];updateTransform();}
 function startDrive() {
   if(track.points.length<3||length<=200){toast('Add at least 3 points to build a driveable circuit.');return;}
-  mode='drive';paused=false;lap=1;countdown=3.15;messageUntil=0;recordKey=signature();lapSignature=recordKey;best=Number.isFinite(recordData[recordKey])?recordData[recordKey]:null;ghost=[];resetCar();
+  if(mode==='build')editorView=clone(view);
+  mode='drive';view={zoom:1,panX:0,panY:0};paused=false;lap=1;sessionLaps=[];renderLapHistory();countdown=3.15;messageUntil=0;recordKey=signature();best=Number.isFinite(recordData[recordKey])?recordData[recordKey]:null;
+  const savedGhost=readStorage('apex-ghost-v1',null);
+  ghost=savedGhost?.key===recordKey && Array.isArray(savedGhost.frames) && savedGhost.frames.length<=15000 && savedGhost.frames.every(f=>['x','y','angle','t'].every(k=>Number.isFinite(f[k])))?savedGhost.frames:[];
+  resetCar();
+  $('#camera-btn').setAttribute('aria-pressed',String(followCamera));
   $('.studio').classList.add('drive-active');$('#drive-hud').hidden=false;
   ['#editor-tools','#canvas-label','#canvas-zoom','#canvas-hint','#compass'].forEach(s=>$(s).hidden=true);
   $('#build-mode').classList.remove('active');$('#drive-mode').classList.add('active');$('#canvas-caption').innerHTML='TEST SESSION <span>/</span> TOP VIEW';
   $('#drive-btn').innerHTML=icon('pen')+'<span>Back to build</span><span class="button-arrow">↗</span>';$('#track-name').disabled=true;$('#width-range').disabled=true;$('#smooth-toggle').disabled=true;
-  $('#pause-btn').innerHTML=icon('pause');$('#pause-btn').setAttribute('aria-label','Pause driving');canvas.style.cursor='default';syncUI();updateHUD();canvas.focus({preventScroll:true});
+  $('#pause-btn').innerHTML=icon('pause');$('#pause-btn').setAttribute('aria-label','Pause driving');canvas.style.cursor='default';canvas.setAttribute('aria-label','Driving session. WASD or arrow keys drive, Shift handbrakes, Space pauses, R resets.');syncUI();updateHUD();canvas.focus({preventScroll:true});
 }
 function stopDrive() {
-  mode='build';keys.clear();paused=false;$('.studio').classList.remove('drive-active');$('#drive-hud').hidden=true;
+  mode='build';if(editorView)view=editorView;editorView=null;updateTransform();keys.clear();paused=false;$('.studio').classList.remove('drive-active');$('#drive-hud').hidden=true;
   ['#editor-tools','#canvas-label','#canvas-zoom','#canvas-hint','#compass'].forEach(s=>$(s).hidden=false);
   $('#build-mode').classList.add('active');$('#drive-mode').classList.remove('active');$('#canvas-caption').innerHTML='CIRCUIT EDITOR <span>/</span> TOP VIEW';
-  $('#drive-btn').innerHTML=icon('play')+'<span>Test drive</span><span class="button-arrow">↗</span>';$('#track-name').disabled=false;$('#width-range').disabled=false;$('#smooth-toggle').disabled=false;setTool(tool);syncUI();
+  $('#drive-btn').innerHTML=icon('play')+'<span>Test drive</span><span class="button-arrow">↗</span>';$('#track-name').disabled=false;$('#width-range').disabled=false;$('#smooth-toggle').disabled=false;canvas.setAttribute('aria-label','Circuit editor. Drag orange points to reshape your track. Select Draw to add points.');setTool(tool);syncUI();
 }
 $('#drive-btn').onclick=()=>mode==='build'?startDrive():stopDrive();$('#drive-mode').onclick=()=>{if(mode!=='drive')startDrive();};$('#build-mode').onclick=()=>{if(mode!=='build')stopDrive();};
 function formatTime(t) {const min=Math.floor(t/60),sec=Math.floor(t%60),ms=Math.floor((t%1)*1000);return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;}
 function setRaceMessage(label,duration=2){$('#race-message').textContent=label;$('#race-message').classList.add('message-label');messageUntil=performance.now()+duration*1000;}
 function togglePause(){if(mode!=='drive'||countdown>0)return;paused=!paused;keys.clear();$('#pause-btn').innerHTML=icon(paused?'play':'pause');$('#pause-btn').setAttribute('aria-label',paused?'Resume driving':'Pause driving');if(paused)setRaceMessage('SESSION PAUSED',3600);else{messageUntil=0;$('#race-message').textContent='';}syncUI();}
 $('#pause-btn').onclick=togglePause;
-function finishLap(){
+$('#camera-btn').onclick=()=>{followCamera=!followCamera;$('#camera-btn').setAttribute('aria-pressed',String(followCamera));$('#camera-btn').title=followCamera?'Use circuit overview (C)':'Follow the car (C)';updateTransform();};
+$('#ghost-btn').onclick=()=>{showGhost=!showGhost;$('#ghost-btn').setAttribute('aria-pressed',String(showGhost));toast(showGhost?'Best lap ghost enabled.':'Best lap ghost hidden.');};
+function restartDrive(){resetCar();countdown=1.2;paused=false;$('#pause-btn').innerHTML=icon('pause');$('#pause-btn').setAttribute('aria-label','Pause driving');syncUI();}
+$('#restart-btn').onclick=restartDrive;
+function renderLapHistory(){
+  const el=$('#lap-history');el.replaceChildren();
+  if(!sessionLaps.length){el.innerHTML='<p class="session-empty">Your next lap is a new possibility.<br>Drive a full circuit to set a time.</p>';return;}
+  sessionLaps.slice(-5).reverse().forEach(result=>{
+    const row=document.createElement('div');row.className='lap-result'+(result.valid?'':' invalid');
+    const num=document.createElement('span');num.textContent=`LAP ${String(result.lap).padStart(2,'0')}`;
+    const time=document.createElement('strong');time.textContent=formatTime(result.time);
+    const detail=document.createElement('span');detail.textContent=!result.valid?'INVALID':result.isBest?'BEST':`+${(result.time-result.best).toFixed(3)}`;
+    row.title=result.reason||'Completed lap';row.append(num,time,detail);el.append(row);
+  });
+}
+function finishLap(result){
   if(elapsed<3)return;
-  const time=elapsed;
-  if(best===null||time<best){best=time;recordData[recordKey]=time;const entries=Object.entries(recordData);if(entries.length>250)delete recordData[entries[0][0]];writeStorage('apex-records-v1',recordData);ghost=clone(currentGhost);setRaceMessage(`NEW BEST · ${formatTime(time)}`,3);toast(`New best lap: ${formatTime(time)}`);}
-  else{setRaceMessage(`LAP ${lap} · ${formatTime(time)}`,2.5);}
-  lap++;elapsed=0;checkpoint=1;currentGhost=[];lastGhostStamp=0;
+  const time=elapsed,isBest=result.valid&&(best===null||time<best);
+  if(isBest){best=time;recordData[recordKey]=time;const entries=Object.entries(recordData);if(entries.length>250)delete recordData[entries[0][0]];writeStorage('apex-records-v1',recordData);ghost=clone(currentGhost);writeStorage('apex-ghost-v1',{key:recordKey,frames:ghost});setRaceMessage(`NEW BEST · ${formatTime(time)}`,3);toast(`New best lap: ${formatTime(time)}`);}
+  else if(result.valid){setRaceMessage(`LAP ${lap} · ${formatTime(time)}`,2.5);}
+  else setRaceMessage(`INVALID LAP · ${result.reason.toUpperCase()}`,2.5);
+  sessionLaps.push({lap,time,isBest,best,...result});if(sessionLaps.length>50)sessionLaps.shift();renderLapHistory();
+  lap++;elapsed=0;currentGhost=[];lastGhostStamp=0;
 }
 function updatePhysics(dt) {
   if(mode!=='drive')return;
-  if(countdown>0){countdown-=dt;const label=countdown>.2?String(Math.ceil(countdown-.2)):'GO';$('#race-message').classList.remove('message-label');$('#race-message').textContent=label;if(countdown<=0){setRaceMessage('GO',.7);}return;}
   if(paused)return;
+  if(countdown>0){countdown-=dt;const label=countdown>.2?String(Math.ceil(countdown-.2)):'GO';$('#race-message').classList.remove('message-label');if($('#race-message').textContent!==label)$('#race-message').textContent=label;if(countdown<=0){setRaceMessage('GO',.7);}return;}
   const v=vehicles[track.car],onRoad=nearest(car).distance<roadWidth/2-3;
   const throttle=keys.has('w')||keys.has('arrowup'),brake=keys.has('s')||keys.has('arrowdown');
   const steer=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0);
-  if(throttle)car.speed+=v.accel*dt;
-  if(brake)car.speed-= (car.speed>1?v.brake: v.accel*.55)*dt;
-  if(!throttle&&!brake)car.speed*=Math.exp(-dt*(onRoad?.45:1.65));
-  car.speed*=Math.exp(-dt*(onRoad?.08:2.05));car.speed=clamp(car.speed,-v.max*.25,onRoad?v.max:v.max*.31);
-  const turning=clamp(Math.abs(car.speed)/55,0,1)/(1+Math.abs(car.speed)/v.max*.5);
-  car.angle+=steer*v.steer*turning*dt*Math.sign(car.speed||1);
-  const grip=onRoad?v.grip:.55,response=(3+grip*12)*dt;
-  const targetVx=Math.cos(car.angle)*car.speed,targetVy=Math.sin(car.angle)*car.speed;
-  car.vx+=(targetVx-car.vx)*Math.min(response,1);car.vy+=(targetVy-car.vy)*Math.min(response,1);
-  const prevX=car.x,prevY=car.y;car.x+=car.vx*dt;car.y+=car.vy*dt;
-  if(car.x<20||car.x>980||car.y<35||car.y>705){car.x=clamp(car.x,20,980);car.y=clamp(car.y,35,705);car.speed*=.6;car.vx*=.5;car.vy*=.5;}
-  if(Math.abs(car.speed)>90&&steer&&onRoad){const nx=-Math.sin(car.angle)*6,ny=Math.cos(car.angle)*6;[-1,1].forEach(s=>marks.push({x1:prevX+nx*s,y1:prevY+ny*s,x2:car.x+nx*s,y2:car.y+ny*s,a:.19}));if(marks.length>1200)marks.splice(0,20);}
+  const handbrake=keys.has('shift'),prevX=car.x,prevY=car.y;
+  stepVehicle(car,v,{throttle,brake,steer,handbrake},onRoad,dt);
+  if(Math.abs(car.speed)>90&&(steer||handbrake)&&onRoad){const nx=-Math.sin(car.angle)*6,ny=Math.cos(car.angle)*6;[-1,1].forEach(s=>marks.push({x1:prevX+nx*s,y1:prevY+ny*s,x2:car.x+nx*s,y2:car.y+ny*s,a:.19}));if(marks.length>1200)marks.splice(0,20);}
   elapsed+=dt;
   const near=nearest(car),progress=relativeProgress(near.progress);
-  // Sequential gates prevent skipping a lap by simply crossing the start line.
-  let delta=progress-lastProgress;if(delta<-.5)delta+=1;else if(delta>.5)delta-=1;
-  if(onRoad && delta>0 && delta<.08){
-    if(checkpoint<=7){const gate=checkpoint/8;let prev=lastProgress,now=progress;if(now<prev)now+=1;if(prev<gate&&now>=gate)checkpoint++;}
-    else if(lastProgress>.9 && progress<.1)finishLap();
-  }
-  lastProgress=progress;
+  const result=lapTracker.update(progress,near.distance<roadWidth/2-3,dt);
+  if(result)finishLap(result);
   if(elapsed-lastGhostStamp>.06){currentGhost.push({x:car.x,y:car.y,angle:car.angle,t:elapsed});lastGhostStamp=elapsed;if(currentGhost.length>15000)currentGhost.shift();}
 }
 let lastHud=0;
 function updateHUD() {
   $('#lap-display').textContent=String(lap).padStart(2,'0');$('#time-display').textContent=formatTime(elapsed);$('#best-display').textContent=best!==null?formatTime(best):'—';
-  const speed=Math.round(Math.abs(car.speed)*.6*3.6);$('#speed-display').textContent=speed;$('#speed-fill').style.width=`${Math.abs(car.speed)/vehicles[track.car].max*100}%`;
+  const speed=Math.round(Math.abs(car.speed)*METERS_PER_UNIT*3.6);$('#speed-display').textContent=speed;$('#speed-fill').style.width=`${Math.abs(car.speed)/vehicles[track.car].max*100}%`;
   const onRoad=nearest(car).distance<roadWidth/2-3;$('#surface-display').textContent=onRoad?'ON TRACK':'OFF TRACK';$('#surface-display').style.color=onRoad?'#a4b097':'#efa07b';
+  $('#lap-validity').textContent=lapTracker.invalidReason?`${lapTracker.invalidReason} · lap invalid`:'Clean lap';$('#lap-validity').classList.toggle('invalid',!!lapTracker.invalidReason);
+  $('#checkpoint-label').textContent=`${lapTracker.checkpoint-1} / 7 checkpoints`;
+  $('#checkpoint-fill').style.width=`${(lapTracker.checkpoint-1)/7*100}%`;
   if(countdown<=0&&!paused&&performance.now()>messageUntil){$('#race-message').textContent='';$('#race-message').classList.remove('message-label');}
 }
 document.addEventListener('keydown',e=>{
   if(e.target.matches('input,textarea') || $$('dialog').some(d=>d.open))return;
   const k=e.key.toLowerCase();
   if(mode==='drive'){
-    if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright',' ','r','escape'].includes(k)){e.preventDefault();if(k===' '&&!e.repeat)togglePause();else if(k==='r'&&!e.repeat){resetCar();countdown=1.2;paused=false;$('#pause-btn').innerHTML=icon('pause');syncUI();}else if(k==='escape'){if($('.studio').classList.contains('expanded'))$('.studio').classList.remove('expanded');else stopDrive();}else keys.add(k);}
+    if(['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright','shift','c',' ','r','escape'].includes(k)){e.preventDefault();if(k===' '&&!e.repeat)togglePause();else if(k==='r'&&!e.repeat)restartDrive();else if(k==='c'&&!e.repeat)$('#camera-btn').click();else if(k==='escape'){if($('.studio').classList.contains('expanded'))$('.studio').classList.remove('expanded');else stopDrive();}else keys.add(k);}
   }else{
     if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo();}else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redo();}else if(!(e.ctrlKey||e.metaKey||e.altKey)){const map={v:'move',p:'draw',e:'erase',s:'start',h:'pan'};if(map[k]){e.preventDefault();setTool(map[k]);}else if(k==='escape')$('.studio').classList.remove('expanded');}
   }
@@ -343,6 +350,11 @@ document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>{keys.clear();if(mode==='drive'&&!paused&&countdown<=0)togglePause();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){keys.clear();if(mode==='drive'&&!paused&&countdown<=0)togglePause();}});
 $$('.touch-controls button').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);keys.add(b.dataset.key);b.style.filter='brightness(1.25)';});['pointerup','pointercancel','lostpointercapture'].forEach(event=>b.addEventListener(event,()=>{keys.delete(b.dataset.key);b.style.filter='';}));});
-let lastFrame=performance.now();
-function frame(now) {const dt=Math.min((now-lastFrame)/1000,.035);lastFrame=now;updatePhysics(dt);draw();if(mode==='drive'&&now-lastHud>50){updateHUD();lastHud=now;}requestAnimationFrame(frame);}
-rebuild();syncUI();resize();setTool('move');requestAnimationFrame(frame);
+let lastFrame=performance.now(),accumulator=0;
+function frame(now) {
+  accumulator+=Math.min((now-lastFrame)/1000,.1);lastFrame=now;
+  while(accumulator>=1/120){updatePhysics(1/120);accumulator-=1/120;}
+  if(mode==='drive'&&followCamera)updateTransform();
+  draw();if(mode==='drive'&&now-lastHud>50){updateHUD();lastHud=now;}requestAnimationFrame(frame);
+}
+rebuild();syncUI();renderLapHistory();resize();setTool('move');requestAnimationFrame(frame);
