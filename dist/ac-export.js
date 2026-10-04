@@ -1,6 +1,7 @@
 import {buildGeometry,pointOnTrack,clamp} from './engine.js';
 import {BinaryWriter,zipFiles} from './binary.js';
 import {ASPHALT} from './surfaces.js';
+import {analyzeTrack} from './analysis.js';
 
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true};
 export function trackSlug(name){return ('apex_'+name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')).slice(0,32).replace(/_+$/,'')||'apex_circuit';}
@@ -189,7 +190,8 @@ export function exportFiles(track,images={}){
   if(scene.options.ai){put('ai/fast_lane.ai',writeAi(scene.frames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitFrames,6,false));}
   for(const [name,bytes] of Object.entries(images))put(name,bytes);
   if(images['map.png'])put('data/map.ini',`[PARAMETERS]\nWIDTH=1000\nHEIGHT=740\nX_OFFSET=${500*unit(track)}\nZ_OFFSET=${370*unit(track)}\nSCALE_FACTOR=${unit(track)}\nDRAWING_SIZE=10\nMARGIN=0\n`);
-  put('apex_source.json',JSON.stringify({format:'apex-circuit',version:3,...track,background:null},null,2));
+  put('apex_source.json',JSON.stringify({format:'apex-circuit',version:4,...track,background:null},null,2));
+  put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
   files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nReference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nAI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nThis export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
   return {files,scene,slug,report};
 }

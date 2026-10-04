@@ -1,6 +1,6 @@
 # Native Assetto Corsa export
 
-APEX 3.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
+APEX 4.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
 
 ## Trace and inspect
 
@@ -9,10 +9,11 @@ APEX 3.0 traces a circuit and generates a prototype track ZIP entirely in the br
 3. Click the centerline in driving order. The road remains open while editing. **Draw** appends points; Alt + click inserts a point into a road section. Select **Move** and drag points to refine the layout. Set road width in meters.
 4. Select points to set elevation in meters and banking in degrees. These are manually authored values; APEX does not retrieve real terrain elevations.
 5. Draw a pit lane as an open path, or keep the automatic lane. Set 1–16 pit boxes and leave enough space for all cars.
-6. Choose an asphalt finish. Click **Draw barrier**, click a path, then **Finish barrier**. Select the barrier from its list to edit height, thickness, or appearance. Move drags its square handles; Erase removes a point. Custom barriers are solid in the browser driving preview and exported model.
+6. Choose an asphalt finish. Click **Draw barrier**, click a path, then **Finish barrier**. Select the barrier from its list to edit height, thickness, or appearance. Move drags its square handles; Erase removes a point. Custom barriers are collision geometry in the exported model.
 7. Open **Circuit details** to set the name, description, creator, type, country, city, tags, mod version, and optional website. These details carry into Content Manager's track listing.
-8. Select **Complete circuit** to join the ends and lock geometry editing. Use **Reopen circuit** to make changes. **Save draft** keeps unfinished work in the garage; JSON import/export also preserves its editing state and barriers.
-9. Select **3D** to orbit and inspect the geometry. The browser driving mode remains an arcade layout preview. Hide the side panel or expand the workspace for more room.
+8. Select **Complete circuit** to join the ends. Completed circuits stay editable. **Open circuit** separates the ends again. **Save draft** keeps unfinished work in the library; JSON import/export preserves its editing state and barriers. **Clear** removes chosen items, and Undo can restore them.
+9. Select **Analyze** for geometry metrics, corner inventory, the elevation profile, calibration source, and export requirements. Click a corner to find it on the map. Use **Reverse direction** to reverse the road and pit direction while preserving the physical banking orientation.
+10. Download the report as JSON or geometry samples as CSV. Select **3D** to orbit and inspect the geometry. Hide the side panel or expand the workspace for more room.
 
 ## Download and install
 
@@ -38,6 +39,7 @@ content/tracks/apex_your_circuit/
   ui/preview.png
   ui/outline.png
   apex_source.json
+  apex_analysis.json
 INSTALL.txt
 ```
 
@@ -45,6 +47,7 @@ AI files are omitted when disabled. The website generates preview and map PNGs d
 
 ## Current limits
 
+- Analysis uses the scaled, traced geometry. Bend counts and straight lengths use curvature thresholds; paved area is length × width. Pit capacity is a spacing estimate. Methods are included in `apex_analysis.json`.
 - Manual elevation and banking affect the road; surrounding terrain is a flat base. This is not a terrain/LIDAR reconstruction tool.
 - The automatically generated AI line follows the centerline with curvature-based speed hints. Record or refine AI in-game for competitive racing.
 - Automatic pit-lane geometry needs inspection. For unusual tracks, draw a dedicated lane and choose a suitable pit-box count.
