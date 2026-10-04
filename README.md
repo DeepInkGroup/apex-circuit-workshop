@@ -1,8 +1,21 @@
-# APEX — Circuit Workshop
+# APEX 2.0 — Track Tracer for Assetto Corsa
 
 **[Open the website](https://deepinkgroup.github.io/apex-circuit-workshop/)**
 
-Build a racing circuit and test it in your browser. APEX combines a visual track editor with an arcade driving playground. No account, installation, or server is required.
+Trace a racing circuit over satellite imagery or an uploaded reference, inspect it in 3D, and export a native Assetto Corsa track ZIP for Content Manager. APEX also includes an arcade driving preview. No account, build step, or server is required.
+
+**[Tracing, export, installation, and limitations](docs/ASSETTO_CORSA.md)**
+
+## Trace → inspect → export
+
+- Satellite references from latitude/longitude or a Google Maps URL, with automatic geographic scale.
+- Local image references, opacity controls, and two-point scale calibration.
+- Editable road centerline, width, per-point elevation and banking, and a custom pit path.
+- An orbitable WebGL 3D preview of the same geometry used by the exporter.
+- Browser-generated KN5 geometry and DDS textures, collision surfaces, timing gates, grid slots, and pit spawns.
+- Optional centerline and pit AI, track metadata, minimap, preview images, and a Content Manager ZIP.
+
+The export is a generated mod prototype. File and geometry checks pass, but an in-game compatibility check is still required. Manual elevations are supported; real-world terrain data is not fetched. Generated AI needs refinement for competitive racing.
 
 ## Features
 
@@ -47,7 +60,7 @@ Stay on the asphalt and pass all seven checkpoints in order, following the start
 
 Circuits, draft recovery, best times, and the latest best ghost are stored in this browser with localStorage. They are not uploaded to GitHub or shared with other visitors. Export a JSON circuit to move it to another device or keep a backup. Export current works even before saving to the garage.
 
-The physics are designed for an arcade driving experience. Track distances, widths, and speed use the same scale: 0.2 meters per world unit.
+The browser physics are designed for an arcade driving experience. Width, distance, and speed share the project's meters-per-pixel scale. Uploaded reference images are stored in IndexedDB; reference imagery is not packaged in the mod.
 
 ## Checks and deployment
 
@@ -56,4 +69,4 @@ npm run check
 npm test
 ```
 
-The tests cover circuit geometry, lap completion and shortcut detection, acceleration, off-road friction, and reversing. Every push to `main` runs these checks and deploys `dist/` to GitHub Pages through `.github/workflows/pages.yml`.
+The tests cover driving behavior, native KN5 decoding, road orientation, AI records, spawn positions, ZIP integrity, circuit geometry, and map scale. Every push to `main` runs these checks and deploys `dist/` to GitHub Pages through `.github/workflows/pages.yml`.

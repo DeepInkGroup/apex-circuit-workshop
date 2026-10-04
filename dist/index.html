@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f5f3ed" />
-  <meta name="description" content="Design your own racing circuit, tune your car, and chase the perfect lap. APEX is your browser-based circuit workshop." />
-  <title>APEX — Circuit Workshop</title>
+  <meta name="description" content="Trace circuits over satellite imagery, inspect your road in 3D, and export a native Assetto Corsa track ZIP for Content Manager." />
+  <title>APEX — Track Tracer for Assetto Corsa</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./tracer.css" />
 </head>
 <body>
   <header class="topbar">
@@ -58,7 +59,7 @@
     </section>
     <section class="below-studio"><div class="tip"><span class="tip-icon">↗</span><p><strong>Every great circuit starts with a corner.</strong><br />Move a point, find your flow, then take it for a spin.</p></div><div class="workflow"><span><b>01</b> Design</span><i>→</i><span><b>02</b> Drive</span><i>→</i><span><b>03</b> Refine</span></div></section>
   </main>
-  <footer><span>APEX <span class="footer-slash">/</span> A playground for the perfect lap.</span><span>NO DOWNLOADS. JUST DRIVE. <span class="orange-dash"></span></span></footer>
+  <footer><span>APEX <span class="footer-slash">/</span> From real places to racing circuits.</span><span>TRACE. INSPECT. EXPORT. <span class="orange-dash"></span></span></footer>
 
   <dialog id="help-dialog"><div class="dialog-top"><p class="eyebrow">WELCOME TO THE WORKSHOP</p><button class="icon-button close-dialog" aria-label="Close help">×</button></div><h2>Build it. Drive it. Refine it.</h2><div class="help-steps"><div><b>01</b><h3>Shape your circuit</h3><p>Drag the orange points to reshape a layout. The pen adds a point to the nearest section. Start from scratch to click out your own circuit; three points close the loop. The eraser removes a point.</p></div><div><b>02</b><h3>Make it yours</h3><p>Adjust road width, smooth your corners, and choose a car. Use the flag tool to move the start line. Save circuits to your browser or export them from My circuits.</p></div><div><b>03</b><h3>Find the limit</h3><p>Hit Test drive. Use WASD or arrow keys to steer, accelerate, brake, and reverse. Space pauses; R resets the car. Complete a full lap in the arrow’s direction to set a time.</p></div></div><p class="help-note">On a touch screen, use the steering and pedal buttons. Circuits and lap records are saved on this device.</p><button class="primary-button close-dialog">Let’s build <span>↗</span></button></dialog>
   <dialog id="library-dialog"><div class="dialog-top"><p class="eyebrow">YOUR GARAGE</p><button class="icon-button close-dialog" aria-label="Close circuit library">×</button></div><h2>My circuits<span>.</span></h2><p class="dialog-description">Your layouts, saved in this browser.</p><div id="library-list"></div><div class="library-actions"><button id="import-btn" class="subtle-button"><i data-icon="upload"></i> Import</button><button id="export-current" class="subtle-button"><i data-icon="download"></i> Export current</button><input id="import-file" type="file" accept=".json,application/json" hidden /><button class="primary-button close-dialog">Back to studio ↗</button></div></dialog>

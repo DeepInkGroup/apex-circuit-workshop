@@ -17,7 +17,10 @@ export function buildGeometry(points, smooth = true) {
     const steps = Math.max(10, Math.ceil(distance(b, c)/5));
     for (let j = 0; j < steps; j++) {
       const t = j / steps;
-      samples.push(smooth ? spline(a,b,c,d,t) : {x:b.x+(c.x-b.x)*t, y:b.y+(c.y-b.y)*t});
+      const p=smooth ? spline(a,b,c,d,t) : {x:b.x+(c.x-b.x)*t, y:b.y+(c.y-b.y)*t};
+      p.elevation=(Number(b.elevation)||0)*(1-t)+(Number(c.elevation)||0)*t;
+      p.bank=(Number(b.bank)||0)*(1-t)+(Number(c.bank)||0)*t;
+      samples.push(p);
       segments.push(i);
     }
   });
@@ -32,7 +35,7 @@ export function pointOnTrack(g, fraction) {
   while (lo < hi) { const mid = Math.ceil((lo+hi)/2); if(g.cumulative[mid] <= l) lo = mid; else hi = mid-1; }
   const a = g.samples[lo], b = g.samples[(lo+1)%g.samples.length], segmentLength = distance(a,b);
   const t = segmentLength ? (l-g.cumulative[lo])/segmentLength : 0;
-  return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, angle:Math.atan2(b.y-a.y,b.x-a.x), index:lo};
+  return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, elevation:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t, bank:(a.bank||0)+((b.bank||0)-(a.bank||0))*t, angle:Math.atan2(b.y-a.y,b.x-a.x), index:lo};
 }
 
 export function closestOnTrack(g, p) {
@@ -83,7 +86,7 @@ export function stepVehicle(car, vehicle, controls, onRoad, dt) {
   car.speed=clamp(car.speed,-vehicle.max*.25,onRoad?vehicle.max:vehicle.max*.31);
   car.steering ??= 0;
   car.steering+=(controls.steer-car.steering)*(1-Math.exp(-dt*9));
-  const turning=clamp(Math.abs(car.speed)/50,0,1)/(1+Math.abs(car.speed)/vehicle.max*.65);
+  const turning=clamp(Math.abs(car.speed)/(vehicle.turnSpeed||50),0,1)/(1+Math.abs(car.speed)/vehicle.max*.65);
   car.angle+=car.steering*vehicle.steer*turning*dt*Math.sign(car.speed||1)*(handbrake?1.3:1);
   const grip=onRoad?vehicle.grip:.5, response=1-Math.exp(-(handbrake?3:3+grip*12)*dt);
   car.vx+=(Math.cos(car.angle)*car.speed-car.vx)*response;
