@@ -1,4 +1,4 @@
-# APEX 2.0 — Track Tracer for Assetto Corsa
+# APEX 3.0 — Track Tracer for Assetto Corsa
 
 **[Open the website](https://deepinkgroup.github.io/apex-circuit-workshop/)**
 
@@ -8,6 +8,11 @@ Trace a racing circuit over satellite imagery or an uploaded reference, inspect 
 
 ## Trace → inspect → export
 
+- Textured asphalt with fresh, weathered, and dark finishes across the editor, 3D preview, and mod.
+- Custom solid barrier paths with editable height, thickness, and concrete or striped appearance.
+- A circuit profile form for name, description, type, creator, country, city, tags, version, and website.
+- Open road drafts, **Complete circuit**, and **Reopen circuit** controls. Drafts can be saved in the garage.
+- A larger creation workspace, a collapsible side panel, and an expanded workspace mode.
 - Satellite references from latitude/longitude or a Google Maps URL, with automatic geographic scale.
 - Local image references, opacity controls, and two-point scale calibration.
 - Editable road centerline, width, per-point elevation and banking, and a custom pit path.

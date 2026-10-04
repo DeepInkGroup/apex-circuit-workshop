@@ -8,12 +8,13 @@ function spline(a, b, c, d, t) {
   return Object.fromEntries(['x', 'y'].map(k => [k, .5 * (2*b[k] + (-a[k]+c[k])*t + (2*a[k]-5*b[k]+4*c[k]-d[k])*t2 + (-a[k]+3*b[k]-3*c[k]+d[k])*t3)]));
 }
 
-export function buildGeometry(points, smooth = true) {
+export function buildGeometry(points, smooth = true, closed = true) {
   const samples = [], segments = [], cumulative = [];
   let length = 0;
-  if (points.length < 3) return { samples: points.map(p => ({...p})), segments, cumulative, length };
+  if (points.length < (closed ? 3 : 2)) return { samples: points.map(p => ({...p})), segments, cumulative, length, closed };
   points.forEach((b, i) => {
-    const n = points.length, a = points[(i+n-1)%n], c = points[(i+1)%n], d = points[(i+2)%n];
+    const n = points.length;if(!closed&&i===n-1)return;
+    const a = points[closed?(i+n-1)%n:Math.max(0,i-1)], c = points[closed?(i+1)%n:i+1], d = points[closed?(i+2)%n:Math.min(n-1,i+2)];
     const steps = Math.max(10, Math.ceil(distance(b, c)/5));
     for (let j = 0; j < steps; j++) {
       const t = j / steps;
@@ -24,15 +25,17 @@ export function buildGeometry(points, smooth = true) {
       segments.push(i);
     }
   });
-  samples.forEach((p,i) => { cumulative.push(length); length += distance(p, samples[(i+1)%samples.length]); });
-  return {samples, segments, cumulative, length};
+  if(!closed){samples.push({...points[points.length-1]});segments.push(points.length-2);}
+  samples.forEach((p,i) => { cumulative.push(length); if(closed||i<samples.length-1)length += distance(p, samples[(i+1)%samples.length]); });
+  return {samples, segments, cumulative, length, closed};
 }
 
 export function pointOnTrack(g, fraction) {
   if (!g.length) return {x:g.samples[0]?.x ?? 500, y:g.samples[0]?.y ?? 370, angle:0, index:0};
-  const l = wrap(fraction) * g.length;
+  const l = (g.closed===false?clamp(fraction,0,1):wrap(fraction)) * g.length;
   let lo = 0, hi = g.cumulative.length-1;
   while (lo < hi) { const mid = Math.ceil((lo+hi)/2); if(g.cumulative[mid] <= l) lo = mid; else hi = mid-1; }
+  if(g.closed===false&&lo===g.samples.length-1)lo--;
   const a = g.samples[lo], b = g.samples[(lo+1)%g.samples.length], segmentLength = distance(a,b);
   const t = segmentLength ? (l-g.cumulative[lo])/segmentLength : 0;
   return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, elevation:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t, bank:(a.bank||0)+((b.bank||0)-(a.bank||0))*t, angle:Math.atan2(b.y-a.y,b.x-a.x), index:lo};
@@ -42,6 +45,7 @@ export function closestOnTrack(g, p) {
   let best = Infinity, result = {distance:Infinity, progress:0, index:0};
   if (!g.length) return result;
   g.samples.forEach((a,i) => {
+    if(g.closed===false&&i===g.samples.length-1)return;
     const b = g.samples[(i+1)%g.samples.length], dx = b.x-a.x, dy = b.y-a.y, l2 = dx*dx+dy*dy;
     const t = l2 ? clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l2,0,1) : 0;
     const x = a.x+t*dx, y = a.y+t*dy, d2 = (p.x-x)**2+(p.y-y)**2;
