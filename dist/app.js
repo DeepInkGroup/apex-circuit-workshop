@@ -11,7 +11,7 @@ import {mountDrawStudio} from './studio-ui.js';
 import {cornerSettings,kerbSides} from './corner-settings.js';
 import {mountCorners} from './corner-ui.js';
 import {mountGenerator} from './generator-ui.js';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,drawBuilding,grassPattern} from './scenery.js';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js';
 import {mountScenery} from './scenery-ui.js';
 import {mountACSetup} from './ac-setup-ui.js';
 const $ = (s) => document.querySelector(s);
@@ -62,7 +62,7 @@ function validateTrack(data) {
   const exportOptions={...DEFAULT_EXPORT};
   ['author','country','city'].forEach(k=>{if(typeof data.export?.[k]==='string')exportOptions[k]=data.export[k].slice(0,60);});
   exportOptions.pitboxes=clamp(Math.round(Number(data.export?.pitboxes)||8),1,16);
-  ['kerbs','barriers','ai','trees','buildings'].forEach(k=>exportOptions[k]=data.export?.[k]!==false);
+  ['kerbs','barriers','ai','trees','buildings','grassFx'].forEach(k=>exportOptions[k]=data.export?.[k]!==false);
   for(const [key,min,max] of [['roadGrip',.8,1.2],['grassGrip',.3,.9],['gridSpacing',4,12],['wallHeight',.5,4]])exportOptions[key]=clamp(Number(data.export?.[key])||DEFAULT_EXPORT[key],min,max);
   const buildings=Array.isArray(data.buildings)?data.buildings.filter(b=>b&&Number.isFinite(b.x)&&Number.isFinite(b.y)).slice(0,60).map(b=>({x:clamp(b.x,0,1000),y:clamp(b.y,0,740),...buildingSettings(b)})):[];
   const pit=Array.isArray(data.pit)?data.pit.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.x<=1000&&p.y>=0&&p.y<=740).slice(0,100).map(p=>({x:p.x,y:p.y,elevation:clamp(Number(p.elevation)||0,-100,500)})):[];
@@ -132,7 +132,7 @@ new ResizeObserver(resize).observe($('#canvas-wrap'));
 function screenToWorld(e) {const r=canvas.getBoundingClientRect(),p={x:(e.clientX-r.left-offsetX)/scale,y:(e.clientY-r.top-offsetY)/scale};if((snapEnabled||e.shiftKey)&&!['pan','measure'].includes(tool)){const step=snapMeters/(track.scale||.2);p.x=Math.round(p.x/step)*step;p.y=Math.round(p.y/step)*step;}return p;}
 function zoom(amount) {view.zoom=clamp(view.zoom*amount,.18,8);updateTransform();}
 function fitView(){
-  if(mode==='preview')stopPreview();const points=[...track.points,...(track.pit||[]),...(track.barriers||[]).flatMap(b=>b.points),...(track.trees||[]),...(track.buildings||[]).flatMap(b=>buildingCorners(b,track.scale))];if(track.points.length>=2)points.push(...pitLayout.path,...pitLayout.bays.flatMap(b=>b.corners));if(!points.length){view={zoom:1,panX:0,panY:0};updateTransform();return;}
+  if(mode==='preview')stopPreview();const points=[...track.points,...(track.pit||[]),...(track.barriers||[]).flatMap(b=>b.points),...(track.trees||[]),...(track.buildings||[]).flatMap(b=>buildingCorners(b,track.scale))];if(track.points.length>=2)points.push(...pitLayout.path,...pitLayout.entryConnection,...pitLayout.exitConnection,...pitLayout.bays.flatMap(b=>b.corners));if(!points.length){view={zoom:1,panX:0,panY:0};updateTransform();return;}
   const pad=45/(Math.min(cssW/1000,cssH/740)||1),minX=Math.min(...points.map(p=>p.x))-pad,maxX=Math.max(...points.map(p=>p.x))+pad,minY=Math.min(...points.map(p=>p.y))-pad,maxY=Math.max(...points.map(p=>p.y))+pad,base=Math.min(cssW/1000,cssH/740);
   view.zoom=clamp(Math.min(cssW/(maxX-minX),cssH/(maxY-minY))/base,.18,5);view.panX=(500-(minX+maxX)/2)*base*view.zoom;view.panY=(370-(minY+maxY)/2)*base*view.zoom;updateTransform();
 }
@@ -191,10 +191,10 @@ function drawTrees(){
 }
 function drawPitLane(){
   if(track.points.length<2&&track.pit.length<2)return;const plan=pitLayout,meter=1/(track.scale||.2),style=PIT_STYLES[plan.settings.style],color=`rgb(${style.color.join(',')})`;
-  for(const path of [plan.path,plan.parkingPath,plan.connector,plan.exitConnector])if(path.length>=2){strokePath('#fff7da',plan.settings.width*meter+.3*meter,path,false);strokePath(color,plan.settings.width*meter,path,false);}
+  for(const path of [plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection])if(path.length>=2){strokePath('#fff7da',plan.settings.width*meter+.3*meter,path,false);strokePath(color,plan.settings.width*meter,path,false);}
   ctx.setLineDash([3*meter,2*meter]);strokePath(style.line,.12*meter,plan.path,false);ctx.setLineDash([]);
   plan.bays.forEach(b=>{ctx.beginPath();b.corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='#aeb6ac';ctx.fill();ctx.strokeStyle='#ead183';ctx.lineWidth=.12*meter;ctx.stroke();ctx.save();ctx.translate(b.center.x,b.center.y);ctx.rotate(b.center.angle);ctx.fillStyle='#334d52';ctx.font=`bold ${Math.min(2*meter,16/scale)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(b.center.number),0,0);ctx.restore();});
-  for(const [text,p] of [['PIT ENTRY',plan.path[0]],['PIT EXIT',plan.path[plan.path.length-1]]]){if(!p)continue;ctx.fillStyle='#315868';ctx.font=`bold ${9/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(text,p.x,p.y-9/scale);}
+  for(const [text,p] of [['PIT ENTRY',plan.entry],['PIT EXIT',plan.exit]]){if(!p)continue;ctx.fillStyle='#315868';ctx.font=`bold ${9/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(text,p.x,p.y-9/scale);}
   track.pit.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.x,p.y,5/scale,0,Math.PI*2);ctx.fillStyle='#edf9f6';ctx.fill();ctx.strokeStyle='#43889c';ctx.lineWidth=1.5/scale;ctx.stroke();});
 }
 function drawPlacement(){
@@ -226,11 +226,11 @@ function draw() {
   ctx.restore();
 }
 
-function buildingClear(b){const corners=buildingCorners(b,track.scale);if(corners.some(p=>p.x<0||p.x>1000||p.y<0||p.y>740))return false;const pad=track.width/2+1;if(samples.some(p=>buildingContains(b,p,track.scale,pad)))return false;const pitPoints=[...pitLayout.path,...pitLayout.parkingPath,...pitLayout.connector,...pitLayout.exitConnector,...pitLayout.bays.flatMap(v=>v.corners)];if(pitPoints.some(p=>buildingContains(b,p,track.scale,pitLayout.settings.width/2+1)))return false;if((track.trees||[]).some(p=>buildingContains(b,p,track.scale,p.height*.3)))return false;if((track.barriers||[]).some(v=>v.points.some(p=>buildingContains(b,p,track.scale,v.width/2+1))))return false;return !(track.buildings||[]).some(v=>buildingsOverlap(b,v,track.scale));}
+function buildingClear(b){const corners=buildingCorners(b,track.scale);if(corners.some(p=>p.x<0||p.x>1000||p.y<0||p.y>740))return false;const pad=track.width/2+1;if(samples.some(p=>buildingContains(b,p,track.scale,pad)))return false;const pitPoints=[...pitLayout.path,...pitLayout.parkingPath,...pitLayout.connector,...pitLayout.exitConnector,...pitLayout.entryConnection,...pitLayout.exitConnection,...pitLayout.bays.flatMap(v=>v.corners)];if(pitPoints.some(p=>buildingContains(b,p,track.scale,pitLayout.settings.width/2+1)))return false;if((track.trees||[]).some(p=>buildingContains(b,p,track.scale,p.height*.3)))return false;if((track.barriers||[]).some(v=>v.points.some(p=>buildingContains(b,p,track.scale,v.width/2+1))))return false;return !(track.buildings||[]).some(v=>buildingsOverlap(b,v,track.scale));}
 function canPlantTree(p){
   if((track.buildings||[]).some(b=>buildingContains(b,p,track.scale,treeBrush.height*.3)))return false;
   const clearance=(track.width/2+2)/(track.scale||.2);if(samples.length&&nearest(p).distance<clearance)return false;
-  const padding=(pitLayout.settings.width/2+2)/(track.scale||.2);return ![...pitLayout.path,...pitLayout.parkingPath,...pitLayout.connector,...pitLayout.exitConnector].some(v=>dist(v,p)<padding)&&!pitLayout.stalls.some(v=>dist(v,p)<5/(track.scale||.2));
+  const padding=(pitLayout.settings.width/2+2)/(track.scale||.2);return ![...pitLayout.path,...pitLayout.parkingPath,...pitLayout.connector,...pitLayout.exitConnector,...pitLayout.entryConnection,...pitLayout.exitConnection].some(v=>dist(v,p)<padding)&&!pitLayout.stalls.some(v=>dist(v,p)<5/(track.scale||.2));
 }
 canvas.addEventListener('pointerdown',e=>{
   if(mode!=='build')return;canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);const p=screenToWorld(e),hit=pointHit(p);
@@ -238,6 +238,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(tool==='pan'){drag={kind:'pan',x:e.clientX,y:e.clientY,panX:view.panX,panY:view.panY};canvas.style.cursor='grabbing';return;}
   if(tool==='sketch'){drag={kind:'sketch',before:snapshot(),points:[p],insert:track.complete!==false&&track.points.length>=2?sampleSegments[nearest(p).index]+1:track.points.length};return;}
   if(tool==='building'){const b={...p,...buildingBrush};if((track.buildings||[]).length>=60){toast('Maximum of 60 buildings reached.');return;}if(!buildingClear(b)){toast('Place the entire building on clear ground, away from road, pits, trees, and buildings.');return;}remember();track.buildings||=[];track.buildings.push(b);selectedBuilding=track.buildings.length-1;selectedPoint=selectedBarrier=selectedTree=-1;commit();return;}
+  const rotated=track.buildings?.[selectedBuilding];if(tool==='move'&&rotated&&dist(p,buildingRotationHandle(rotated,track.scale,scale))<12/scale){drag={kind:'buildingRotate',index:selectedBuilding,startAngle:Math.atan2(p.y-rotated.y,p.x-rotated.x),rotation:rotated.rotation,before:snapshot(),changed:false};return;}
   let buildingHit=-1;(track.buildings||[]).forEach((b,i)=>{if(buildingContains(b,p,track.scale))buildingHit=i;});
   if(buildingHit>=0&&hit<0&&tool==='move'){const b=track.buildings[buildingHit];selectedBuilding=buildingHit;selectedTree=selectedPoint=selectedBarrier=-1;drag={kind:'building',index:buildingHit,offset:{x:p.x-b.x,y:p.y-b.y},before:snapshot(),changed:false};syncUI();return;}
   if(buildingHit>=0&&hit<0&&tool==='erase'){remember();track.buildings.splice(buildingHit,1);selectedBuilding=-1;commit();return;}
@@ -287,6 +288,7 @@ canvas.addEventListener('pointermove',e=>{
   if(drag?.kind==='point'){const v=track.points[drag.index];v.x=clamp(p.x,40,960);v.y=clamp(p.y,70,670);drag.changed=true;track.preset=null;rebuild();syncUI();}
   else if(drag?.kind==='pit'){const v=track.pit[drag.index];v.x=clamp(p.x,40,960);v.y=clamp(p.y,70,670);drag.changed=true;rebuild();syncUI();}
   else if(drag?.kind==='barrier'){const v=track.barriers[drag.barrier].points[drag.index];v.x=clamp(p.x,20,980);v.y=clamp(p.y,20,720);v.elevation=pointAt(nearest(v).progress).elevation||0;drag.changed=true;}
+  else if(drag?.kind==='buildingRotate'){const b=track.buildings[drag.index],degrees=(Math.atan2(p.y-b.y,p.x-b.x)-drag.startAngle)*180/Math.PI+drag.rotation,snap=e.shiftKey?15:1;b.rotation=((Math.round(degrees/snap)*snap)%360+360)%360;drag.changed=true;sceneryUI?.refresh();}
   else if(drag?.kind==='building'){const b=track.buildings[drag.index];b.x=clamp(p.x-drag.offset.x,0,1000);b.y=clamp(p.y-drag.offset.y,0,740);drag.changed=true;}
   else if(drag?.kind==='tree'){const v=track.trees[drag.index];v.x=clamp(p.x,20,980);v.y=clamp(p.y,20,720);drag.changed=true;}
   else if(tool==='move')canvas.style.cursor=hoverPoint>=0?'grab':'default';
@@ -295,7 +297,7 @@ function finishDrag() {
   if(drag?.kind==='sketch'){
     const added=simplifyStroke(drag.points,3/scale).map(p=>({x:clamp(p.x,20,980),y:clamp(p.y,20,720),elevation:pointAt(nearest(p).progress).elevation||0,bank:0})).filter((p,i,a)=>(!i||dist(p,a[i-1])>2)&&!track.points.some(v=>dist(v,p)<2)).slice(0,150-track.points.length);
     if(added.length>=2){remember(drag.before);track.points.splice(drag.insert,0,...added);selectedPoint=drag.insert+added.length-1;selectedTree=selectedBarrier=-1;track.start=0;commit();toast(`Sketch created ${added.length} editable points.`);}else toast('Draw a longer stroke to add a road section.');
-  }else if(['point','pit','barrier','tree','building'].includes(drag?.kind)&&drag.changed){remember(drag.before);commit();}
+  }else if(['point','pit','barrier','tree','building','buildingRotate'].includes(drag?.kind)&&drag.changed){remember(drag.before);commit();}
   drag=null;activePoint=-1;if(mode==='build')canvas.style.cursor=tool==='pan'?'grab':tool==='move'?'default':'crosshair';
 }
 canvas.addEventListener('pointerup',finishDrag);canvas.addEventListener('pointercancel',()=>{if(drag?.before)track=drag.before;drag=null;commit();});canvas.addEventListener('pointerleave',()=>{hoverPoint=-1;cursorPoint=null;});
@@ -360,7 +362,7 @@ document.addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo();}
   else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redo();}
-  else if(!(e.ctrlKey||e.metaKey||e.altKey)){const tools={v:'move',p:'draw',e:'erase',s:'start',h:'pan',b:'barrier',k:'sketch',t:'tree',u:'building'};if(tools[k]){e.preventDefault();setTool(tools[k]);}else if(k==='escape'){$('.studio').classList.remove('expanded','drawing-focus');$('#focus-drawing').textContent='Focus canvas ↗';$('#focus-drawing').setAttribute('aria-pressed','false');}}
+  else if(!(e.ctrlKey||e.metaKey||e.altKey)){const tools={v:'move',p:'draw',e:'erase',s:'start',h:'pan',b:'barrier',k:'sketch',t:'tree',u:'building'};if(k==='r'){e.preventDefault();editorApi.rotateBuilding(e.shiftKey?-15:15);}else if(tools[k]){e.preventDefault();setTool(tools[k]);}else if(k==='escape'){$('.studio').classList.remove('expanded','drawing-focus');$('#focus-drawing').textContent='Focus canvas ↗';$('#focus-drawing').setAttribute('aria-pressed','false');}}
 });
 function frame(){draw();requestAnimationFrame(frame);}
 function stopPreview(){if(mode!=='preview')return;mode='build';$('.studio').classList.remove('preview-active');$('#preview-canvas').hidden=true;canvas.hidden=false;$('#preview-mode').classList.remove('active');$('#build-mode').classList.add('active');$('#canvas-caption').innerHTML='TRACE EDITOR <span>/</span> TOP VIEW';syncUI();resize();setTool(tool);}
@@ -376,6 +378,7 @@ const editorApi={
   useGenerated(candidate){changeLayout(()=>{const previous=snapshot();remember();track={...emptyTrack(),...clone(candidate),complete:true,width:previous.width,weather:previous.weather,asphalt:previous.asphalt,grass:previous.grass,export:previous.export};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;analysisFocus=null;measurement=[];commit();setTool('move');fitView();toast('Generated circuit loaded. Every point is editable.');});},
   getTool:()=>tool,getTree:()=>selectedTree,getTreeBrush:()=>({...treeBrush}),getPitPlan:()=>pitLayout,fitView,
   getBuilding:()=>selectedBuilding,getBuildingBrush:()=>({...buildingBrush}),setBuildingBrush(values){buildingBrush=buildingSettings(values);},
+  rotateBuilding(degrees){const b=track.buildings?.[selectedBuilding];if(b){remember();b.rotation=((b.rotation+degrees)%360+360)%360;buildingBrush={...buildingBrush,rotation:b.rotation};commit();}else{buildingBrush.rotation=((buildingBrush.rotation+degrees)%360+360)%360;sceneryUI?.refresh();} },
   selectBuilding(index){selectedBuilding=track.buildings?.[index]?index:-1;selectedTree=selectedPoint=selectedBarrier=-1;if(selectedBuilding>=0)setTool('move');syncUI();},
   setSnap(enabled,meters){snapEnabled=enabled;snapMeters=meters;},
   setTreeBrush(values){treeBrush={...treeBrush,...values};},

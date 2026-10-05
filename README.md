@@ -1,4 +1,4 @@
-# APEX 7.0 — Circuit Studio for Assetto Corsa
+# APEX 8.0 — Circuit Studio for Assetto Corsa
 
 **[Open the website](https://deepinkgroup.github.io/apex-circuit-workshop/)**
 
@@ -8,15 +8,21 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Trace → inspect → export
 
+- The export bypasses the custom BC1 compressor with explicit 32-bit color/alpha masks and opaque pixels, adjusts material lighting, versions texture names, and includes explicit CSP texture bindings. The white-surface symptom still needs visual confirmation in-game.
+- Improved grass detail and optional CSP Grass FX, with road/pit/building occlusion. The colored base also works without CSP.
+- Building rotation via canvas handle (Shift snaps to 15°), degree input, slider, ±15° buttons, and 90° turn.
+- Automatic curved connections from custom pit entry/exit to the road, including elevation and bank blending; disable auto-connect for manual joins.
+- Corrected crew SIDE placement and sector TEXT keys after inspecting game-log errors.
+
 - Automatic textured grass across empty ground: meadow, mown lawn, and dry summer finishes.
-- Place pit garages, control towers, and pavilions. Edit dimensions, height, rotation, and roof finish; move or erase them with Undo support. Buildings appear in previews and exports with collision geometry.
+- Place pit garages, control towers, pavilions, covered grandstands, workshops, and marshal posts. Edit dimensions, height, rotation, and roof finish; move or erase them with Undo support. Buildings appear in previews and exports with collision geometry.
 - Assetto Corsa setup organized by identity, paddock, surface grip, and package contents. Solo/kart/race presets set pit count and AI inclusion; customize grid spacing and boundary height.
 - Select trees and buildings for the mod, inspect overlap warnings, and review the package before downloading. The 3D renderer uses the same procedural texture pixels as exported DDS files.
 
 - Per-point corner rounding, sharp/tight/rounded shapes, corner names, banking, and configurable kerb sides and widths.
 - Seeded random circuits replace the sample buttons. Choose flowing, technical, or fast layouts; preview an idea before applying it. Saved seeds are reproducible.
 - A larger canvas, compact drawing controls, and **Focus canvas** for a full-window drawing workspace.
-- Improved export materials: opaque DXT1 textures with nine mip levels, explicit shader settings, content-based texture names, and embedded plus separate DDS assets.
+- Improved export materials: opaque uncompressed BGRA DDS textures with nine mip levels, explicit shader settings, content-based texture names, and embedded plus separate DDS assets.
 - A color overview in the export dialog and a separate preview-image download. White minimap and outline masks remain available for their game UI roles.
 
 - A drawing ribbon with labeled tools, freehand sketches converted to editable points, meter-based snapping, live coordinates, and Fit view.
@@ -64,6 +70,7 @@ Open http://127.0.0.1:5173. Set the `PORT` environment variable to choose anothe
 | Draw a barrier | B |
 | Sketch a road / place trees | K / T |
 | Place a building | U |
+| Rotate selected building or placement brush by 15° | R / Shift + R |
 | Temporarily snap to the selected grid | Shift |
 | Exit focus / expanded canvas | Esc |
 | Undo / redo | Ctrl or Cmd + Z / Shift + Z; Ctrl + Y |

@@ -1,6 +1,6 @@
 # Native Assetto Corsa export
 
-APEX 7.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
+APEX 8.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
 
 ## Trace and inspect
 
@@ -27,13 +27,23 @@ The canvas is taller and **Focus canvas** fills the window. Escape exits focus.
 
 **Ground & buildings** covers all empty ground with grass. Choose Meadow, Mown lawn, or Dry summer; the finish is preserved in circuit files, the color preview, 3D, and the exported DDS material.
 
-Select a garage, control tower, or pavilion, set its dimensions and roof finish, then click **Place building** (U) and click clear ground. Move selects and drags it. The inspector changes dimensions and rotation after placement. Erase or Clear removes buildings; Undo restores them. Newly placed footprints avoid the road, pits, trees, and other buildings. Imported or edited footprints that overlap road or pits receive export review notes. Buildings sit on the flat grass base; they do not follow road elevation.
+Select a garage, control tower, pavilion, covered grandstand, workshop/warehouse, or marshal post, set its dimensions and roof finish, then click **Place building** (U) and click clear ground. Move selects and drags it. The inspector changes dimensions and rotation after placement. Rotate with the canvas handle above a selected building, the angle slider, ±15° and 90° buttons, or R / Shift+R. Shift while dragging the handle snaps to 15°. Enter any whole degree from 0–359. Erase or Clear removes buildings; Undo restores them. Newly placed footprints avoid the road, pits, trees, and other buildings. Imported or edited footprints that overlap road or pits receive export review notes. Buildings sit on the flat grass base; they do not follow road elevation.
 
 **Assetto Corsa setup** provides Solo practice (1 pit, AI off), Kart session (8 pits, AI on), and Race session (16 pits, AI on) presets. These configure the package, not car classes or game sessions. Set creator and location, edit the full circuit profile, choose 1–16 pit boxes, and set grid row spacing (4–12 m). **Design pit lane** opens the pit editor.
 
-Surface controls write asphalt/kerb/pit friction (0.8–1.2) and grass friction (0.3–0.9) to the existing surface definitions. Defaults are 1.00 and 0.70. Inclusion switches control generated kerbs, outer boundary walls, placed trees, placed buildings, and AI files. Boundary height is adjustable from 0.5–4 m. Grass and custom drawn barriers remain part of the track. The 3D preview shows the selected mod contents.
+Surface controls write asphalt/kerb/pit friction (0.8–1.2) and grass friction (0.3–0.9) to the existing surface definitions. Defaults are 1.00 and 0.70. Inclusion switches control generated kerbs, outer boundary walls, placed trees, placed buildings, and AI files. Boundary height is adjustable from 0.5–4 m. Grass and custom drawn barriers remain part of the track. The 3D preview shows the selected mod contents. **Grass blades in game · CSP** enables a Grass FX definition when Custom Shaders Patch is installed and Grass FX is enabled. Road, pits, kerbs, walls, and buildings occlude blades; the opaque grass base remains visible without CSP.
 
 The package summary displays the generated track folder, pit count, grass finish, and included scenery counts. Review the export notes and inspect spawns and pit routes. Drop the downloaded ZIP into Content Manager, install it, select the track, choose one car, and start Practice. Game weather and cars are selected in Content Manager.
+
+## Connected pit lane
+
+Custom pit paths automatically gain curved entry and exit ribbons anchored to the centerline in the driving direction. The connector positions recalculate when the road or pit points move. They carry road/pit elevation and banking, and taper their road join height to avoid a sharp 35 mm step. The service path remains editable and keeps its fitted pit bays. Connections appear in 2D, 3D, route images, KN5 geometry, and pit AI. In **Pit lane design**, turn off **Connect entry & exit to track** to keep manual joins. Inspect complex nearby corners and crossing paths in 3D. The automatic pit route already joins the road.
+
+## Material export and replacing an old mod
+
+The exporter now writes opaque uncompressed 32-bit BGRA DDS assets with full mipmaps, explicit channel masks, and pitch. All alpha pixels are 255. Native ksPerPixel material properties include zero emissive output and moderated diffuse/specular levels. Textures are embedded in KN5 and copied to texture/. Names start with apex8_ and include a content hash to distinguish them from previous cached assets. The optional CSP config explicitly binds each material to its corresponding diffuse texture. Raw textures make the package larger than the earlier BC1 export.
+
+Exit your active game session, export a fresh ZIP, install it with Content Manager replacing the old model/config files, then start Practice again. An already downloaded or installed ZIP cannot pick up website fixes automatically. If white surfaces persist, capture the in-game image and game log; the previous installed material table contained colored textures and zero emissive values, so the exact cause has not yet been confirmed.
 
 ## Scene and drawing tools
 
@@ -62,6 +72,7 @@ content/tracks/apex_your_circuit/
   data/surfaces.ini
   data/map.ini
   data/sections.ini
+  extension/ext_config.ini
   data/lighting.ini
   data/crew.ini
   ui/ui_track.json
@@ -82,7 +93,7 @@ AI files are omitted when disabled. The website generates preview and map PNGs d
 - Automatic pit-lane geometry needs inspection. For unusual tracks, draw a dedicated lane and choose a suitable pit-box count.
 - Tight corners can cause inner-edge overlap. The export report flags this; adjust the trace or width in 3D.
 - Self-crossing centerlines are rejected. Overpasses and separate layouts are not generated.
-- Placed broadleaf and pine trees are exported as simple meshes with collidable trunks. Garages, towers, and pavilions include collision bodies, detailed roofs, windows, and doors. Replay cameras and CSP-specific features are not included.
+- Placed broadleaf and pine trees are exported as simple meshes with collidable trunks. Garages, towers, and pavilions include collision bodies, detailed roofs, windows, and doors. Replay cameras are not included.
 - Weather presets affect the studio preview and exported sun settings. They do not enable rain physics; select game weather in Content Manager.
 - Uploaded references are stored locally in IndexedDB. Exported JSON retains the reference ID, so another device needs the image uploaded again.
 - Satellite imagery is used as a tracing reference with Esri attribution; it is not included in the exported mod.
@@ -91,4 +102,6 @@ AI files are omitted when disabled. The website generates preview and map PNGs d
 
 `npm test` includes an independent KN5 decoder, upward road-triangle checks for all starter circuits, AI point/extra-record checks, distinct spawn checks, ZIP path and CRC checks, and geometry/scale checks. A real Assetto Corsa/Content Manager installation is still needed to verify gameplay.
 
-Format research references: [Content Manager's AcTools KN5 writer](https://github.com/gro-ove/actools/blob/master/AcTools/Kn5File/Kn5Writer.cs), [Direct3D BC1/DXT1 format](https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-block-compression), [Content Manager material implementation](https://github.com/gro-ove/actools/blob/master/AcTools.Render/Kn5SpecificForward/Materials/Kn5MaterialSimple.cs), [AI spline reader](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiSpline.cs), [AI extra-point structure](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiPointExtra.cs), and the original [track authoring guide](https://assettocorsamods.net/threads/build-your-first-track-basic-guide.12/). The tracing workflow was informed by [TrackTracer](https://tracktracer.trackgrind.com/); APEX is independent of it and of Kunos Simulazioni.
+CSP references: [Grass FX](https://github.com/ac-custom-shaders-patch/acc-extension-config/wiki/Tracks-%E2%80%93-Grass-FX) and [shader/texture replacement syntax](https://github.com/ac-custom-shaders-patch/acc-extension-config/wiki/General-%E2%80%93-Shader-replacements).
+
+Format research references: [Content Manager's AcTools KN5 writer](https://github.com/gro-ove/actools/blob/master/AcTools/Kn5File/Kn5Writer.cs), [Direct3D DDS header](https://learn.microsoft.com/en-us/windows/win32/direct3ddds/dds-header) and [pixel masks](https://learn.microsoft.com/en-us/windows/win32/direct3ddds/dds-pixelformat), [Content Manager material implementation](https://github.com/gro-ove/actools/blob/master/AcTools.Render/Kn5SpecificForward/Materials/Kn5MaterialSimple.cs), [AI spline reader](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiSpline.cs), [AI extra-point structure](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiPointExtra.cs), and the original [track authoring guide](https://assettocorsamods.net/threads/build-your-first-track-basic-guide.12/). The tracing workflow was informed by [TrackTracer](https://tracktracer.trackgrind.com/); APEX is independent of it and of Kunos Simulazioni.
