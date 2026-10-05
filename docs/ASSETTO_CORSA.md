@@ -21,6 +21,8 @@ APEX 8.0 traces a circuit and generates a prototype track ZIP entirely in the br
 
 Select a road handle, then use **Corner workshop** to name it, adjust rounding, choose sharp/tight/rounded geometry, set banking, and select kerb side and width for its outgoing section. Enable **Smooth corners** for rounding; the global **Generate kerbs** toggle controls all kerbs. These changes carry into the 3D preview and mod.
 
+Sharp corners retain their exact control points in the road mesh. Road and kerbs share joined boundary vertices; oversized corner extensions are bounded and local inner-edge loops are trimmed. Kerb width changes use shared endpoints, and pit openings are consistent in the drawing, 3D model, and color preview. Corners tighter than half the road width still need visual review because the road itself may overlap.
+
 The canvas is taller and **Focus canvas** fills the window. Escape exits focus.
 
 ## Ground, buildings, and mod setup
@@ -48,6 +50,10 @@ Choose oak, pine, white-bark birch, cypress, palm, or cherry blossom in **Weathe
 ### Driving direction
 
 The export preserves the point order and the editor's turn direction. Painted road arrows show the forward direction in 3D and the mod. The native car convention is +Z forward and +X left, confirmed from the stock car's wheel nodes; the editor uses +Y downward and converts it to native +Z. Minimap image projection is separate from driving coordinates. Re-export and replace an old installed mod to get the corrected geometry; existing ZIP files do not update themselves.
+
+The start/finish checkerboard is a separate visual paint mesh, without a physical surface prefix. Its white tiles follow road-triangle elevation with a 2 mm display offset, and dark tiles show the underlying asphalt. The collision road contains no raised start/finish tiles.
+
+The minimap uses native X/Z without reflecting Z. Its projection is `pixel X = (world X + X_OFFSET) / SCALE_FACTOR` and `pixel Y = (world Z + Z_OFFSET) / SCALE_FACTOR`. `WIDTH` and `HEIGHT` are image pixels; `SCALE_FACTOR` is meters per pixel. The PNG and INI share one calculation, with bounds that include road edges, pit joins, and bays. The map mask is independent of the fitted color preview. This follows [Content Manager's map generator](https://github.com/gro-ove/actools/blob/master/AcTools.Render/Kn5SpecificSpecial/TrackMapRenderer.cs).
 
 ## Material export and replacing an old mod
 

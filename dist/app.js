@@ -1,23 +1,24 @@
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261006-scene';
-import {ReferenceLayer} from './tracing.js?v=20261006-scene';
-import {mountTracer} from './tracer-ui.js?v=20261006-scene';
-import {TrackPreview} from './preview3d.js?v=20261006-scene';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261006-scene';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-scene';
-import {mountAnalysis} from './analysis-ui.js?v=20261006-scene';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261006-scene';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261006-scene';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261006-scene';
-import {toGamePoint} from './coordinates.js?v=20261006-scene';
-import {mountDrawStudio} from './studio-ui.js?v=20261006-scene';
-import {cornerSettings,kerbSides} from './corner-settings.js?v=20261006-scene';
-import {mountCorners} from './corner-ui.js?v=20261006-scene';
-import {mountGenerator} from './generator-ui.js?v=20261006-scene';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261006-scene';
-import {mountScenery} from './scenery-ui.js?v=20261006-scene';
-import {mountACSetup} from './ac-setup-ui.js?v=20261006-scene';
-import {mountSharing} from './sharing.js?v=20261006-scene';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261006-scene';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261006-surfaces';
+import {ReferenceLayer} from './tracing.js?v=20261006-surfaces';
+import {mountTracer} from './tracer-ui.js?v=20261006-surfaces';
+import {TrackPreview} from './preview3d.js?v=20261006-surfaces';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261006-surfaces';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-surfaces';
+import {mountAnalysis} from './analysis-ui.js?v=20261006-surfaces';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261006-surfaces';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261006-surfaces';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261006-surfaces';
+import {toGamePoint} from './coordinates.js?v=20261006-surfaces';
+import {buildRoadLayout,drawRoadLayout} from './road-layout.js?v=20261006-surfaces';
+import {mountDrawStudio} from './studio-ui.js?v=20261006-surfaces';
+import {cornerSettings} from './corner-settings.js?v=20261006-surfaces';
+import {mountCorners} from './corner-ui.js?v=20261006-surfaces';
+import {mountGenerator} from './generator-ui.js?v=20261006-surfaces';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261006-surfaces';
+import {mountScenery} from './scenery-ui.js?v=20261006-surfaces';
+import {mountACSetup} from './ac-setup-ui.js?v=20261006-surfaces';
+import {mountSharing} from './sharing.js?v=20261006-surfaces';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261006-surfaces';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -93,6 +94,7 @@ let selectedBarrier=-1,activeBarrier=-1;const asphaltTextures=new Map();
 const canvas=$('#track-canvas'),ctx=canvas.getContext('2d');
 let geometry=buildGeometry(track.points,track.smooth);
 let pitLayout=buildPitPlan(track);
+let roadLayout=buildRoadLayout(track,geometry,pitLayout);
 let analysisOverlay=false,analysisData=null,analysisFocus=null;
 
 function toast(message) {const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),3200);}
@@ -108,6 +110,7 @@ function rebuild() {
   samples=geometry.samples;sampleSegments=geometry.segments;cumulative=geometry.cumulative;length=geometry.length;
   roadWidth=track.width/(track.scale||.2);
   pitLayout=buildPitPlan(track);
+  roadLayout=buildRoadLayout(track,geometry,pitLayout);
 }
 const pointAt = fraction => pointOnTrack(geometry,fraction);
 const nearest = p => closestOnTrack(geometry,p);
@@ -153,9 +156,8 @@ function drawTrack() {
   if(track.points.length<2){strokePath('#a9b19a',2,track.points,false);return;}
   // Road finish and kerb dimensions use the circuit's real-world scale.
   const meters=1/(track.scale||.2);strokePath('#d8d9c7',roadWidth+5*meters);strokePath('#c2c6b2',roadWidth+2.4*meters);
-  if(track.export?.kerbs!==false){for(let i=0;i<(track.complete!==false?samples.length:samples.length-1);i++){const a=samples[i],b=samples[(i+1)%samples.length],direction=Math.atan2(b.y-a.y,b.x-a.x),nx=Math.sin(direction),ny=-Math.cos(direction),width=(a.kerbWidth||.7)*meters;for(const side of kerbSides(a.kerbs)){const inner=side*roadWidth/2,outer=inner+side*width;ctx.beginPath();ctx.moveTo(a.x+nx*inner,a.y+ny*inner);ctx.lineTo(b.x+nx*inner,b.y+ny*inner);ctx.lineTo(b.x+nx*outer,b.y+ny*outer);ctx.lineTo(a.x+nx*outer,a.y+ny*outer);ctx.closePath();ctx.fillStyle=Math.floor(cumulative[i]*track.scale/1.5)%2?'#f0ece0':'#ba5546';ctx.fill();}}}
   const style=track.asphalt||'fresh';if(!asphaltTextures.has(style))asphaltTextures.set(style,asphaltPattern(ctx,style));
-  strokePath('#23272b',roadWidth);strokePath('#e5e4d9',Math.max(.5,roadWidth-.2*meters));strokePath(asphaltTextures.get(style),Math.max(.25,roadWidth-.4*meters));
+  drawRoadLayout(ctx,roadLayout,asphaltTextures.get(style),track.export?.kerbs!==false);
   if(track.line){ctx.setLineDash([7,9]);strokePath('#aee0a16b',1.6);ctx.setLineDash([]);}
   if(track.complete===false){const a=track.points[0],b=track.points[track.points.length-1];[a,b].forEach((p,i)=>{ctx.fillStyle=i?'#ec7c44':'#4c9d86';ctx.beginPath();ctx.arc(p.x,p.y,6/scale,0,Math.PI*2);ctx.fill();ctx.fillStyle='#38443b';ctx.font=`${10/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(i?'END':'START',p.x,p.y-14/scale);});return;}
   const s=pointAt(track.start),w=roadWidth;

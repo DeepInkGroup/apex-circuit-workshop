@@ -1,6 +1,6 @@
-import {WEATHER,TREE_TYPES} from './environment.js?v=20261006-scene';
-import {TREE_SPECIES} from './trees.js?v=20261006-scene';
-import {PIT_STYLES,pitSettings} from './pit-plan.js?v=20261006-scene';
+import {WEATHER,TREE_TYPES} from './environment.js?v=20261006-surfaces';
+import {TREE_SPECIES} from './trees.js?v=20261006-surfaces';
+import {PIT_STYLES,pitSettings} from './pit-plan.js?v=20261006-surfaces';
 const $=s=>document.querySelector(s);
 export function mountDrawStudio(api){
   const tools=$('#editor-tools'),labels={move:'Move',draw:'Points',erase:'Erase',start:'Start line',pan:'Pan',measure:'Calibrate',pit:'Pit route',barrier:'Barrier',sketch:'Freehand',tree:'Trees',building:'Buildings'};

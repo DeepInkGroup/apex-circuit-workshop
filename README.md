@@ -8,6 +8,9 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Sharp corners now retain their exact vertices and use joined road/kerb edges with bounded corner extensions and trimmed inner loops. The drawing, 3D preview, and color export share the same kerb geometry and pit openings.
+- Start/finish checkerboard tiles are visual paint on a separate non-collision mesh. Dark squares use the underlying asphalt; no elevated checkerboard faces are added to the road collision mesh. Paint follows the actual road triangles, including elevation and banking.
+- Corrected minimap Z direction and shared its world-to-pixel transform with `map.ini`. Image dimensions, offsets, and meters per pixel are calculated together; the map also includes connected pits and parking bays outside the drawing area.
 - Preserved driving turn direction across the editor, 3D model, KN5 export, AI, and spawns: a drawn right turn stays a right turn. Native car axes were compared with the stock Assetto Corsa model. Road arrows show the forward direction in 3D and in-game. Fresh exports replace previously mirrored mods.
 - Automatic pits now use a separate service straight outside the racing surface, with fitted bays and curved entry/exit connections. Adjust the minimum road gap and pit side, or use **Fit automatic connected lane** to replace a custom route that overlaps the road. The grass base expands to support pits outside the drawing bounds.
 - Six tree models: oak, pine, birch with white bark, slender cypress, palm with fronds, and pink cherry blossom. Species and dimensions survive saved circuits, sharing, and mod exports.

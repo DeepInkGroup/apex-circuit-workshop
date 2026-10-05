@@ -1,4 +1,4 @@
-import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261006-scene';
+import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261006-surfaces';
 const lerp=(a,b,t)=>a+(b-a)*t;
 export const PIT_STYLES={blue:{label:'Blue pit lane',color:[60,89,108],line:'#81c1d4'},classic:{label:'Classic asphalt',color:[61,65,69],line:'#e3d79c'}};
 export function pitSettings(track){return {width:clamp(Number(track.pitSettings?.width)||6,4,10),setback:clamp(Number(track.pitSettings?.setback)||5,3,30),style:PIT_STYLES[track.pitSettings?.style]?track.pitSettings.style:'blue',side:['left','right'].includes(track.pitSettings?.side)?track.pitSettings.side:'auto',autoConnect:track.pitSettings?.autoConnect!==false};}

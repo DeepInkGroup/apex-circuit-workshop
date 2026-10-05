@@ -1,24 +1,47 @@
-import {buildGeometry} from './engine.js?v=20261006-scene';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261006-scene';
-import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261006-scene';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-scene';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261006-scene';
-import {WEATHER} from './environment.js?v=20261006-scene';
-import {drawTree} from './trees.js?v=20261006-scene';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261006-scene';
+import {buildGeometry} from './engine.js?v=20261006-surfaces';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261006-surfaces';
+import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261006-surfaces';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-surfaces';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261006-surfaces';
+import {WEATHER} from './environment.js?v=20261006-surfaces';
+import {drawTree} from './trees.js?v=20261006-surfaces';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261006-surfaces';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261006-surfaces';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261006-surfaces';
+import {toGamePoint} from './coordinates.js?v=20261006-surfaces';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
 function header(eyebrow,title){return `<div class="dialog-top"><p class="eyebrow">${eyebrow}</p><button class="icon-button" data-close aria-label="Close">×</button></div><h2>${title}</h2>`;}
 function png(canvas){return new Promise((resolve,reject)=>canvas.toBlob(async b=>b?resolve(new Uint8Array(await b.arrayBuffer())):reject(new Error('Preview image creation failed.')),'image/png'));}
 export async function exportImages(track){
-  const geometry=buildGeometry(track.points,track.smooth),s=track.scale||.2,plan=buildPitPlan(track),footprint=(track.export?.buildings!==false?(track.buildings||[]):[]).flatMap(b=>buildingCorners(b,s)),margin=track.width/s+20,minX=Math.min(0,...footprint.map(p=>p.x-margin),plan.bounds.minX-margin),maxX=Math.max(1000,...footprint.map(p=>p.x+margin),plan.bounds.maxX+margin),minY=Math.min(0,...footprint.map(p=>p.y-margin),plan.bounds.minY-margin),maxY=Math.max(740,...footprint.map(p=>p.y+margin),plan.bounds.maxY+margin),factor=Math.min(960/(maxX-minX),580/(maxY-minY)),tx=500-(minX+maxX)/2*factor,ty=310-(minY+maxY)/2*factor;
-  const draw=(canvas,background,color,flip=false)=>{const ctx=canvas.getContext('2d');if(background){ctx.fillStyle=grassPattern(ctx,track.grass);ctx.fillRect(0,0,canvas.width,canvas.height);}ctx.save();ctx.scale(canvas.width/1000,canvas.height/740);ctx.translate(tx,flip?740-ty:ty);ctx.scale(factor,flip?-factor:factor);const path=(points,width,stroke,closed=false)=>{ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));if(closed)ctx.closePath();ctx.lineWidth=width;ctx.strokeStyle=stroke;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();};if(background){ctx.shadowColor='#233b3333';ctx.shadowBlur=5;path(geometry.samples,track.width/s+3/s,'#abb79e',true);ctx.shadowBlur=0;if(track.export?.kerbs!==false){for(let i=0;i<geometry.samples.length;i++){const a=geometry.samples[i],b=geometry.samples[(i+1)%geometry.samples.length],angle=Math.atan2(b.y-a.y,b.x-a.x),normal={x:Math.sin(angle),y:-Math.cos(angle)},sides=a.kerbs==='off'?[]:a.kerbs==='left'?[1]:a.kerbs==='right'?[-1]:[-1,1];for(const side of sides){const inner=side*track.width/2/s,outer=inner+side*(a.kerbWidth||.7)/s;ctx.beginPath();ctx.moveTo(a.x+normal.x*inner,a.y+normal.y*inner);ctx.lineTo(b.x+normal.x*inner,b.y+normal.y*inner);ctx.lineTo(b.x+normal.x*outer,b.y+normal.y*outer);ctx.lineTo(a.x+normal.x*outer,a.y+normal.y*outer);ctx.closePath();ctx.fillStyle=Math.floor(geometry.cumulative[i]*s/1.5)%2?'#eee9d9':'#b95040';ctx.fill();}}}path(geometry.samples,track.width/s,color,true);path(geometry.samples,Math.max(.5,track.width/s-.3/s),asphaltPattern(ctx,track.asphalt),true);}else path(geometry.samples,track.width/s,color,true);for(const p of [plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection])if(p.length>=2)path(p,plan.settings.width/s,background?`rgb(${PIT_STYLES[plan.settings.style].color.join(',')})`:color);if(background){plan.bays.forEach(b=>{ctx.beginPath();b.corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='#acb4ab';ctx.fill();ctx.strokeStyle='#e8cf88';ctx.lineWidth=.14/s;ctx.stroke();});(track.barriers||[]).forEach(b=>path(b.points,Math.max(2,b.width/s),'#bdc0bd'));(track.export?.buildings!==false?(track.buildings||[]):[]).forEach(b=>drawBuilding(ctx,b,s,false,factor));(track.export?.trees!==false?(track.trees||[]):[]).forEach(t=>drawTree(ctx,t,s,false,factor));}ctx.restore();};
-  const preview=document.createElement('canvas');preview.width=1000;preview.height=740;draw(preview,(WEATHER[track.weather]||WEATHER.sunny).ground,`rgb(${(ASPHALT[track.asphalt]||ASPHALT.fresh).color.join(',')})`);
+  const geometry=buildGeometry(track.points,track.smooth,track.complete!==false),s=track.scale||.2,plan=buildPitPlan(track),road=buildRoadLayout(track,geometry,plan),mapLayout=createTrackMap(track,geometry,plan,road);
+  const footprint=(track.export?.buildings!==false?(track.buildings||[]):[]).flatMap(b=>buildingCorners(b,s)),margin=track.width/s+20,minX=Math.min(0,...footprint.map(p=>p.x-margin),plan.bounds.minX-margin),maxX=Math.max(1000,...footprint.map(p=>p.x+margin),plan.bounds.maxX+margin),minY=Math.min(0,...footprint.map(p=>p.y-margin),plan.bounds.minY-margin),maxY=Math.max(740,...footprint.map(p=>p.y+margin),plan.bounds.maxY+margin),factor=Math.min(960/(maxX-minX),580/(maxY-minY)),tx=500-(minX+maxX)/2*factor,ty=310-(minY+maxY)/2*factor;
+  const routes=[plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection];
+  const draw=(canvas,background)=>{
+    const ctx=canvas.getContext('2d');if(background){ctx.fillStyle=grassPattern(ctx,track.grass);ctx.fillRect(0,0,canvas.width,canvas.height);}
+    ctx.save();ctx.translate(tx,ty);ctx.scale(factor,factor);
+    const path=(points,width,color)=>{if(points.length<2)return;ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.lineWidth=width;ctx.strokeStyle=color;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();};
+    if(background)drawRoadLayout(ctx,road,asphaltPattern(ctx,track.asphalt),track.export?.kerbs!==false);else fillRoadPolygons(ctx,road.quads,'#fff');
+    routes.forEach(p=>path(p,plan.settings.width/s,background?`rgb(${PIT_STYLES[plan.settings.style].color.join(',')})`:'#fff'));
+    if(background){
+      plan.bays.forEach(b=>{fillRoadPolygons(ctx,[b.corners],'#acb4ab');ctx.strokeStyle='#e8cf88';ctx.lineWidth=.14/s;ctx.stroke();});
+      (track.barriers||[]).forEach(b=>path(b.points,Math.max(2,b.width/s),'#bdc0bd'));
+      (track.export?.buildings!==false?(track.buildings||[]):[]).forEach(b=>drawBuilding(ctx,b,s,false,factor));
+      (track.export?.trees!==false?(track.trees||[]):[]).forEach(t=>drawTree(ctx,t,s,false,factor));
+    }
+    ctx.restore();
+  };
+  const preview=document.createElement('canvas');preview.width=1000;preview.height=740;draw(preview,true);
   const ctx=preview.getContext('2d');ctx.fillStyle='#f7f5ec';ctx.fillRect(20,625,960,95);ctx.fillStyle='#29392e';ctx.font='bold 30px sans-serif';ctx.fillText(track.name.slice(0,60),42,669,910);ctx.font='16px sans-serif';ctx.fillStyle='#71826a';ctx.fillText(`${Math.round(geometry.length*s)} m · ${track.width} m wide · APEX / TRACER`,42,699);
-  const outline=document.createElement('canvas');outline.width=1000;outline.height=740;draw(outline,null,'#ffffff');
-  // The in-game map retains the original world transform from data/map.ini.
-  const map=document.createElement('canvas');map.width=1000;map.height=740;const mc=map.getContext('2d');mc.strokeStyle='#fff';mc.lineWidth=track.width/s;mc.lineCap='round';mc.lineJoin='round';mc.beginPath();geometry.samples.forEach((p,i)=>i?mc.lineTo(p.x,740-p.y):mc.moveTo(p.x,740-p.y));mc.closePath();mc.stroke();
+  const outline=document.createElement('canvas');outline.width=1000;outline.height=740;draw(outline,false);
+  // The PNG and INI use the same native-world projection. Keep the separate
+  // fitted color preview transform out of the car-marker/minimap calculation.
+  const map=document.createElement('canvas');map.width=mapLayout.width;map.height=mapLayout.height;const mc=map.getContext('2d'),project=p=>worldToMap(toGamePoint(p,track),mapLayout);
+  fillRoadPolygons(mc,road.quads.map(corners=>corners.map(project)),'#fff');
+  mc.strokeStyle='#fff';mc.lineWidth=plan.settings.width/mapLayout.scaleFactor;mc.lineCap='round';mc.lineJoin='round';
+  routes.forEach(path=>{if(path.length<2)return;mc.beginPath();path.map(project).forEach((p,i)=>i?mc.lineTo(p.x,p.y):mc.moveTo(p.x,p.y));mc.stroke();});
+  fillRoadPolygons(mc,plan.bays.map(b=>b.corners.map(project)),'#fff');
   return {'ui/preview.png':await png(preview),'ui/outline.png':await png(outline),'map.png':await png(map)};
 }
 
