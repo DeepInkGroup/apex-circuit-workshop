@@ -1,6 +1,6 @@
 # Native Assetto Corsa export
 
-APEX 5.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
+APEX 6.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
 
 ## Trace and inspect
 
@@ -15,6 +15,14 @@ APEX 5.0 traces a circuit and generates a prototype track ZIP entirely in the br
 9. Select **Analyze** for geometry metrics, corner inventory, the elevation profile, calibration source, and export requirements. Click a corner to find it on the map. Use **Reverse direction** to reverse the road and pit direction while preserving the physical banking orientation.
 10. Download the report as JSON or geometry samples as CSV. Select **3D** to orbit and inspect the geometry. Hide the side panel or expand the workspace for more room.
 
+## Random layouts and custom corners
+
+**A little inspiration** now generates random layouts. Choose a character, target length, control-point count, and seed. **New idea** changes the seed and preview. **Use this circuit** applies the idea as a closed, editable circuit. The seed is saved in circuit JSON. Target length sets the physical scale; no satellite calibration is implied.
+
+Select a road handle, then use **Corner workshop** to name it, adjust rounding, choose sharp/tight/rounded geometry, set banking, and select kerb side and width for its outgoing section. Enable **Smooth corners** for rounding; the global **Generate kerbs** toggle controls all kerbs. These changes carry into the 3D preview and mod.
+
+The canvas is taller and **Focus canvas** fills the window. Escape exits focus.
+
 ## Scene and drawing tools
 
 Use **Freehand** (K) to sketch a road section, then refine its editable points. **Snap** aligns placement in meters; Shift temporarily enables it. **Fit view** frames the circuit and generated pits.
@@ -25,6 +33,8 @@ In **Weather & trees**, choose a preview mood, place trees with T, or scatter ed
 
 Click **Export to Assetto Corsa**, review the report, and download the ZIP. Drop the ZIP into Content Manager and install the detected track. Alternatively extract its `content/` folder into the Assetto Corsa game directory.
 
+The exported KN5 embeds colored opaque DXT1 DDS textures with complete mip chains. Matching copies are included in `texture/` for editing. All materials explicitly set diffuse, ambient, specular, and zero emissive properties. Texture names include a content checksum. When updating an installed circuit, replace its old version. The export dialog displays the color overview before downloading; `map.png` and `ui/outline.png` are intentionally white route masks for the game UI.
+
 Start with a single-car Practice session. Check spawn placement, collision surfaces, timing, and elevation transitions before attempting races. APEX's automated file checks do **not** certify in-game compatibility.
 
 The folder layout is:
@@ -33,6 +43,7 @@ The folder layout is:
 content/tracks/apex_your_circuit/
   apex_your_circuit.kn5
   models.ini
+  texture/apex_*.dds
   map.png
   ai/fast_lane.ai
   ai/pit_lane.ai
@@ -68,4 +79,4 @@ AI files are omitted when disabled. The website generates preview and map PNGs d
 
 `npm test` includes an independent KN5 decoder, upward road-triangle checks for all starter circuits, AI point/extra-record checks, distinct spawn checks, ZIP path and CRC checks, and geometry/scale checks. A real Assetto Corsa/Content Manager installation is still needed to verify gameplay.
 
-Format research references: [Content Manager's AcTools KN5 writer](https://github.com/gro-ove/actools/blob/master/AcTools/Kn5File/Kn5Writer.cs), [AI spline reader](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiSpline.cs), [AI extra-point structure](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiPointExtra.cs), and the original [track authoring guide](https://assettocorsamods.net/threads/build-your-first-track-basic-guide.12/). The tracing workflow was informed by [TrackTracer](https://tracktracer.trackgrind.com/); APEX is independent of it and of Kunos Simulazioni.
+Format research references: [Content Manager's AcTools KN5 writer](https://github.com/gro-ove/actools/blob/master/AcTools/Kn5File/Kn5Writer.cs), [Direct3D BC1/DXT1 format](https://learn.microsoft.com/en-us/windows/win32/direct3d10/d3d10-graphics-programming-guide-resources-block-compression), [Content Manager material implementation](https://github.com/gro-ove/actools/blob/master/AcTools.Render/Kn5SpecificForward/Materials/Kn5MaterialSimple.cs), [AI spline reader](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiSpline.cs), [AI extra-point structure](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiPointExtra.cs), and the original [track authoring guide](https://assettocorsamods.net/threads/build-your-first-track-basic-guide.12/). The tracing workflow was informed by [TrackTracer](https://tracktracer.trackgrind.com/); APEX is independent of it and of Kunos Simulazioni.

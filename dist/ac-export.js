@@ -4,6 +4,8 @@ import {ASPHALT} from './surfaces.js';
 import {analyzeTrack} from './analysis.js';
 import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js';
 import {WEATHER} from './environment.js';
+import {kerbSides} from './corner-settings.js';
+import {createTexture,materialProperties} from './textures.js';
 
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true};
 export function trackSlug(name){return ('apex_'+name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')).slice(0,32).replace(/_+$/,'')||'apex_circuit';}
@@ -21,7 +23,7 @@ function quad(m,a,b,c,d,uvScale=5){
   for(const p of [a,b,c,d])m.vertices.push({pos:p,normal,uv:[p[0]/uvScale,p[2]/uvScale],tangent:[1,0,0]});
   for(const triangle of [[0,1,2],[0,2,3]]){const positions=[a,b,c,d],n=cross(sub(positions[triangle[1]],positions[triangle[0]]),sub(positions[triangle[2]],positions[triangle[0]]));if(surface&&n[1]<0)[triangle[1],triangle[2]]=[triangle[2],triangle[1]];m.indices.push(...triangle.map(i=>i+base));}
 }
-function frame(p,t){const pos=world(p,t),forward=[Math.cos(p.angle),0,-Math.sin(p.angle)],left=[-forward[2],0,forward[0]];return {pos,forward,left,bank:Math.tan((p.bank||0)*Math.PI/180)};}
+function frame(p,t){const pos=world(p,t),forward=[Math.cos(p.angle),0,-Math.sin(p.angle)],left=[-forward[2],0,forward[0]];return {pos,forward,left,bank:Math.tan((p.bank||0)*Math.PI/180),kerbs:p.kerbs||'inherit',kerbWidth:p.kerbWidth||.7};}
 const edge=(f,offset,lift=0)=>[f.pos[0]+f.left[0]*offset,f.pos[1]+offset*f.bank+lift,f.pos[2]+f.left[2]*offset];
 function band(m,frames,left,right,lift=0,closed=true){
   const count=closed?frames.length:frames.length-1;
@@ -54,7 +56,7 @@ export function createScene(track){
     const white=add('1KERB_WHITE',2),red=add('1KERB_RED',3);
     for(let i=0;i<(closed?count:count-1);i++){
       const a=frames[i],b=frames[(i+1)%count],m=Math.floor(i*total/count/1.5)%2?white:red;
-      for(const side of [-1,1]){const l=side>0?half+.7:-half,r=side>0?half:-half-.7;quad(m,edge(a,l,.035),edge(b,l,.035),edge(b,r,.035),edge(a,r,.035));}
+      for(const side of kerbSides(a.kerbs)){const outer=side*(half+a.kerbWidth),inner=side*half;quad(m,edge(a,outer,.035),edge(b,outer,.035),edge(b,inner,.035),edge(a,inner,.035));}
     }
   }
   const markings=add('ROAD_MARKINGS',2);band(markings,frames,half-.15,half-.28,.012,closed);band(markings,frames,-half+.28,-half+.15,.012,closed);
@@ -105,24 +107,16 @@ export function createScene(track){
   return {meshes:meshes.filter(m=>m.indices.length),dummies,materials,frames,pitFrames,pitPlan,weather,length:total,pitCount,options};
 }
 
-function dds(color,noiseLevel=5){
-  const w=new BinaryWriter(),size=32;
-  w.bytes('DDS ').u32(124).u32(0x100f).u32(size).u32(size).u32(size*4).u32(0).u32(0);
-  for(let i=0;i<11;i++)w.u32(0);
-  w.u32(32).u32(0x41).u32(0).u32(32).u32(0x00ff0000).u32(0x0000ff00).u32(0x000000ff).u32(0xff000000).u32(0x1000);
-  for(let i=0;i<4;i++)w.u32(0);
-  for(let y=0;y<size;y++)for(let x=0;x<size;x++){const noise=(((x*73+y*47)%31)-15)*noiseLevel/15;w.u8(clamp(color[2]+noise,0,255)).u8(clamp(color[1]+noise,0,255)).u8(clamp(color[0]+noise,0,255)).u8(255);}
-  return w.finish();
-}
 export function writeKn5(scene){
+  const textures=scene.textures||(scene.textures=scene.materials.map(m=>createTexture(m)));
   const w=new BinaryWriter();w.bytes('sc6969').u32(6).u32(0).u32(scene.materials.length);
-  scene.materials.forEach((m,i)=>{const bytes=dds(m.color,m.noise);w.u32(1).string(`apex_${i}.dds`).u32(bytes.length).bytes(bytes);});
+  textures.forEach(({name,bytes})=>w.u32(1).string(name).u32(bytes.length).bytes(bytes));
   w.u32(scene.materials.length);
   scene.materials.forEach((m,i)=>{
     w.string(m.name).string('ksPerPixel').u8(0).u8(0).u32(0);
-    const properties={ksAmbient:.5,ksDiffuse:.7,ksSpecular:.04,ksSpecularEXP:10};w.u32(Object.keys(properties).length);
-    Object.entries(properties).forEach(([name,value])=>{w.string(name).f32(value);for(let j=0;j<9;j++)w.f32(0);});
-    w.u32(1).string('txDiffuse').u32(0).string(`apex_${i}.dds`);
+    const properties=materialProperties(m);w.u32(Object.keys(properties).length);
+    Object.entries(properties).forEach(([name,value])=>{w.string(name).f32(Array.isArray(value)?0:value).floats([0,0]).floats(Array.isArray(value)?value:[0,0,0]).floats([0,0,0,0]);});
+    w.u32(1).string('txDiffuse').u32(0).string(textures[i].name);
   });
   const identity=[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
   w.u32(1).string('APEX_ROOT').u32(scene.meshes.length+scene.dummies.length).u8(1).floats(identity);
@@ -181,6 +175,7 @@ export function exportFiles(track,images={}){
   const scene=createScene(track),slug=trackSlug(track.name),root=`content/tracks/${slug}/`,files={};
   const put=(p,v)=>files[root+p]=v;
   put(`${slug}.kn5`,writeKn5(scene));put('models.ini',`[MODEL_0]\nFILE=${slug}.kn5\nPOSITION=0,0,0\nROTATION=0,0,0\n`);
+  scene.textures.forEach(texture=>put(`texture/${texture.name}`,texture.bytes));
   put('data/surfaces.ini',['ROAD','GRASS','KERB','PIT','WALL'].map((key,i)=>`[SURFACE_${i}]\n${surface(key,!['GRASS','WALL'].includes(key),key==='PIT')}`).join('\n'));
   put('data/lighting.ini',`[LIGHTING]\nSUN_PITCH_ANGLE=${scene.weather.sunPitch}\nSUN_HEADING_ANGLE=${scene.weather.sunHeading}\n`);
   put('data/crew.ini','[HEADER]\nVERSION=1\n[CREW]\nSIDE=1\n');
@@ -190,9 +185,9 @@ export function exportFiles(track,images={}){
   if(scene.options.ai){put('ai/fast_lane.ai',writeAi(scene.frames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitFrames,scene.pitPlan.settings.width,false));}
   for(const [name,bytes] of Object.entries(images))put(name,bytes);
   if(images['map.png'])put('data/map.ini',`[PARAMETERS]\nWIDTH=1000\nHEIGHT=740\nX_OFFSET=${500*unit(track)}\nZ_OFFSET=${370*unit(track)}\nSCALE_FACTOR=${unit(track)}\nDRAWING_SIZE=10\nMARGIN=0\n`);
-  put('apex_source.json',JSON.stringify({format:'apex-circuit',version:5,...track,background:null},null,2));
+  put('apex_source.json',JSON.stringify({format:'apex-circuit',version:6,...track,background:null},null,2));
   put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
-  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nPlaced trees and styled pit lanes are included. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nAI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nThis export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
+  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nColored DXT1 textures with mipmaps are embedded in the KN5 and copied to texture/. Opaque materials include explicit shader properties. Placed trees, custom corners and styled pit lanes are included. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nAI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nReplace the old version of this track when installing a fresh export. ui/preview.png is the color overview; map.png and ui/outline.png are white route masks by design. This export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
   return {files,scene,slug,report};
 }
 export function exportZip(track,images={}){const result=exportFiles(track,images);return {...result,bytes:zipFiles(result.files)};}

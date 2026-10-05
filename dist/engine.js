@@ -4,8 +4,8 @@ const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const wrap = n => ((n % 1) + 1) % 1;
 
 function spline(a, b, c, d, t) {
-  const t2 = t * t, t3 = t2 * t;
-  return Object.fromEntries(['x', 'y'].map(k => [k, .5 * (2*b[k] + (-a[k]+c[k])*t + (2*a[k]-5*b[k]+4*c[k]-d[k])*t2 + (-a[k]+3*b[k]-3*c[k]+d[k])*t3)]));
+  const t2=t*t,t3=t2*t,start=clamp(Number.isFinite(b.rounding)?b.rounding:1,0,1),end=clamp(Number.isFinite(c.rounding)?c.rounding:1,0,1);
+  return Object.fromEntries(['x','y'].map(k=>[k,(2*t3-3*t2+1)*b[k]+(t3-2*t2+t)*(c[k]-a[k])*.5*start+(-2*t3+3*t2)*c[k]+(t3-t2)*(d[k]-b[k])*.5*end]));
 }
 
 export function buildGeometry(points, smooth = true, closed = true) {
@@ -21,6 +21,7 @@ export function buildGeometry(points, smooth = true, closed = true) {
       const p=smooth ? spline(a,b,c,d,t) : {x:b.x+(c.x-b.x)*t, y:b.y+(c.y-b.y)*t};
       p.elevation=(Number(b.elevation)||0)*(1-t)+(Number(c.elevation)||0)*t;
       p.bank=(Number(b.bank)||0)*(1-t)+(Number(c.bank)||0)*t;
+      p.kerbs=b.kerbs||'inherit';p.kerbWidth=clamp(Number(b.kerbWidth)||.7,.25,2);p.cornerName=b.cornerName||'';
       samples.push(p);
       segments.push(i);
     }
@@ -38,7 +39,7 @@ export function pointOnTrack(g, fraction) {
   if(g.closed===false&&lo===g.samples.length-1)lo--;
   const a = g.samples[lo], b = g.samples[(lo+1)%g.samples.length], segmentLength = distance(a,b);
   const t = segmentLength ? (l-g.cumulative[lo])/segmentLength : 0;
-  return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, elevation:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t, bank:(a.bank||0)+((b.bank||0)-(a.bank||0))*t, angle:Math.atan2(b.y-a.y,b.x-a.x), index:lo};
+  return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, elevation:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t, bank:(a.bank||0)+((b.bank||0)-(a.bank||0))*t,kerbs:a.kerbs||'inherit',kerbWidth:a.kerbWidth||.7,cornerName:a.cornerName||'', angle:Math.atan2(b.y-a.y,b.x-a.x), index:lo};
 }
 
 export function closestOnTrack(g, p) {

@@ -1,4 +1,4 @@
-# APEX 5.0 — Circuit Studio for Assetto Corsa
+# APEX 6.0 — Circuit Studio for Assetto Corsa
 
 **[Open the website](https://deepinkgroup.github.io/apex-circuit-workshop/)**
 
@@ -7,6 +7,12 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 **[Tracing, export, installation, and limitations](docs/ASSETTO_CORSA.md)**
 
 ## Trace → inspect → export
+
+- Per-point corner rounding, sharp/tight/rounded shapes, corner names, banking, and configurable kerb sides and widths.
+- Seeded random circuits replace the sample buttons. Choose flowing, technical, or fast layouts; preview an idea before applying it. Saved seeds are reproducible.
+- A larger canvas, compact drawing controls, and **Focus canvas** for a full-window drawing workspace.
+- Improved export materials: opaque DXT1 textures with nine mip levels, explicit shader settings, content-based texture names, and embedded plus separate DDS assets.
+- A color overview in the export dialog and a separate preview-image download. White minimap and outline masks remain available for their game UI roles.
 
 - A drawing ribbon with labeled tools, freehand sketches converted to editable points, meter-based snapping, live coordinates, and Fit view.
 - Styled pit lanes with adjustable width, bay side, numbered parking bays, and a connected apron when a short path needs more room. The selected pit count is preserved.
@@ -32,7 +38,7 @@ The export is a generated mod prototype. File and geometry checks pass, but an i
 
 ## Editing
 
-Three starter circuits, open or closed roads, movable control points, pit paths, custom barriers, undo/redo, draft recovery, and a local circuit library. Completed circuits remain editable. Drawing on a closed road inserts a point into the nearest section; drawing on an open road extends it. Alt + click inserts into an open road section.
+Random circuit generation, open or closed roads, movable control points, pit paths, custom barriers, undo/redo, draft recovery, and a local circuit library. Completed circuits remain editable. Drawing on a closed road inserts a point into the nearest section; drawing on an open road extends it. Alt + click inserts into an open road section.
 
 ## Run locally
 
@@ -53,6 +59,7 @@ Open http://127.0.0.1:5173. Set the `PORT` environment variable to choose anothe
 | Draw a barrier | B |
 | Sketch a road / place trees | K / T |
 | Temporarily snap to the selected grid | Shift |
+| Exit focus / expanded canvas | Esc |
 | Undo / redo | Ctrl or Cmd + Z / Shift + Z; Ctrl + Y |
 
 Mouse wheel zooms the editor. The 3D preview supports drag to orbit and wheel to zoom.
@@ -61,7 +68,7 @@ Mouse wheel zooms the editor. The 3D preview supports drag to orbit and wheel to
 
 Circuits and draft recovery are stored in this browser with localStorage. They are not uploaded to GitHub or shared with other visitors. Export a JSON circuit to move it to another device or keep a backup. Unfinished drafts can also be imported and exported.
 
-Distances use the circuit's meters-per-pixel scale. The report identifies satellite, calibrated, or manual scale and keeps calibration measurements. Heights are manually authored. Curvature-based bend counts and paved area are estimates. Pit bay counts follow the generated layout, whose method is included in the report. Uploaded reference images are stored in IndexedDB; reference imagery is not packaged in the mod.
+Distances use the circuit's meters-per-pixel scale. Generated circuits set this scale to the requested target length; this is a design size, not geographic calibration. The report identifies satellite, calibrated, or manual scale and keeps calibration measurements. Heights are manually authored. Curvature-based bend counts and paved area are estimates. Pit bay counts follow the generated layout, whose method is included in the report. Uploaded reference images are stored in IndexedDB; reference imagery is not packaged in the mod.
 
 ## Checks and deployment
 

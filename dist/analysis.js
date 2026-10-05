@@ -24,7 +24,7 @@ export function analyzeTrack(track){
   }
   // Convert null radii to infinity for grouping, while keeping the report valid JSON.
   const groupedRows=rows.map(r=>({...r,radius:r.radius??Infinity}));
-  const corners=runs(groupedRows,'corner',closed).filter(c=>c.length>=Math.max(4,step*2)&&c.angle>=15).map((c,i)=>{const progress=((c.startIndex+(c.length/step)/2)/(closed?count:count-1))%1,p=pointOnTrack(g,progress);return {number:i+1,direction:c.sign>0?'right':'left',length:c.length,angle:c.angle,radius:Number.isFinite(c.radius)?c.radius:null,progress,x:p.x,y:p.y};});
+  const corners=runs(groupedRows,'corner',closed).filter(c=>c.length>=Math.max(4,step*2)&&c.angle>=15).map((c,i)=>{const progress=((c.startIndex+(c.length/step)/2)/(closed?count:count-1))%1,p=pointOnTrack(g,progress);return {number:i+1,name:p.cornerName||'',direction:c.sign>0?'right':'left',length:c.length,angle:c.angle,radius:Number.isFinite(c.radius)?c.radius:null,progress,x:p.x,y:p.y};});
   const straights=runs(groupedRows,'straight',closed),longestStraight=Math.max(0,...straights.map(r=>r.length));
   let area=0;for(let i=0;closed&&i<g.samples.length;i++){const a=g.samples[i],b=g.samples[(i+1)%g.samples.length];area+=a.x*b.y-b.x*a.y;}
   const elevations=rows.map(r=>r.elevation),banks=rows.map(r=>Math.abs(r.bank)),walls=track.barriers||[],pitboxes=clamp(Math.round(Number(track.export?.pitboxes)||8),1,16);
