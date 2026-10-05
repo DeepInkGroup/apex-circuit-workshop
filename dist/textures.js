@@ -1,4 +1,5 @@
 import {BinaryWriter,crc32} from './binary.js';
+import {grassPixels} from './scenery.js';
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
 const rgb565=c=>(Math.round(c[0]*31/255)<<11)|(Math.round(c[1]*63/255)<<5)|Math.round(c[2]*31/255);
 const unpack=n=>[(n>>>11)*255/31,((n>>>5)&63)*255/63,(n&31)*255/31];
@@ -11,7 +12,8 @@ function compressLevel(writer,pixels,size){
     block.forEach((c,i)=>{let best=0,error=Infinity;colors.forEach((candidate,j)=>{const e=c.reduce((n,v,k)=>n+(v-candidate[k])**2,0);if(e<error){error=e;best=j;}});bits|=best<<(i*2);});writer.u16(c0).u16(c1).u32(bits>>>0);
   }
 }
-function surfacePixels(material,size){
+export function surfacePixels(material,size){
+  if(material.name==='Grass')return grassPixels(material.grass||'mown',size);
   const pixels=new Uint8Array(size*size*3),noise=material.noise??5;let state=0x51a77;
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){state=(Math.imul(state,1664525)+1013904223)>>>0;const grain=((state>>>16)/65535-.5)*noise*2,large=(Math.sin(x*.095)*Math.cos(y*.073)+Math.sin((x+y)*.041))*noise*.15;let detail=grain+large;
     if(material.name==='Grass')detail+=Math.sin(x*.7+y*.3)*4;

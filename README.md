@@ -1,4 +1,4 @@
-# APEX 6.0 — Circuit Studio for Assetto Corsa
+# APEX 7.0 — Circuit Studio for Assetto Corsa
 
 **[Open the website](https://deepinkgroup.github.io/apex-circuit-workshop/)**
 
@@ -7,6 +7,11 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 **[Tracing, export, installation, and limitations](docs/ASSETTO_CORSA.md)**
 
 ## Trace → inspect → export
+
+- Automatic textured grass across empty ground: meadow, mown lawn, and dry summer finishes.
+- Place pit garages, control towers, and pavilions. Edit dimensions, height, rotation, and roof finish; move or erase them with Undo support. Buildings appear in previews and exports with collision geometry.
+- Assetto Corsa setup organized by identity, paddock, surface grip, and package contents. Solo/kart/race presets set pit count and AI inclusion; customize grid spacing and boundary height.
+- Select trees and buildings for the mod, inspect overlap warnings, and review the package before downloading. The 3D renderer uses the same procedural texture pixels as exported DDS files.
 
 - Per-point corner rounding, sharp/tight/rounded shapes, corner names, banking, and configurable kerb sides and widths.
 - Seeded random circuits replace the sample buttons. Choose flowing, technical, or fast layouts; preview an idea before applying it. Saved seeds are reproducible.
@@ -22,7 +27,7 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 - Custom solid barrier paths with editable height, thickness, and concrete or striped appearance.
 - A circuit profile form for name, description, type, creator, country, city, tags, version, and website.
 - Open road drafts and **Complete circuit** controls. Completed circuits stay editable; **Open circuit** separates the ends.
-- **Clear** road, pits, barriers, trees, references, or all geometry, with Undo available.
+- **Clear** road, pits, barriers, trees, buildings, references, or all geometry, with Undo available.
 - Geometry insights: length, direction, bends, radius, straight length, elevation profile, slope, banking, paved area, and pit capacity.
 - Corner markers and clickable bend inventory, reverse direction, and export-readiness feedback.
 - Download an analysis report as JSON or centerline samples as CSV. Mod ZIPs also include `apex_analysis.json`.
@@ -58,6 +63,7 @@ Open http://127.0.0.1:5173. Set the `PORT` environment variable to choose anothe
 | Place start line / pan canvas | S / H |
 | Draw a barrier | B |
 | Sketch a road / place trees | K / T |
+| Place a building | U |
 | Temporarily snap to the selected grid | Shift |
 | Exit focus / expanded canvas | Esc |
 | Undo / redo | Ctrl or Cmd + Z / Shift + Z; Ctrl + Y |

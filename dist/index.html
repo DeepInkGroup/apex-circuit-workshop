@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f5f3ed" />
-  <meta name="description" content="Create circuits with textured asphalt, editable barriers, and full track details. Trace maps, inspect in 3D, analyze, and export native Assetto Corsa mods." />
+  <meta name="description" content="Create circuits with textured asphalt and grass, editable buildings and barriers, and full track details. Trace maps, inspect in 3D, analyze, and export native Assetto Corsa mods." />
   <title>APEX — Circuit Studio & Analysis for Assetto Corsa</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="./style.css" />
@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="./analysis.css" />
   <link rel="stylesheet" href="./studio.css" />
   <link rel="stylesheet" href="./workshop.css" />
+  <link rel="stylesheet" href="./scenery.css" />
 </head>
 <body>
   <header class="topbar">
@@ -21,7 +22,7 @@
   </header>
 
   <main>
-    <section class="intro"><div><p class="eyebrow"><span class="orange-dash"></span> REAL PLACES. YOUR CIRCUIT.</p><h1>Find your perfect line<span>.</span></h1><p class="intro-copy">Trace your circuit. Refine its geometry. Understand every section.</p></div><div class="intro-aside"><span class="status-dot"></span><span>Your personal proving ground</span><span class="version">V.01</span></div></section>
+    <section class="intro"><div><p class="eyebrow"><span class="orange-dash"></span> REAL PLACES. YOUR CIRCUIT.</p><h1>Find your perfect line<span>.</span></h1><p class="intro-copy">Shape the road. Build its surroundings. Take your circuit to Assetto Corsa.</p></div><div class="intro-aside"><span class="status-dot"></span><span>Your personal proving ground</span><span class="version">V.01</span></div></section>
 
     <section class="studio" aria-label="Circuit workshop">
       <div class="studio-top"><div class="studio-title"><i data-icon="circuit"></i><input id="track-name" aria-label="Circuit name" maxlength="40" value="Untitled Circuit" /><span class="local-label"><span class="status-dot"></span> LOCAL SESSION</span></div><div class="studio-actions"><button id="undo-btn" class="icon-button" aria-label="Undo" title="Undo (Ctrl+Z)"><i data-icon="undo"></i></button><button id="redo-btn" class="icon-button" aria-label="Redo" title="Redo (Ctrl+Y)"><i data-icon="redo"></i></button><div class="separator"></div><button id="save-btn" class="subtle-button"><i data-icon="save"></i><span>Save circuit</span></button></div></div>

@@ -1,6 +1,6 @@
 # Native Assetto Corsa export
 
-APEX 6.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
+APEX 7.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
 
 ## Trace and inspect
 
@@ -22,6 +22,18 @@ APEX 6.0 traces a circuit and generates a prototype track ZIP entirely in the br
 Select a road handle, then use **Corner workshop** to name it, adjust rounding, choose sharp/tight/rounded geometry, set banking, and select kerb side and width for its outgoing section. Enable **Smooth corners** for rounding; the global **Generate kerbs** toggle controls all kerbs. These changes carry into the 3D preview and mod.
 
 The canvas is taller and **Focus canvas** fills the window. Escape exits focus.
+
+## Ground, buildings, and mod setup
+
+**Ground & buildings** covers all empty ground with grass. Choose Meadow, Mown lawn, or Dry summer; the finish is preserved in circuit files, the color preview, 3D, and the exported DDS material.
+
+Select a garage, control tower, or pavilion, set its dimensions and roof finish, then click **Place building** (U) and click clear ground. Move selects and drags it. The inspector changes dimensions and rotation after placement. Erase or Clear removes buildings; Undo restores them. Newly placed footprints avoid the road, pits, trees, and other buildings. Imported or edited footprints that overlap road or pits receive export review notes. Buildings sit on the flat grass base; they do not follow road elevation.
+
+**Assetto Corsa setup** provides Solo practice (1 pit, AI off), Kart session (8 pits, AI on), and Race session (16 pits, AI on) presets. These configure the package, not car classes or game sessions. Set creator and location, edit the full circuit profile, choose 1–16 pit boxes, and set grid row spacing (4–12 m). **Design pit lane** opens the pit editor.
+
+Surface controls write asphalt/kerb/pit friction (0.8–1.2) and grass friction (0.3–0.9) to the existing surface definitions. Defaults are 1.00 and 0.70. Inclusion switches control generated kerbs, outer boundary walls, placed trees, placed buildings, and AI files. Boundary height is adjustable from 0.5–4 m. Grass and custom drawn barriers remain part of the track. The 3D preview shows the selected mod contents.
+
+The package summary displays the generated track folder, pit count, grass finish, and included scenery counts. Review the export notes and inspect spawns and pit routes. Drop the downloaded ZIP into Content Manager, install it, select the track, choose one car, and start Practice. Game weather and cars are selected in Content Manager.
 
 ## Scene and drawing tools
 
@@ -70,7 +82,7 @@ AI files are omitted when disabled. The website generates preview and map PNGs d
 - Automatic pit-lane geometry needs inspection. For unusual tracks, draw a dedicated lane and choose a suitable pit-box count.
 - Tight corners can cause inner-edge overlap. The export report flags this; adjust the trace or width in 3D.
 - Self-crossing centerlines are rejected. Overpasses and separate layouts are not generated.
-- Placed broadleaf and pine trees are exported as simple meshes with collidable trunks. Buildings, replay cameras, and CSP-specific features are not included.
+- Placed broadleaf and pine trees are exported as simple meshes with collidable trunks. Garages, towers, and pavilions include collision bodies, detailed roofs, windows, and doors. Replay cameras and CSP-specific features are not included.
 - Weather presets affect the studio preview and exported sun settings. They do not enable rain physics; select game weather in Content Manager.
 - Uploaded references are stored locally in IndexedDB. Exported JSON retains the reference ID, so another device needs the image uploaded again.
 - Satellite imagery is used as a tracing reference with Esri attribution; it is not included in the exported mod.
