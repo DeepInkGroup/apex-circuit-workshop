@@ -6,6 +6,14 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 **[Tracing, export, installation, and limitations](docs/ASSETTO_CORSA.md)**
 
+## Latest fixes
+
+- Corrected the vertical-axis conversion for exported road geometry, pits, buildings, trees, AI, and spawns. The exported world and minimap use the same orientation. Fresh exports are required to replace previously mirrored mods.
+- North-aligned 3D preview, **Top view**, and **Reset view** controls make the layout easier to compare with the drawing.
+- Four new building models: trackside café with an awning and tables, medical center with a roof cross, fuel station with pumps and a canopy, and a hospitality building with a terrace.
+- Five wall finishes, five roof finishes, optional glass panels, a footprint preview, and **Duplicate nearby**. Building clearances include awnings and roof overhangs.
+- Existing circuits, shared codes, and JSON imports preserve the new building settings. The footer remains V 1.3.2.
+
 ## New in 1.3.2
 
 - **Share** creates a real 14-digit code for an immutable circuit snapshot. Another user pastes it, previews the layout, and opens an editable copy. Copy a code or a direct editor link. Leading zeros are preserved.
@@ -23,7 +31,7 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 - Corrected crew SIDE placement and sector TEXT keys after inspecting game-log errors.
 
 - Automatic textured grass across empty ground: meadow, mown lawn, and dry summer finishes.
-- Place pit garages, control towers, pavilions, covered grandstands, workshops, and marshal posts. Edit dimensions, height, rotation, and roof finish; move or erase them with Undo support. Buildings appear in previews and exports with collision geometry.
+- Place pit garages, control towers, pavilions, covered grandstands, workshops, marshal posts, cafés, medical centers, fuel stations, and hospitality buildings. Edit dimensions, height, rotation, and roof finish; move or erase them with Undo support. Buildings appear in previews and exports with collision geometry.
 - Assetto Corsa setup organized by identity, paddock, surface grip, and package contents. Solo/kart/race presets set pit count and AI inclusion; customize grid spacing and boundary height.
 - Select trees and buildings for the mod, inspect overlap warnings, and review the package before downloading. The 3D renderer uses the same procedural texture pixels as exported DDS files.
 

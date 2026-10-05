@@ -6,12 +6,13 @@ import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js';
 import {WEATHER} from './environment.js';
 import {kerbSides} from './corner-settings.js';
 import {createTexture,materialProperties} from './textures.js';
-import {GRASS,buildingSettings,buildingCorners,buildingContains} from './scenery.js';
+import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js';
+import {trackScale,toGamePoint,toEditorPoint} from './coordinates.js';
 
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true,trees:true,buildings:true,roadGrip:1,grassGrip:.7,grassFx:true,gridSpacing:6,wallHeight:2};
 export function trackSlug(name){return ('apex_'+name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')).slice(0,32).replace(/_+$/,'')||'apex_circuit';}
-const unit=t=>clamp(Number(t.scale)||.2,.02,10);
-const world=(p,t)=>[(p.x-500)*unit(t),Number(p.elevation)||0,(370-p.y)*unit(t)];
+const unit=trackScale;
+const world=toGamePoint;
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const sub=(a,b)=>a.map((v,i)=>v-b[i]);
@@ -21,10 +22,11 @@ function quad(m,a,b,c,d,uvScale=5){
   const surface=/^1(ROAD|PIT|KERB|GRASS)/.test(m.name);
   if(surface&&normal[1]<0)normal=normal.map(v=>-v);
   if(Math.hypot(...normal)<.5)normal=[0,1,0];
-  for(const p of [a,b,c,d])m.vertices.push({pos:p,normal,uv:[p[0]/uvScale,p[2]/uvScale],tangent:[1,0,0]});
+  const vertical=Math.abs(normal[1])<.5,side=vertical&&Math.abs(normal[0])>Math.abs(normal[2]);
+  for(const p of [a,b,c,d])m.vertices.push({pos:p,normal,uv:vertical?[p[side?2:0]/uvScale,p[1]/uvScale]:[p[0]/uvScale,p[2]/uvScale],tangent:side?[0,0,1]:[1,0,0]});
   for(const triangle of [[0,1,2],[0,2,3]]){const positions=[a,b,c,d],n=cross(sub(positions[triangle[1]],positions[triangle[0]]),sub(positions[triangle[2]],positions[triangle[0]]));if(surface&&n[1]<0)[triangle[1],triangle[2]]=[triangle[2],triangle[1]];m.indices.push(...triangle.map(i=>i+base));}
 }
-function frame(p,t){const pos=world(p,t),forward=[Math.cos(p.angle),0,-Math.sin(p.angle)],left=[-forward[2],0,forward[0]];return {pos,forward,left,bank:Math.tan((p.bank||0)*Math.PI/180),kerbs:p.kerbs||'inherit',kerbWidth:p.kerbWidth||.7};}
+function frame(p,t){const pos=world(p,t),forward=[Math.cos(p.angle),0,Math.sin(p.angle)],left=[forward[2],0,-forward[0]];return {pos,forward,left,bank:Math.tan((p.bank||0)*Math.PI/180),kerbs:p.kerbs||'inherit',kerbWidth:p.kerbWidth||.7};}
 const edge=(f,offset,lift=0)=>[f.pos[0]+f.left[0]*offset,f.pos[1]+offset*f.bank+lift,f.pos[2]+f.left[2]*offset];
 function band(m,frames,left,right,lift=0,closed=true){
   const count=closed?frames.length:frames.length-1;
@@ -51,12 +53,12 @@ export function createScene(track){
   const add=(name,mat)=>{const m=mesh(name,mat);meshes.push(m);return m;};
   const ground=add('1GRASS_TERRAIN',1),base=Math.min(...frames.map(f=>f.pos[1]))-.08;
   const footprint=(options.buildings?(track.buildings||[]):[]).flatMap(b=>buildingCorners({...b,...buildingSettings(b)},s)).map(p=>world(p,track));
-  const xmin=Math.min(-500*s,...footprint.map(p=>p[0]-2),(pitPlan.bounds.minX-500)*s-12),xmax=Math.max(500*s,...footprint.map(p=>p[0]+2),(pitPlan.bounds.maxX-500)*s+12),zmin=Math.min(-370*s,...footprint.map(p=>p[2]-2),(370-pitPlan.bounds.maxY)*s-12),zmax=Math.max(370*s,...footprint.map(p=>p[2]+2),(370-pitPlan.bounds.minY)*s+12);
+  const xmin=Math.min(-500*s,...footprint.map(p=>p[0]-2),(pitPlan.bounds.minX-500)*s-12),xmax=Math.max(500*s,...footprint.map(p=>p[0]+2),(pitPlan.bounds.maxX-500)*s+12),zmin=Math.min(-370*s,...footprint.map(p=>p[2]-2),(pitPlan.bounds.minY-370)*s-12),zmax=Math.max(370*s,...footprint.map(p=>p[2]+2),(pitPlan.bounds.maxY-370)*s+12);
   quad(ground,[xmin,base,zmin],[xmin,base,zmax],[xmax,base,zmax],[xmax,base,zmin],18);
   const road=add('1ROAD_SURFACE',0);band(road,frames,half,-half,0,closed);
   // Cut kerb openings wherever paved pit ribbons merge with the road.
   const pitSegments=[pitPlan.path,pitPlan.parkingPath,pitPlan.connector,pitPlan.exitConnector,pitPlan.entryConnection,pitPlan.exitConnection].flatMap(path=>path.slice(1).map((b,i)=>[path[i],b])),pitPadding=(pitPlan.settings.width/2+.25)/s;
-  const pitOpening=(f,side)=>{const e=edge(f,side*half),p={x:e[0]/s+500,y:370-e[2]/s};return pitSegments.some(([a,b])=>{if(p.x<Math.min(a.x,b.x)-pitPadding||p.x>Math.max(a.x,b.x)+pitPadding||p.y<Math.min(a.y,b.y)-pitPadding||p.y>Math.max(a.y,b.y)+pitPadding)return false;const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy,t=l2?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l2,0,1):0;return (p.x-a.x-dx*t)**2+(p.y-a.y-dy*t)**2<pitPadding*pitPadding;});};
+  const pitOpening=(f,side)=>{const e=edge(f,side*half),p=toEditorPoint(e,track);return pitSegments.some(([a,b])=>{if(p.x<Math.min(a.x,b.x)-pitPadding||p.x>Math.max(a.x,b.x)+pitPadding||p.y<Math.min(a.y,b.y)-pitPadding||p.y>Math.max(a.y,b.y)+pitPadding)return false;const dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy,t=l2?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l2,0,1):0;return (p.x-a.x-dx*t)**2+(p.y-a.y-dy*t)**2<pitPadding*pitPadding;});};
   if(options.kerbs){
     const white=add('1KERB_WHITE',2),red=add('1KERB_RED',3);
     for(let i=0;i<(closed?count:count-1);i++){
@@ -80,7 +82,7 @@ export function createScene(track){
   const apron=add('1PIT_PARKING_APRON',6),bayPaint=add('PIT_BAY_MARKINGS',7);
   pitPlan.bays.forEach(b=>{const corners=b.corners.map(p=>world(p,track));quad(apron,...corners.map(p=>[p[0],p[1]+.04,p[2]]),3);for(let i=0;i<4;i++)band(bayPaint,openFrames([b.corners[i],b.corners[(i+1)%4]],track),.06,-.06,.055,false);});
   const digits=['abcdef','bc','abdeg','abcdg','bcfg','acdfg','acdefg','abc','abcdefg','abcdfg'],segments={a:[[-.3,.6],[.3,.6]],b:[[.3,.6],[.3,0]],c:[[.3,0],[.3,-.6]],d:[[.3,-.6],[-.3,-.6]],e:[[-.3,-.6],[-.3,0]],f:[[-.3,0],[-.3,.6]],g:[[-.3,0],[.3,0]]};
-  pitPlan.stalls.forEach(p=>{const f=frame(p,track),number=String(p.number);[...number].forEach((digit,index)=>{for(const key of digits[Number(digit)]){const [a,b]=segments[key],off=(index-(number.length-1)/2)*.8,point=v=>({x:p.x+(f.forward[0]*(v[0]+off)+f.left[0]*v[1])/s,y:p.y-(f.forward[2]*(v[0]+off)+f.left[2]*v[1])/s,elevation:p.elevation||0});band(bayPaint,openFrames([point(a),point(b)],track),.035,-.035,.065,false);}});});
+  pitPlan.stalls.forEach(p=>{const f=frame(p,track),number=String(p.number);[...number].forEach((digit,index)=>{for(const key of digits[Number(digit)]){const [a,b]=segments[key],off=(index-(number.length-1)/2)*.8,point=v=>({x:p.x+(f.forward[0]*(v[0]+off)+f.left[0]*v[1])/s,y:p.y+(f.forward[2]*(v[0]+off)+f.left[2]*v[1])/s,elevation:p.elevation||0});band(bayPaint,openFrames([point(a),point(b)],track),.035,-.035,.065,false);}});});
   function dummy(name,f,lateral=0){dummies.push({name,pos:edge(f,lateral,1),forward:f.forward});}
   for(let i=0;i<pitCount;i++){
     const f=frame(pointOnTrack(g,track.start-(8+Math.floor(i/2)*clamp(Number(options.gridSpacing)||6,4,12))/total),track);dummy(`AC_START_${i}`,f,(i%2?1:-1)*Math.min(2.2,half*.4));
@@ -111,9 +113,13 @@ export function createScene(track){
   const crown=(m,x,y,z,r,h)=>{const ring=[[x+r,y,z],[x,y,z+r],[x-r,y,z],[x,y,z-r]],top=[x,y+h,z],bottom=[x,y-h*.6,z];for(let i=0;i<4;i++){triangle(m,ring[(i+1)%4],ring[i],top);triangle(m,ring[i],ring[(i+1)%4],bottom);}};
   for(const tree of (options.trees?(track.trees||[]):[]).slice(0,300)){const p=world({...tree,elevation:base},track),height=clamp(Number(tree.height)||8,3,18);box(trunks,p[0],base,p[2],Math.max(.2,height*.04),height*.75,Math.max(.2,height*.04));if(tree.type==='pine'){for(let i=0;i<3;i++)crown(i%2?leafHighlights:leaves,p[0],base+height*(.45+i*.19),p[2],height*(.27-i*.06),height*.23);}else{crown(leaves,p[0],base+height*.72,p[2],height*.32,height*.28);crown(leafHighlights,p[0]+height*.14,base+height*.79,p[2]+height*.09,height*.23,height*.22);}}
   materials.push({name:'Building plaster',color:[196,191,172],noise:4},{name:'Roof graphite',color:[74,85,90],noise:5},{name:'Building glass',color:[57,91,105],noise:2},{name:'Building trim',color:[211,220,210],noise:2},{name:'Roof terracotta',color:[160,105,78],noise:6},{name:'Roof blue',color:[75,115,133],noise:5},{name:'Grandstand seats',color:[151,87,49],noise:3});
+  const facadeMaterials={plaster:11},roofMaterials={graphite:12,terracotta:15,blue:16};
+  for(const [key,value] of Object.entries(BUILDING_FACADES))if(key!=='plaster'){facadeMaterials[key]=materials.length;materials.push({name:'Building '+key,color:value.color,noise:5,finish:key});}
+  for(const [key,value] of Object.entries(BUILDING_ROOFS))if(!(key in roofMaterials)){roofMaterials[key]=materials.length;materials.push({name:'Roof '+key,color:value.color,noise:5});}
+  const fuelAccent=materials.length;materials.push({name:'Fuel station amber',color:[197,150,52],noise:3});
   (options.buildings?(track.buildings||[]):[]).slice(0,60).forEach((source,index)=>{
     const b={...source,...buildingSettings(source)},center=world(b,track),parts=[],part=(name,mat)=>{const m=add(name,mat);parts.push(m);return m;};
-    const body=part(`1WALL_BUILDING_${index}`,11),roof=part(`1WALL_BUILDING_ROOF_${index}`,{graphite:12,terracotta:15,blue:16}[b.roof]),glass=part(`BUILDING_WINDOWS_${index}`,13),trim=part(`BUILDING_TRIM_${index}`,14);
+    const body=part(`1WALL_BUILDING_${index}`,facadeMaterials[b.facade]),roof=part(`1WALL_BUILDING_ROOF_${index}`,roofMaterials[b.roof]),glass=part(`BUILDING_WINDOWS_${index}`,13),trim=part(`BUILDING_TRIM_${index}`,14);
     if(b.type==='grandstand'){
       const seats=part(`BUILDING_SEATS_${index}`,17),rows=6;for(let row=0;row<rows;row++){const z=-b.depth/2+(row+.5)*b.depth/rows,h=b.height*.65*(row+1)/rows;box(body,0,0,z,b.width,h,b.depth/rows+.02);box(seats,0,h+.06,z,b.width*.94,.18,b.depth/rows*.32);}
       for(const x of [-b.width*.46,b.width*.46])for(const z of [-b.depth*.45,b.depth*.45])box(body,x,0,z,.22,b.height,.22);box(roof,0,b.height,0,b.width+.6,.22,b.depth+.6);
@@ -123,12 +129,37 @@ export function createScene(track){
       quad(roof,[-b.width/2-.25,ridge,0],[-b.width/2-.25,b.height,b.depth/2+.25],[b.width/2+.25,b.height,b.depth/2+.25],[b.width/2+.25,ridge,0]);
       triangle(body,[-b.width/2,b.height,-b.depth/2],[-b.width/2,b.height,b.depth/2],[-b.width/2,ridge,0]);triangle(body,[b.width/2,b.height,b.depth/2],[b.width/2,b.height,-b.depth/2],[b.width/2,ridge,0]);
       for(const x of [-b.width*.22,b.width*.22]){box(trim,x,.1,-b.depth/2-.025,b.width*.35,b.height*.78,.08);box(glass,x,.25,-b.depth/2-.08,b.width*.3,b.height*.7,.04);}box(trim,0,.03,0,b.width+.12,.14,b.depth+.12);
+    }else if(b.type==='fuel'){
+      box(trim,0,0,0,b.width,.15,b.depth);
+      for(const x of [-b.width*.42,b.width*.42])for(const z of [-b.depth*.38,b.depth*.38])box(body,x,.15,z,.3,b.height-.15,.3);
+      box(roof,0,b.height,0,b.width+.6,.28,b.depth+.6);
+      const accent=part(`BUILDING_FUEL_FASCIA_${index}`,fuelAccent);box(accent,0,b.height-.25,-b.depth/2-.26,b.width+.6,.4,.18);
+      for(const x of [-b.width*.22,b.width*.22]){box(body,x,.15,0,1.15,1.65,.65);box(trim,x,1.45,-.37,.85,.25,.06);box(glass,x,.85,-.37,.55,.4,.06);box(accent,x,.2,0,1.22,.18,.7);}
+    }else if(b.type==='hospitality'){
+      const lower=b.height*.45;box(body,0,0,0,b.width,lower,b.depth);box(body,0,lower,b.depth*.12,b.width*.86,b.height-lower,b.depth*.76);
+      box(roof,0,b.height,b.depth*.12,b.width*.86+.5,.3,b.depth*.76+.5);
+      box(trim,0,lower,-b.depth*.38,b.width+.15,.2,b.depth*.24);
+      for(const x of [-b.width*.47,b.width*.47])box(trim,x,lower,-b.depth*.37,.12,.85,b.depth*.26);
+      box(trim,0,lower+.75,-b.depth*.5,b.width,.12,.12);
+      for(const [y,h,z,width] of [[.7,Math.min(2,lower-1),-b.depth/2-.035,b.width*.86],[lower+.7,Math.min(2,b.height-lower-.9),-b.depth*.26-.035,b.width*.73]]){box(glass,0,y,z,width,h,.06);for(let x=-width/2;x<=width/2;x+=Math.max(1.8,width/8))box(trim,x,y,z-.04,.1,h,.1);}
+    }else if(b.type==='medical'){
+      box(body,0,0,0,b.width,b.height,b.depth);box(roof,0,b.height,0,b.width+.5,.3,b.depth+.5);
+      for(const x of [-b.width*.29,b.width*.12,b.width*.32])box(glass,x,.9,-b.depth/2-.04,b.width*.14,1.35,.06);
+      box(trim,-b.width*.05,.1,-b.depth/2-.06,b.width*.13,2.35,.12);box(roof,-b.width*.05,b.height*.58,-b.depth/2-.7,b.width*.22,.18,1.5);
+      const crossRoof=part(`BUILDING_MEDICAL_CROSS_${index}`,3),size=Math.min(b.width,b.depth)*.42;box(crossRoof,0,b.height+.32,0,size,.045,size*.25);box(crossRoof,0,b.height+.32,0,size*.25,.045,size);
+    }else if(b.type==='cafe'){
+      box(body,0,0,0,b.width,b.height,b.depth);box(roof,0,b.height,0,b.width+.4,.3,b.depth+.4);
+      box(glass,0,.6,-b.depth/2-.035,b.width*.82,Math.min(2,b.height-.9),.06);
+      box(roof,0,b.height*.72,-b.depth*.57,b.width*.93,.18,b.depth*.28);
+      for(const x of [-b.width*.4,b.width*.4])box(trim,x,0,-b.depth*.68,.15,b.height*.72,.15);
+      const furniture=part(`BUILDING_CAFE_FURNITURE_${index}`,17);for(const x of [-b.width*.22,b.width*.22]){box(trim,x,.02,-b.depth*.6,.13,.72,.13);box(furniture,x,.74,-b.depth*.6,1.1,.12,.7);}
     }else{
       box(body,0,0,0,b.width,b.height,b.depth);box(roof,0,b.height,0,b.width+.5,.35,b.depth+.5);
       if(b.type==='garage'){const bays=Math.max(1,Math.floor(b.width/4));for(let i=0;i<bays;i++){const x=-b.width/2+(i+.5)*b.width/bays;box(trim,x,.12,-b.depth/2-.03,b.width/bays*.86,b.height*.72,.07);box(glass,x,.3,-b.depth/2-.08,b.width/bays*.75,b.height*.6,.04);for(let y=.6;y<b.height*.6;y+=.6)box(trim,x,y,-b.depth/2-.11,b.width/bays*.75,.045,.04);}}
       else{const floors=b.type==='tower'?Math.max(1,Math.floor(b.height/3)):1;for(let f=0;f<floors;f++){const y=f*b.height/floors+.7,h=Math.min(1.5,b.height/floors-.9);for(const side of [-1,1]){box(glass,0,y,side*(b.depth/2+.025),b.width*.8,h,.045);box(glass,side*(b.width/2+.025),y,0,.045,h,b.depth*.8);}box(trim,0,y-.15,0,b.width+.15,.12,b.depth+.15);}box(trim,0,.1,-b.depth/2-.05,1.1,Math.min(2.2,b.height-.2),.1);if(b.type==='marshal'){box(trim,0,.2,0,b.width+.3,.35,b.depth+.3);for(const x of [-b.width*.4,b.width*.4])box(trim,x,0,-b.depth/2-.3,.16,b.height,.16);}}
     }
-    const r=b.rotation*Math.PI/180,c=Math.cos(r),s=Math.sin(r);for(const m of parts)for(const v of m.vertices){const [x,y,z]=v.pos,[nx,ny,nz]=v.normal;v.pos=[center[0]+x*c+z*s,base+y,center[2]-x*s+z*c];v.normal=[nx*c+nz*s,ny,-nx*s+nz*c];v.tangent=[c,0,-s];}
+    if(!b.windows){glass.vertices=[];glass.indices=[];}
+    const r=b.rotation*Math.PI/180,c=Math.cos(r),s=Math.sin(r);for(const m of parts)for(const v of m.vertices){const [x,y,z]=v.pos,[nx,ny,nz]=v.normal,[tx,ty,tz]=v.tangent;v.pos=[center[0]+x*c-z*s,base+y,center[2]+x*s+z*c];v.normal=[nx*c-nz*s,ny,nx*s+nz*c];v.tangent=[tx*c-tz*s,ty,tx*s+tz*c];}
   });
   return {meshes:meshes.filter(m=>m.indices.length),dummies,materials,frames,pitFrames,pitPlan,weather,length:total,pitCount,options};
 }
@@ -221,7 +252,7 @@ export function exportFiles(track,images={}){
   if(images['map.png'])put('data/map.ini',`[PARAMETERS]\nWIDTH=1000\nHEIGHT=740\nX_OFFSET=${500*unit(track)}\nZ_OFFSET=${370*unit(track)}\nSCALE_FACTOR=${unit(track)}\nDRAWING_SIZE=10\nMARGIN=0\n`);
   put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:8,background:null},null,2));
   put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
-  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.options.gridSpacing} m row spacing\nRoad grip ${scene.options.roadGrip} · grass grip ${scene.options.grassGrip}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nOpaque uncompressed BGRA DDS textures with mipmaps are embedded in the KN5 and copied to texture/. Opaque materials include explicit shader properties with moderated diffuse lighting and zero emissive output. An extension/ext_config.ini supplies explicit texture bindings and optional Grass FX for CSP; the colored base works without CSP. Textured grass covers the empty ground. Placed buildings have collision bodies and detailed roofs, windows, and garage doors. Trees and buildings follow the scenery switches in Assetto Corsa setup. Custom corners and styled pit lanes are included. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nAI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nExit the current driving session, export a fresh ZIP, and replace the old track files in Content Manager. Re-enter the session to load the new model and versioned textures. Old downloads cannot update themselves. ui/preview.png is the color overview; map.png and ui/outline.png are white route masks by design. This export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
+  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.options.gridSpacing} m row spacing\nRoad grip ${scene.options.roadGrip} · grass grip ${scene.options.grassGrip}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nOpaque uncompressed BGRA DDS textures with mipmaps are embedded in the KN5 and copied to texture/. Opaque materials include explicit shader properties with moderated diffuse lighting and zero emissive output. An extension/ext_config.ini supplies explicit texture bindings and optional Grass FX for CSP; the colored base works without CSP. Textured grass covers the empty ground. Placed buildings have collision bodies and detailed roofs, windows, and garage doors. Trees and buildings follow the scenery switches in Assetto Corsa setup. Custom corners and styled pit lanes are included. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nAI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nThe export uses the same X/Z orientation as the editor and minimap. Exit the current driving session, export a fresh ZIP, and replace the old track files in Content Manager. Re-enter the session to load the new model and versioned textures. Old downloads cannot update themselves. ui/preview.png is the color overview; map.png and ui/outline.png are white route masks by design. This export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
   put('extension/ext_config.ini',sceneExtension(scene,track));
   return {files,scene,slug,report};
 }

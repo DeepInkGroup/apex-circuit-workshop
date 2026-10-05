@@ -1,5 +1,6 @@
 import {createScene} from './ac-export.js';
 import {surfacePixels} from './textures.js';
+import {toGamePoint} from './coordinates.js';
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);
@@ -11,7 +12,7 @@ function matrix(eye,target,aspect){
 }
 export class TrackPreview {
   constructor(canvas){
-    this.canvas=canvas;this.gl=canvas.getContext('webgl',{antialias:true,alpha:false});this.buffers=[];this.textures=[];this.yaw=.7;this.pitch=.8;this.zoom=1;this.drag=null;
+    this.canvas=canvas;this.gl=canvas.getContext('webgl',{antialias:true,alpha:false});this.buffers=[];this.textures=[];this.yaw=Math.PI/2;this.pitch=.8;this.zoom=1;this.drag=null;
     if(!this.gl)return;
     const gl=this.gl,program=gl.createProgram();
     const shader=(type,source)=>{const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;};
@@ -30,9 +31,10 @@ export class TrackPreview {
     const scene=createScene(track),gl=this.gl;
     this.buffers.forEach(b=>{gl.deleteBuffer(b.vertices);gl.deleteBuffer(b.indices);});this.buffers=[];this.textures.forEach(t=>gl.deleteTexture(t));this.textures=scene.materials.map(m=>{const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,256,256,0,gl.RGB,gl.UNSIGNED_BYTE,surfacePixels(m,256));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.generateMipmap(gl.TEXTURE_2D);return texture;});
     this.weather=scene.weather;this.rain=track.weather==='rain';
-    const all=[...scene.frames.map(f=>f.pos),...[...scene.pitPlan.path,...scene.pitPlan.entryConnection,...scene.pitPlan.exitConnection,...scene.pitPlan.bays.flatMap(b=>b.corners)].map(p=>[(p.x-500)*scene.pitPlan.scale,p.elevation||0,(370-p.y)*scene.pitPlan.scale]),...scene.meshes.filter(m=>m.name.startsWith('1WALL_BUILDING')).flatMap(m=>m.vertices.map(v=>v.pos)),...(track.trees||[]).map(p=>[(p.x-500)*scene.pitPlan.scale,p.height,(370-p.y)*scene.pitPlan.scale])],min=[0,1,2].map(i=>Math.min(...all.map(p=>p[i]))),max=[0,1,2].map(i=>Math.max(...all.map(p=>p[i])));this.target=min.map((n,i)=>(n+max[i])/2);this.radius=Math.max(20,Math.hypot(...max.map((n,i)=>n-min[i]))*.72);
+    const all=[...scene.frames.map(f=>f.pos),...[...scene.pitPlan.path,...scene.pitPlan.entryConnection,...scene.pitPlan.exitConnection,...scene.pitPlan.bays.flatMap(b=>b.corners)].map(p=>toGamePoint(p,track)),...scene.meshes.filter(m=>m.name.startsWith('1WALL_BUILDING')).flatMap(m=>m.vertices.map(v=>v.pos)),...(track.trees||[]).map(p=>toGamePoint({...p,elevation:p.height},track))],min=[0,1,2].map(i=>Math.min(...all.map(p=>p[i]))),max=[0,1,2].map(i=>Math.max(...all.map(p=>p[i])));this.target=min.map((n,i)=>(n+max[i])/2);this.radius=Math.max(20,Math.hypot(...max.map((n,i)=>n-min[i]))*.72);
     scene.meshes.forEach(m=>{const vertices=gl.createBuffer(),indices=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertices);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(m.vertices.flatMap(v=>[...v.pos,...v.normal,...v.uv])),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(m.indices),gl.STATIC_DRAW);this.buffers.push({vertices,indices,count:m.indices.length,texture:this.textures[m.material],wet:[0,5].includes(m.material)});});this.draw();return true;
   }
+  setView(top=false){this.yaw=Math.PI/2;this.pitch=top?Math.PI/2-.01:.8;this.zoom=1;this.draw();}
   draw(){
     if(!this.gl||!this.target||this.canvas.hidden)return;
     const gl=this.gl,r=this.canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);if(!r.width||!r.height)return;

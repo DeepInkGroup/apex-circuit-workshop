@@ -6,6 +6,8 @@ export function surfacePixels(material,size){
   const pixels=new Uint8Array(size*size*3),noise=material.noise??5;let state=0x51a77;
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){state=(Math.imul(state,1664525)+1013904223)>>>0;const grain=((state>>>16)/65535-.5)*noise*2,large=(Math.sin(x*.095)*Math.cos(y*.073)+Math.sin((x+y)*.041))*noise*.15;let detail=grain+large;
     if(material.name==='Asphalt'&&noise>=12&&((x+Math.round(5*Math.sin(y*.05)))%91+91)%91<1)detail-=12;
+    if(material.finish==='brick'){const row=Math.floor(y/16),seam=y%16<2||(x+(row%2)*32)%64<2;if(seam)detail+=35;}
+    if(material.finish==='steel'&&x%32<2)detail-=18;
     for(let k=0;k<3;k++)pixels[(y*size+x)*3+k]=clamp(material.color[k]+detail);
   }return pixels;
 }
