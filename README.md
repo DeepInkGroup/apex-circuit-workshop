@@ -1,4 +1,4 @@
-# APEX 4.0 — Circuit Studio for Assetto Corsa
+# APEX 5.0 — Circuit Studio for Assetto Corsa
 
 **[Open the website](https://deepinkgroup.github.io/apex-circuit-workshop/)**
 
@@ -8,11 +8,15 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Trace → inspect → export
 
+- A drawing ribbon with labeled tools, freehand sketches converted to editable points, meter-based snapping, live coordinates, and Fit view.
+- Styled pit lanes with adjustable width, bay side, numbered parking bays, and a connected apron when a short path needs more room. The selected pit count is preserved.
+- Clear daylight, overcast, golden hour, and rainy preview moods. Choose game weather separately in Content Manager.
+- Place broadleaf or pine trees with editable height; scatter them beside the circuit. Tree meshes and collidable trunks are included in the mod.
 - Textured asphalt with fresh, weathered, and dark finishes across the editor, 3D preview, and mod.
 - Custom solid barrier paths with editable height, thickness, and concrete or striped appearance.
 - A circuit profile form for name, description, type, creator, country, city, tags, version, and website.
 - Open road drafts and **Complete circuit** controls. Completed circuits stay editable; **Open circuit** separates the ends.
-- **Clear** road, pits, barriers, references, or all geometry, with Undo available.
+- **Clear** road, pits, barriers, trees, references, or all geometry, with Undo available.
 - Geometry insights: length, direction, bends, radius, straight length, elevation profile, slope, banking, paved area, and pit capacity.
 - Corner markers and clickable bend inventory, reverse direction, and export-readiness feedback.
 - Download an analysis report as JSON or centerline samples as CSV. Mod ZIPs also include `apex_analysis.json`.
@@ -47,6 +51,8 @@ Open http://127.0.0.1:5173. Set the `PORT` environment variable to choose anothe
 | Move / add / erase points | V / P / E |
 | Place start line / pan canvas | S / H |
 | Draw a barrier | B |
+| Sketch a road / place trees | K / T |
+| Temporarily snap to the selected grid | Shift |
 | Undo / redo | Ctrl or Cmd + Z / Shift + Z; Ctrl + Y |
 
 Mouse wheel zooms the editor. The 3D preview supports drag to orbit and wheel to zoom.
@@ -55,7 +61,7 @@ Mouse wheel zooms the editor. The 3D preview supports drag to orbit and wheel to
 
 Circuits and draft recovery are stored in this browser with localStorage. They are not uploaded to GitHub or shared with other visitors. Export a JSON circuit to move it to another device or keep a backup. Unfinished drafts can also be imported and exported.
 
-Distances use the circuit's meters-per-pixel scale. The report identifies satellite, calibrated, or manual scale and keeps calibration measurements. Heights are manually authored. Curvature-based bend counts, paved area, and pit capacity are estimates, with their methods included in the report. Uploaded reference images are stored in IndexedDB; reference imagery is not packaged in the mod.
+Distances use the circuit's meters-per-pixel scale. The report identifies satellite, calibrated, or manual scale and keeps calibration measurements. Heights are manually authored. Curvature-based bend counts and paved area are estimates. Pit bay counts follow the generated layout, whose method is included in the report. Uploaded reference images are stored in IndexedDB; reference imagery is not packaged in the mod.
 
 ## Checks and deployment
 

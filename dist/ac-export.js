@@ -2,6 +2,8 @@ import {buildGeometry,pointOnTrack,clamp} from './engine.js';
 import {BinaryWriter,zipFiles} from './binary.js';
 import {ASPHALT} from './surfaces.js';
 import {analyzeTrack} from './analysis.js';
+import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js';
+import {WEATHER} from './environment.js';
 
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true};
 export function trackSlug(name){return ('apex_'+name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')).slice(0,32).replace(/_+$/,'')||'apex_circuit';}
@@ -34,19 +36,19 @@ function box(m,x,y,z,w,h,d){
   quad(m,[x0,y1,z1],[x1,y1,z1],[x1,y1,z0],[x0,y1,z0]);
 }
 function openFrames(points,t){
-  const sampled=[];
-  for(let i=0;i<points.length-1;i++){const a=points[i],b=points[i+1],steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)*unit(t)/1.5));for(let j=0;j<steps;j++){const f=j/steps;sampled.push({x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,elevation:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*f});}}
-  sampled.push(points[points.length-1]);
+  const sampled=resamplePath(points,unit(t));
   return sampled.map((p,i)=>{const a=sampled[Math.max(0,i-1)],b=sampled[Math.min(sampled.length-1,i+1)];return frame({...p,angle:Math.atan2(b.y-a.y,b.x-a.x)},t);});
 }
 export function createScene(track){
   const closed=track.complete!==false,g=buildGeometry(track.points,track.smooth,closed),options={...DEFAULT_EXPORT,...track.export},s=unit(track),total=g.length*s;
   const pitCount=clamp(Math.round(Number(options.pitboxes)||8),1,16);
   const count=clamp(Math.ceil(total/1.5),64,4000),frames=Array.from({length:count},(_,i)=>frame(pointOnTrack(g,closed?track.start+i/count:i/(count-1)),track));
+  const pitPlan=buildPitPlan(track),weather=WEATHER[track.weather]||WEATHER.sunny;
   const meshes=[],dummies=[],half=track.width/2;
   const add=(name,mat)=>{const m=mesh(name,mat);meshes.push(m);return m;};
   const ground=add('1GRASS_TERRAIN',1),base=Math.min(...frames.map(f=>f.pos[1]))-.08;
-  quad(ground,[-500*s,base,-370*s],[-500*s,base,370*s],[500*s,base,370*s],[500*s,base,-370*s],18);
+  const xmin=Math.min(-500*s,(pitPlan.bounds.minX-500)*s-12),xmax=Math.max(500*s,(pitPlan.bounds.maxX-500)*s+12),zmin=Math.min(-370*s,(370-pitPlan.bounds.maxY)*s-12),zmax=Math.max(370*s,(370-pitPlan.bounds.minY)*s+12);
+  quad(ground,[xmin,base,zmin],[xmin,base,zmax],[xmax,base,zmax],[xmax,base,zmin],18);
   const road=add('1ROAD_SURFACE',0);band(road,frames,half,-half,0,closed);
   if(options.kerbs){
     const white=add('1KERB_WHITE',2),red=add('1KERB_RED',3);
@@ -63,28 +65,25 @@ export function createScene(track){
     quad(m,point(side,row*.5),point(Math.min(side+.5,half),row*.5),point(Math.min(side+.5,half),(row+1)*.5),point(side,(row+1)*.5));
   }
   // A separate pit ribbon and explicit spawns make practice sessions usable immediately.
-  let pitFrames;
-  if(track.pit?.length>=2)pitFrames=openFrames(track.pit,track);
-  else{
-    const pitLength=Math.min(total*.35,(pitCount*6+14)/.7),steps=64,offset=half+7;
-    pitFrames=Array.from({length:steps},(_,i)=>{
-      const f=frame(pointOnTrack(g,track.start-.03+i/(steps-1)*pitLength/total),track);
-      const taper=Math.sin(Math.PI*i/(steps-1));
-      return {...f,pos:edge(f,-offset*taper,.015),bank:0};
-    });
-  }
-  const pit=add('1PIT_LANE',0);band(pit,pitFrames,3,-3,.03,false);
+  const pitFrames=openFrames(pitPlan.aiPath,track),laneFrames=openFrames(pitPlan.path,track),pitHalf=pitPlan.settings.width/2;
+  const pit=add('1PIT_LANE',5);band(pit,laneFrames,pitHalf,-pitHalf,.035,false);
+  for(const path of [pitPlan.parkingPath,pitPlan.connector,pitPlan.exitConnector])if(path.length>=2)band(pit,openFrames(path,track),pitHalf,-pitHalf,.035,false);
+  const pitPaint=add('PIT_EDGE_MARKINGS',2);for(const path of [pitPlan.path,pitPlan.parkingPath,pitPlan.connector,pitPlan.exitConnector])if(path.length>=2){const frames=openFrames(path,track);band(pitPaint,frames,pitHalf-.08,pitHalf-.2,.05,false);band(pitPaint,frames,-pitHalf+.2,-pitHalf+.08,.05,false);}
+  const apron=add('1PIT_PARKING_APRON',6),bayPaint=add('PIT_BAY_MARKINGS',7);
+  pitPlan.bays.forEach(b=>{const corners=b.corners.map(p=>world(p,track));quad(apron,...corners.map(p=>[p[0],p[1]+.04,p[2]]),3);for(let i=0;i<4;i++)band(bayPaint,openFrames([b.corners[i],b.corners[(i+1)%4]],track),.06,-.06,.055,false);});
+  const digits=['abcdef','bc','abdeg','abcdg','bcfg','acdfg','acdefg','abc','abcdefg','abcdfg'],segments={a:[[-.3,.6],[.3,.6]],b:[[.3,.6],[.3,0]],c:[[.3,0],[.3,-.6]],d:[[.3,-.6],[-.3,-.6]],e:[[-.3,-.6],[-.3,0]],f:[[-.3,0],[-.3,.6]],g:[[-.3,0],[.3,0]]};
+  pitPlan.stalls.forEach(p=>{const f=frame(p,track),number=String(p.number);[...number].forEach((digit,index)=>{for(const key of digits[Number(digit)]){const [a,b]=segments[key],off=(index-(number.length-1)/2)*.8,point=v=>({x:p.x+(f.forward[0]*(v[0]+off)+f.left[0]*v[1])/s,y:p.y-(f.forward[2]*(v[0]+off)+f.left[2]*v[1])/s,elevation:p.elevation||0});band(bayPaint,openFrames([point(a),point(b)],track),.035,-.035,.065,false);}});});
   function dummy(name,f,lateral=0){dummies.push({name,pos:edge(f,lateral,1),forward:f.forward});}
   for(let i=0;i<pitCount;i++){
     const f=frame(pointOnTrack(g,track.start-(8+Math.floor(i/2)*6)/total),track);dummy(`AC_START_${i}`,f,(i%2?1:-1)*Math.min(2.2,half*.4));
-    const fraction=.15+.7*(i+.5)/pitCount,index=clamp(Math.round(fraction*(pitFrames.length-1)),0,pitFrames.length-1);dummy(`AC_PIT_${i}`,pitFrames[index]);
+    dummy(`AC_PIT_${i}`,frame(pitPlan.stalls[i],track));
   }
   dummy('AC_HOTLAP_START_0',frame(pointOnTrack(g,track.start-25/total),track));
   for(let sector=0;sector<3;sector++){
     const f=frame(pointOnTrack(g,track.start+sector/3),track);dummy(`AC_TIME_${sector}_L`,f,half+.75);dummy(`AC_TIME_${sector}_R`,f,-half-.75);
   }
-  if(options.barriers){const wall=add('1WALL_BOUNDARY',4),width=1000*s,height=740*s;
-    box(wall,0,base,-height/2,width,2,.4);box(wall,0,base,height/2,width,2,.4);box(wall,-width/2,base,0,.4,2,height);box(wall,width/2,base,0,.4,2,height);
+  if(options.barriers){const wall=add('1WALL_BOUNDARY',4),width=xmax-xmin,depth=zmax-zmin,cx=(xmin+xmax)/2,cz=(zmin+zmax)/2;
+    box(wall,cx,base,zmin,width,2,.4);box(wall,cx,base,zmax,width,2,.4);box(wall,xmin,base,cz,.4,2,depth);box(wall,xmax,base,cz,.4,2,depth);
   }
   (track.barriers||[]).forEach((barrier,index)=>{
     const solid=add(`1WALL_CUSTOM_${index}`,4),red=barrier.style==='striped'?add(`1WALL_CUSTOM_${index}_RED`,3):null,white=red?add(`1WALL_CUSTOM_${index}_WHITE`,2):null;
@@ -98,8 +97,12 @@ export function createScene(track){
     }
   });
   const asphalt=ASPHALT[track.asphalt]||ASPHALT.fresh;
-  const materials=[{name:'Asphalt',color:asphalt.color,noise:asphalt.noise},{name:'Grass',color:[105,127,80]},{name:'White',color:[231,231,215]},{name:'Kerb red',color:[186,56,44]},{name:'Barrier',color:[153,155,153]}];
-  return {meshes:meshes.filter(m=>m.indices.length),dummies,materials,frames,pitFrames,length:total,pitCount,options};
+  const materials=[{name:'Asphalt',color:asphalt.color,noise:asphalt.noise},{name:'Grass',color:[105,127,80]},{name:'White',color:[231,231,215]},{name:'Kerb red',color:[186,56,44]},{name:'Barrier',color:[153,155,153]},{name:'Pit asphalt',color:PIT_STYLES[pitPlan.settings.style].color,noise:7},{name:'Pit apron',color:[148,153,147],noise:9},{name:'Pit bay paint',color:[228,199,114]},{name:'Tree bark',color:[97,75,54]},{name:'Foliage',color:[58,104,65]},{name:'Foliage light',color:[83,132,74]}];
+  const trunks=add('1WALL_TREE_TRUNKS',8),leaves=add('SCENERY_TREE_CANOPY',9),leafHighlights=add('SCENERY_TREE_HIGHLIGHTS',10);
+  const triangle=(m,a,b,c)=>{const index=m.vertices.length,n=normalize(cross(sub(b,a),sub(c,a)));[a,b,c].forEach(p=>m.vertices.push({pos:p,normal:n,uv:[p[0]/3,p[2]/3],tangent:[1,0,0]}));m.indices.push(index,index+1,index+2);};
+  const crown=(m,x,y,z,r,h)=>{const ring=[[x+r,y,z],[x,y,z+r],[x-r,y,z],[x,y,z-r]],top=[x,y+h,z],bottom=[x,y-h*.6,z];for(let i=0;i<4;i++){triangle(m,ring[(i+1)%4],ring[i],top);triangle(m,ring[i],ring[(i+1)%4],bottom);}};
+  for(const tree of (track.trees||[]).slice(0,300)){const p=world({...tree,elevation:base},track),height=clamp(Number(tree.height)||8,3,18);box(trunks,p[0],base,p[2],Math.max(.2,height*.04),height*.75,Math.max(.2,height*.04));if(tree.type==='pine'){for(let i=0;i<3;i++)crown(i%2?leafHighlights:leaves,p[0],base+height*(.45+i*.19),p[2],height*(.27-i*.06),height*.23);}else{crown(leaves,p[0],base+height*.72,p[2],height*.32,height*.28);crown(leafHighlights,p[0]+height*.14,base+height*.79,p[2]+height*.09,height*.23,height*.22);}}
+  return {meshes:meshes.filter(m=>m.indices.length),dummies,materials,frames,pitFrames,pitPlan,weather,length:total,pitCount,options};
 }
 
 function dds(color,noiseLevel=5){
@@ -158,9 +161,6 @@ export function validateExport(track){
   if(track.pit?.length===1)errors.push('Add a second pit-lane point or choose the automatic pit lane.');
   if(track.points?.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))errors.push('The circuit contains invalid coordinates.');
   if(track.width<4||track.width>30)errors.push('Track width must be between 4 and 30 meters.');
-  const pits=clamp(Math.round(Number(track.export?.pitboxes)||8),1,16);
-  const pitLength=track.pit?.length>=2?track.pit.slice(1).reduce((n,p,i)=>n+Math.hypot(p.x-track.pit[i].x,p.y-track.pit[i].y)*s,0):g.length*s*.35;
-  if(pitLength*.7<pits*6+14)errors.push(`Not enough pit-lane space for ${pits} boxes. Draw a longer pit path or reduce the pit count.`);
   const n=clamp(Math.ceil(g.length/8),32,350),poly=Array.from({length:n},(_,i)=>pointOnTrack(g,i/n));
   const orient=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
   let intersect=false;
@@ -182,17 +182,17 @@ export function exportFiles(track,images={}){
   const put=(p,v)=>files[root+p]=v;
   put(`${slug}.kn5`,writeKn5(scene));put('models.ini',`[MODEL_0]\nFILE=${slug}.kn5\nPOSITION=0,0,0\nROTATION=0,0,0\n`);
   put('data/surfaces.ini',['ROAD','GRASS','KERB','PIT','WALL'].map((key,i)=>`[SURFACE_${i}]\n${surface(key,!['GRASS','WALL'].includes(key),key==='PIT')}`).join('\n'));
-  put('data/lighting.ini','[LIGHTING]\nSUN_PITCH_ANGLE=45\nSUN_HEADING_ANGLE=0\n');
+  put('data/lighting.ini',`[LIGHTING]\nSUN_PITCH_ANGLE=${scene.weather.sunPitch}\nSUN_HEADING_ANGLE=${scene.weather.sunHeading}\n`);
   put('data/crew.ini','[HEADER]\nVERSION=1\n[CREW]\nSIDE=1\n');
   put('data/sections.ini','[SECTION_0]\nIN=0\nOUT=.333333\nNAME=Sector 1\n[SECTION_1]\nIN=.333333\nOUT=.666667\nNAME=Sector 2\n[SECTION_2]\nIN=.666667\nOUT=1\nNAME=Sector 3\n');
   const details=track.details||{},tags=[details.type||'circuit','apex','generated',...(details.tags||'').split(',').map(t=>t.trim()).filter(Boolean)];
   put('ui/ui_track.json',JSON.stringify({name:track.name,description:details.description||'A circuit traced and generated with APEX. Browser-generated prototype; verify in practice before racing.',tags:[...new Set(tags)],geotags:track.background?.type==='map'?[String(track.background.lat),String(track.background.lon)]:[],country:scene.options.country,city:scene.options.city,length:`${Math.round(scene.length)} m`,width:`${track.width} m`,pitboxes:String(scene.pitCount),author:scene.options.author,version:details.version||'1.0',url:details.website||'https://deepinkgroup.github.io/apex-circuit-workshop/'},null,2));
-  if(scene.options.ai){put('ai/fast_lane.ai',writeAi(scene.frames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitFrames,6,false));}
+  if(scene.options.ai){put('ai/fast_lane.ai',writeAi(scene.frames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitFrames,scene.pitPlan.settings.width,false));}
   for(const [name,bytes] of Object.entries(images))put(name,bytes);
   if(images['map.png'])put('data/map.ini',`[PARAMETERS]\nWIDTH=1000\nHEIGHT=740\nX_OFFSET=${500*unit(track)}\nZ_OFFSET=${370*unit(track)}\nSCALE_FACTOR=${unit(track)}\nDRAWING_SIZE=10\nMARGIN=0\n`);
-  put('apex_source.json',JSON.stringify({format:'apex-circuit',version:4,...track,background:null},null,2));
+  put('apex_source.json',JSON.stringify({format:'apex-circuit',version:5,...track,background:null},null,2));
   put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
-  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nReference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nAI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nThis export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
+  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nPlaced trees and styled pit lanes are included. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nAI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nThis export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
   return {files,scene,slug,report};
 }
 export function exportZip(track,images={}){const result=exportFiles(track,images);return {...result,bytes:zipFiles(result.files)};}

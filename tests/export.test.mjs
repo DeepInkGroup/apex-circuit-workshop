@@ -52,9 +52,9 @@ test('ZIP entries use CM content/tracks structure and CRCs match their payloads'
   while(r.view.getUint32(r.offset,true)===0x04034b50){r.u32();r.u16();r.u16();assert.equal(r.u16(),0);r.u16();r.u16();const crc=r.u32(),size=r.u32();assert.equal(r.u32(),size);const pathLength=r.u16(),extra=r.u16();const path=new TextDecoder().decode(bytes.slice(r.offset,r.offset+pathLength));r.offset+=pathLength+extra;assert.equal(crc32(bytes.slice(r.offset,r.offset+size)),crc);r.offset+=size;paths.push(path);}
   assert.ok(paths.includes(`content/tracks/${slug}/${slug}.kn5`));assert.ok(paths.includes(`content/tracks/${slug}/ui/ui_track.json`));assert.ok(paths.includes('INSTALL.txt'));assert.equal(r.u32(),0x02014b50);
 });
-test('invalid crossings and cramped pit layouts are rejected',()=>{
+test('invalid crossings are rejected and short pit routes receive fitted bays',()=>{
   const crossed={...track,smooth:false,points:[{x:100,y:100},{x:900,y:600},{x:100,y:600},{x:900,y:100}]};assert.ok(validateExport(crossed).errors.some(e=>e.includes('crosses')));
-  assert.ok(validateExport({...track,pit:[{x:100,y:100},{x:110,y:100}]}).errors.some(e=>e.includes('pit-lane')));
+  assert.equal(validateExport({...track,pit:[{x:100,y:100},{x:110,y:100}]}).errors.length,0);
   assert.equal(validateExport(track).errors.length,0);
 });
 test('custom two-point pit path is resampled and creates distinct pit boxes',()=>{
