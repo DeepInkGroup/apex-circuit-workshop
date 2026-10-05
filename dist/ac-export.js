@@ -1,13 +1,14 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js';
-import {BinaryWriter,zipFiles} from './binary.js';
-import {ASPHALT} from './surfaces.js';
-import {analyzeTrack} from './analysis.js';
-import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js';
-import {WEATHER} from './environment.js';
-import {kerbSides} from './corner-settings.js';
-import {createTexture,materialProperties} from './textures.js';
-import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js';
-import {trackScale,toGamePoint,toEditorPoint} from './coordinates.js';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261006-scene';
+import {BinaryWriter,zipFiles} from './binary.js?v=20261006-scene';
+import {ASPHALT} from './surfaces.js?v=20261006-scene';
+import {analyzeTrack} from './analysis.js?v=20261006-scene';
+import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261006-scene';
+import {WEATHER} from './environment.js?v=20261006-scene';
+import {TREE_SPECIES,treeSettings} from './trees.js?v=20261006-scene';
+import {kerbSides} from './corner-settings.js?v=20261006-scene';
+import {createTexture,materialProperties} from './textures.js?v=20261006-scene';
+import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261006-scene';
+import {trackScale,toGamePoint,toEditorPoint,gameDirection} from './coordinates.js?v=20261006-scene';
 
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true,trees:true,buildings:true,roadGrip:1,grassGrip:.7,grassFx:true,gridSpacing:6,wallHeight:2};
 export function trackSlug(name){return ('apex_'+name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')).slice(0,32).replace(/_+$/,'')||'apex_circuit';}
@@ -26,7 +27,7 @@ function quad(m,a,b,c,d,uvScale=5){
   for(const p of [a,b,c,d])m.vertices.push({pos:p,normal,uv:vertical?[p[side?2:0]/uvScale,p[1]/uvScale]:[p[0]/uvScale,p[2]/uvScale],tangent:side?[0,0,1]:[1,0,0]});
   for(const triangle of [[0,1,2],[0,2,3]]){const positions=[a,b,c,d],n=cross(sub(positions[triangle[1]],positions[triangle[0]]),sub(positions[triangle[2]],positions[triangle[0]]));if(surface&&n[1]<0)[triangle[1],triangle[2]]=[triangle[2],triangle[1]];m.indices.push(...triangle.map(i=>i+base));}
 }
-function frame(p,t){const pos=world(p,t),forward=[Math.cos(p.angle),0,Math.sin(p.angle)],left=[forward[2],0,-forward[0]];return {pos,forward,left,bank:Math.tan((p.bank||0)*Math.PI/180),kerbs:p.kerbs||'inherit',kerbWidth:p.kerbWidth||.7};}
+function frame(p,t){return {pos:world(p,t),...gameDirection(p.angle),bank:Math.tan((p.bank||0)*Math.PI/180),kerbs:p.kerbs||'inherit',kerbWidth:p.kerbWidth||.7};}
 const edge=(f,offset,lift=0)=>[f.pos[0]+f.left[0]*offset,f.pos[1]+offset*f.bank+lift,f.pos[2]+f.left[2]*offset];
 function band(m,frames,left,right,lift=0,closed=true){
   const count=closed?frames.length:frames.length-1;
@@ -68,6 +69,12 @@ export function createScene(track){
   }
   const markings=add('ROAD_MARKINGS',2);band(markings,frames,half-.15,half-.28,.012,closed);band(markings,frames,-half+.28,-half+.15,.012,closed);
   const start=frames[0];
+  // Painted arrows keep the actual driving direction visible in 3D and in-game.
+  for(const progress of (closed?[.015,.25,.5,.75]:[.1,.6])){
+    const f=frame(pointOnTrack(g,closed?(track.start||0)+progress:progress),track),size=Math.min(1.2,half*.28),point=(along,left)=>[f.pos[0]+f.forward[0]*along+f.left[0]*left,f.pos[1]+left*f.bank+.027,f.pos[2]+f.forward[2]*along+f.left[2]*left];
+    quad(markings,point(-size*1.5,size*.17),point(size*.25,size*.17),point(size*.25,-size*.17),point(-size*1.5,-size*.17));
+    quad(markings,point(0,size*.65),point(size*1.5,0),point(0,-size*.65),point(size*.2,0));
+  }
   for(let side=-half;closed&&side<half;side+=.5)for(let row=0;row<2;row++){
     const m=(Math.floor((side+half)/.5)+row)%2?road:markings;
     const point=(off,fwd)=>[start.pos[0]+start.left[0]*off+start.forward[0]*fwd,start.pos[1]+off*start.bank+.025,start.pos[2]+start.left[2]*off+start.forward[2]*fwd];
@@ -111,8 +118,23 @@ export function createScene(track){
   const trunks=add('1WALL_TREE_TRUNKS',8),leaves=add('SCENERY_TREE_CANOPY',9),leafHighlights=add('SCENERY_TREE_HIGHLIGHTS',10);
   const triangle=(m,a,b,c)=>{const index=m.vertices.length,n=normalize(cross(sub(b,a),sub(c,a)));[a,b,c].forEach(p=>m.vertices.push({pos:p,normal:n,uv:[p[0]/3,p[2]/3],tangent:[1,0,0]}));m.indices.push(index,index+1,index+2);};
   const crown=(m,x,y,z,r,h)=>{const ring=[[x+r,y,z],[x,y,z+r],[x-r,y,z],[x,y,z-r]],top=[x,y+h,z],bottom=[x,y-h*.6,z];for(let i=0;i<4;i++){triangle(m,ring[(i+1)%4],ring[i],top);triangle(m,ring[i],ring[(i+1)%4],bottom);}};
-  for(const tree of (options.trees?(track.trees||[]):[]).slice(0,300)){const p=world({...tree,elevation:base},track),height=clamp(Number(tree.height)||8,3,18);box(trunks,p[0],base,p[2],Math.max(.2,height*.04),height*.75,Math.max(.2,height*.04));if(tree.type==='pine'){for(let i=0;i<3;i++)crown(i%2?leafHighlights:leaves,p[0],base+height*(.45+i*.19),p[2],height*(.27-i*.06),height*.23);}else{crown(leaves,p[0],base+height*.72,p[2],height*.32,height*.28);crown(leafHighlights,p[0]+height*.14,base+height*.79,p[2]+height*.09,height*.23,height*.22);}}
   materials.push({name:'Building plaster',color:[196,191,172],noise:4},{name:'Roof graphite',color:[74,85,90],noise:5},{name:'Building glass',color:[57,91,105],noise:2},{name:'Building trim',color:[211,220,210],noise:2},{name:'Roof terracotta',color:[160,105,78],noise:6},{name:'Roof blue',color:[75,115,133],noise:5},{name:'Grandstand seats',color:[151,87,49],noise:3});
+  materials[8].tree=materials[9].tree=materials[10].tree=true;
+  const foliage={broadleaf:[leaves,leafHighlights],pine:[leaves,leafHighlights]},used=new Set((options.trees?track.trees||[]:[]).map(t=>treeSettings(t).type));
+  for(const type of used)if(!foliage[type])foliage[type]=TREE_SPECIES[type].colors.slice(0,2).map((color,i)=>{const mat=materials.length;materials.push({name:`Tree ${type} ${i?'highlight':'foliage'}`,color:[1,3,5].map(j=>parseInt(color.slice(j,j+2),16)),noise:7,tree:true});return add(`SCENERY_TREE_${type.toUpperCase()}_${i}`,mat);});
+  let birchBark=trunks;if(used.has('birch')){const mat=materials.length;materials.push({name:'Tree birch bark',color:[212,212,187],noise:16,tree:true});birchBark=add('1WALL_TREE_BIRCH_TRUNKS',mat);}
+  for(const source of (options.trees?track.trees||[]:[]).slice(0,300)){
+    const tree=treeSettings(source),p=world({...source,elevation:base},track),h=tree.height,[dark,light]=foliage[tree.type],x=p[0],z=p[2];
+    box(tree.type==='birch'?birchBark:trunks,x,base,z,Math.max(.16,h*.035),h*(tree.type==='palm'?.84:.7),Math.max(.16,h*.035));
+    if(tree.type==='pine')for(let i=0;i<3;i++)crown(i%2?light:dark,x,base+h*(.35+i*.2),z,h*(.27-i*.06),h*.23);
+    else if(tree.type==='cypress'){crown(dark,x,base+h*.59,z,h*.16,h*.41);crown(light,x+h*.025,base+h*.72,z,h*.11,h*.27);}
+    else if(tree.type==='palm'){
+      crown(dark,x,base+h*.84,z,h*.09,h*.08);
+      for(let i=0;i<8;i++){const a=i*Math.PI/4,dir=[Math.cos(a),Math.sin(a)],side=[-dir[1],dir[0]],stem=[x,base+h*.86,z],mid=[x+dir[0]*h*.23,base+h*.98,z+dir[1]*h*.23],tip=[x+dir[0]*h*.42,base+h*.77,z+dir[1]*h*.42],a1=[mid[0]+side[0]*h*.065,mid[1],mid[2]+side[1]*h*.065],b1=[mid[0]-side[0]*h*.065,mid[1],mid[2]-side[1]*h*.065],m=i%2?light:dark;for(const pts of [[stem,a1,b1],[a1,tip,b1]]){triangle(m,...pts);triangle(m,...[...pts].reverse());}}
+    }else if(tree.type==='birch'){for(let i=0;i<3;i++)crown(i%2?light:dark,x+(i-1)*h*.09,base+h*(.58+i*.12),z+(i%2)*h*.06,h*.19,h*.16);}
+    else if(tree.type==='blossom'){for(let i=0;i<5;i++){const a=i*Math.PI*2/5;crown(i%2?light:dark,x+Math.cos(a)*h*.1,base+h*(.68+(i%2)*.08),z+Math.sin(a)*h*.1,h*.25,h*.21);}}
+    else{crown(dark,x,base+h*.72,z,h*.32,h*.28);crown(light,x+h*.14,base+h*.79,z+h*.09,h*.23,h*.21);}
+  }
   const facadeMaterials={plaster:11},roofMaterials={graphite:12,terracotta:15,blue:16};
   for(const [key,value] of Object.entries(BUILDING_FACADES))if(key!=='plaster'){facadeMaterials[key]=materials.length;materials.push({name:'Building '+key,color:value.color,noise:5,finish:key});}
   for(const [key,value] of Object.entries(BUILDING_ROOFS))if(!(key in roofMaterials)){roofMaterials[key]=materials.length;materials.push({name:'Roof '+key,color:value.color,noise:5});}
@@ -186,7 +208,8 @@ export function writeKn5(scene){
     const radius=Math.max(...m.vertices.map(v=>Math.hypot(...sub(v.pos,center))));
     w.u32(m.material).u32(0).f32(0).f32(100000).floats(center).f32(radius).u8(1);
   });
-  scene.dummies.forEach(d=>{const f=d.forward,right=[f[2],0,-f[0]];w.u32(1).string(d.name).u32(0).u8(1).floats([...right,0,0,1,0,0,...f,0,...d.pos,1]);});
+  // Local X is the car's left side, not its right. Use a proper rotation (det +1).
+  scene.dummies.forEach(d=>{const f=d.forward,left=[f[2],0,-f[0]];w.u32(1).string(d.name).u32(0).u8(1).floats([...left,0,0,1,0,0,...f,0,...d.pos,1]);});
   return w.finish();
 }
 export function writeAi(frames,width,closed=true){
@@ -223,17 +246,17 @@ export function validateExport(track){
   const radiusSamples=poly.map((p,i)=>{const a=poly[(i+n-1)%n],b=poly[(i+1)%n],cross=Math.abs(orient(a,p,b));return cross>1e-6?Math.hypot(a.x-p.x,a.y-p.y)*Math.hypot(p.x-b.x,p.y-b.y)*Math.hypot(a.x-b.x,a.y-b.y)/(2*cross)*s:Infinity;});
   if(Math.min(...radiusSamples)<track.width/2)warnings.push('Some corners are tighter than half the road width. Check the inner-edge overlap in 3D.');
   if(track.points?.some(p=>Math.abs(p.elevation||0)>0))warnings.push('Elevation is hand-authored; the surrounding terrain remains a flat base.');
-  if(!track.pit?.length)warnings.push('An automatic pit lane will be generated near the start. Review it in 3D.');
+  if(!track.pit?.length)warnings.push('An automatic service lane is fitted beside a clear section of track, with entry and exit joins. Review it in 3D.');
   if(track.export?.ai!==false)warnings.push('Generated AI follows the centerline. Refine it in-game for competitive races.');
   const slots=clamp(Math.round(Number(track.export?.pitboxes)||8),1,16),gridLength=8+Math.floor((slots-1)/2)*clamp(Number(track.export?.gridSpacing)||6,4,12);if(track.points?.length>=3&&gridLength>=g.length*s)warnings.push('The starting grid wraps around this short circuit. Reduce pit count or grid row spacing.');
-  const buildingPitPlan=track.export?.buildings!==false&&(track.buildings||[]).length?buildPitPlan(track):null;
+  const buildingPitPlan=buildPitPlan(track);if(buildingPitPlan.overlapsRoad)warnings.push('The custom service lane overlaps the racing road. Use Fit automatic connected lane or move the pit handles onto clear ground.');
   for(const [index,raw] of (track.export?.buildings!==false?(track.buildings||[]):[]).entries()){const b={...raw,...buildingSettings(raw)},plan=buildingPitPlan,corners=buildingCorners(b,s);if(poly.some(p=>buildingContains(b,p,s,track.width/2))||[...plan.path,...plan.parkingPath,...plan.entryConnection,...plan.exitConnection,...plan.bays.flatMap(v=>v.corners)].some(p=>buildingContains(b,p,s,plan.settings.width/2)))warnings.push(`Building ${index+1} overlaps road or pits. Move it before driving.`);if(corners.some(p=>p.x<0||p.x>1000||p.y<0||p.y>740))warnings.push(`Building ${index+1} extends beyond the editor area. The exported grass base will expand to support it.`);}
   return {errors,warnings,length:g.length*s};
 }
 function sceneExtension(scene,track){
-  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=8.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
+  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=9.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
   scene.materials.forEach((m,index)=>{lines.push(`[SHADER_REPLACEMENT_${index}]`,`MATERIALS=${m.name}`,'SHADER=ksPerPixel','RESOURCE_0=txDiffuse',`RESOURCE_TEXTURE_0=${scene.textures[index].name}`);Object.entries(materialProperties(m)).forEach(([key,value],i)=>lines.push(`PROP_${i}=${key}, ${Array.isArray(value)?value.join(', '):value}`));lines.push('');});
-  const grass=GRASS[track.grass]||GRASS.mown;lines.push('[GRASS_FX]',`ACTIVE=${scene.options.grassFx?1:0}`,'GRASS_MESHES=1GRASS_TERRAIN','GRASS_MATERIALS=Grass',`OCCLUDING_MATERIALS=${scene.materials.filter(m=>!['Grass','Foliage','Foliage light','Tree bark'].includes(m.name)).map(m=>m.name).join(', ')}`,'ORIGINAL_GRASS_MATERIALS=','MASK_MAIN_THRESHOLD=-1','MASK_RED_THRESHOLD=0','MASK_MIN_LUMINANCE=-1','MASK_MAX_LUMINANCE=1',`SHAPE_SIZE=${grass.size}`,`SHAPE_TIDY=${grass.tidy}`,`SHAPE_CUT=${grass.cut}`,'SHAPE_WIDTH=1','');return lines.join('\n');
+  const grass=GRASS[track.grass]||GRASS.mown;lines.push('[GRASS_FX]',`ACTIVE=${scene.options.grassFx?1:0}`,'GRASS_MESHES=1GRASS_TERRAIN','GRASS_MATERIALS=Grass',`OCCLUDING_MATERIALS=${scene.materials.filter(m=>m.name!=='Grass'&&!m.tree).map(m=>m.name).join(', ')}`,'ORIGINAL_GRASS_MATERIALS=','MASK_MAIN_THRESHOLD=-1','MASK_RED_THRESHOLD=0','MASK_MIN_LUMINANCE=-1','MASK_MAX_LUMINANCE=1',`SHAPE_SIZE=${grass.size}`,`SHAPE_TIDY=${grass.tidy}`,`SHAPE_CUT=${grass.cut}`,'SHAPE_WIDTH=1','');return lines.join('\n');
 }
 export function exportFiles(track,images={}){
   const report=validateExport(track);if(report.errors.length)throw new Error(report.errors.join(' '));
@@ -250,7 +273,7 @@ export function exportFiles(track,images={}){
   if(scene.options.ai){put('ai/fast_lane.ai',writeAi(scene.frames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitFrames,scene.pitPlan.settings.width,false));}
   for(const [name,bytes] of Object.entries(images))put(name,bytes);
   if(images['map.png'])put('data/map.ini',`[PARAMETERS]\nWIDTH=1000\nHEIGHT=740\nX_OFFSET=${500*unit(track)}\nZ_OFFSET=${370*unit(track)}\nSCALE_FACTOR=${unit(track)}\nDRAWING_SIZE=10\nMARGIN=0\n`);
-  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:8,background:null},null,2));
+  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:9,background:null},null,2));
   put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
   files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.options.gridSpacing} m row spacing\nRoad grip ${scene.options.roadGrip} · grass grip ${scene.options.grassGrip}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nOpaque uncompressed BGRA DDS textures with mipmaps are embedded in the KN5 and copied to texture/. Opaque materials include explicit shader properties with moderated diffuse lighting and zero emissive output. An extension/ext_config.ini supplies explicit texture bindings and optional Grass FX for CSP; the colored base works without CSP. Textured grass covers the empty ground. Placed buildings have collision bodies and detailed roofs, windows, and garage doors. Trees and buildings follow the scenery switches in Assetto Corsa setup. Custom corners and styled pit lanes are included. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nAI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nThe export uses the same X/Z orientation as the editor and minimap. Exit the current driving session, export a fresh ZIP, and replace the old track files in Content Manager. Re-enter the session to load the new model and versioned textures. Old downloads cannot update themselves. ui/preview.png is the color overview; map.png and ui/outline.png are white route masks by design. This export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
   put('extension/ext_config.ini',sceneExtension(scene,track));

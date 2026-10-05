@@ -1,5 +1,5 @@
-import {DEFAULT_EXPORT,trackSlug,validateExport} from './ac-export.js';
-import {GRASS} from './scenery.js';
+import {DEFAULT_EXPORT,trackSlug,validateExport} from './ac-export.js?v=20261006-scene';
+import {GRASS} from './scenery.js?v=20261006-scene';
 const $=s=>document.querySelector(s);
 export function mountACSetup(api){const section=$('.export-settings'),body=section.querySelector('.details-body');
  const inputs=Object.fromEntries(['author','country','city','pits','kerbs','barriers','ai'].map(k=>[k,$('#export-'+k)]));

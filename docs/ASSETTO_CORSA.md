@@ -37,7 +37,17 @@ The package summary displays the generated track folder, pit count, grass finish
 
 ## Connected pit lane
 
-Custom pit paths automatically gain curved entry and exit ribbons anchored to the centerline in the driving direction. The connector positions recalculate when the road or pit points move. They carry road/pit elevation and banking, and taper their road join height to avoid a sharp 35 mm step. The service path remains editable and keeps its fitted pit bays. Connections appear in 2D, 3D, route images, KN5 geometry, and pit AI. In **Pit lane design**, turn off **Connect entry & exit to track** to keep manual joins. Inspect complex nearby corners and crossing paths in 3D. The automatic pit route already joins the road.
+Automatic pits use a separate straight service lane beside a clear section of the circuit. The planner searches for a shoulder outside the racing surface, fits the selected number of bays, and connects both ends with curved ribbons. **Minimum road gap** sets the requested separation; the planner increases it when nearby road sections need more clearance. **Pit side** chooses automatic outside, left, or right. Use **Fit automatic connected lane** to replace a custom route with the generated layout; Undo restores your route. Pits extending outside the canvas receive an expanded grass base in the mod. Fit view includes the pit layout.
+
+Custom pit paths automatically gain curved entry and exit ribbons anchored to the centerline in the driving direction. The connector positions recalculate when the road or pit points move. They carry road/pit elevation and banking, and taper their road join height to avoid a sharp 35 mm step. Draw the service route on clear ground beside the road. Overlapping custom routes receive a placement note and remain editable. Connections appear in 2D, 3D, route images, KN5 geometry, and pit AI. Turn off **Connect entry & exit to track** for manual joins. Inspect complex nearby corners and crossing paths in 3D.
+
+### Trees and automatic planting
+
+Choose oak, pine, white-bark birch, cypress, palm, or cherry blossom in **Weather & trees**. All six have distinct 2D and native 3D models. Place individually with T, then select with Move to change height or species. **Automatic random trees** adds up to 200 per batch, with a maximum of 300 per circuit. Choose clear-ground scatter, track edges, or woodland groves. Mix all species or use the current brush; heights vary naturally. Planting checks canopy clearance against roads, pit connections and bays, buildings, barriers, and existing trees. If space runs out, only the trees that fit are added. Undo removes the whole batch. Saved circuits, JSON files, shared codes, color previews, and KN5 exports preserve the species.
+
+### Driving direction
+
+The export preserves the point order and the editor's turn direction. Painted road arrows show the forward direction in 3D and the mod. The native car convention is +Z forward and +X left, confirmed from the stock car's wheel nodes; the editor uses +Y downward and converts it to native +Z. Minimap image projection is separate from driving coordinates. Re-export and replace an old installed mod to get the corrected geometry; existing ZIP files do not update themselves.
 
 ## Material export and replacing an old mod
 

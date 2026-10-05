@@ -1,5 +1,5 @@
-import {generateTrack,randomSeed,GENERATOR_STYLES} from './generator.js';
-import {buildGeometry} from './engine.js';
+import {generateTrack,randomSeed,GENERATOR_STYLES} from './generator.js?v=20261006-scene';
+import {buildGeometry} from './engine.js?v=20261006-scene';
 const $=s=>document.querySelector(s);
 export function mountGenerator(api){
   const panel=$('.starter-section'),newButton=$('#new-btn');panel.classList.add('generator-panel');panel.innerHTML=`<div class="section-heading"><span class="section-num">IDEA</span><h2>A little inspiration</h2><span class="scene-tag">GENERATOR</span></div><p class="field-hint">Create a fresh circuit. Every seed has its own shape.</p><div id="random-track-preview" class="random-track-preview"></div><label class="studio-field">Layout character<select id="generator-style">${Object.entries(GENERATOR_STYLES).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></label><div class="studio-fields"><label class="studio-field">Target length · meters<input id="generator-length" type="number" min="300" max="5000" step="100" value="900"></label><label class="studio-field">Control points<input id="generator-complexity" type="number" min="8" max="24" value="12"></label></div><label class="studio-field">Seed<input id="generator-seed" maxlength="32" spellcheck="false"></label><div class="generator-actions"><button id="shuffle-track" class="outline-button">↻ New idea</button><button id="apply-generated-track" class="complete-button">Use this circuit</button></div><p id="generator-summary" class="field-hint"></p>`;

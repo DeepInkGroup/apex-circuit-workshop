@@ -8,7 +8,10 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
-- Corrected the vertical-axis conversion for exported road geometry, pits, buildings, trees, AI, and spawns. The exported world and minimap use the same orientation. Fresh exports are required to replace previously mirrored mods.
+- Preserved driving turn direction across the editor, 3D model, KN5 export, AI, and spawns: a drawn right turn stays a right turn. Native car axes were compared with the stock Assetto Corsa model. Road arrows show the forward direction in 3D and in-game. Fresh exports replace previously mirrored mods.
+- Automatic pits now use a separate service straight outside the racing surface, with fitted bays and curved entry/exit connections. Adjust the minimum road gap and pit side, or use **Fit automatic connected lane** to replace a custom route that overlaps the road. The grass base expands to support pits outside the drawing bounds.
+- Six tree models: oak, pine, birch with white bark, slender cypress, palm with fronds, and pink cherry blossom. Species and dimensions survive saved circuits, sharing, and mod exports.
+- **Automatic random trees** adds 1–200 trees across clear ground, along track edges, or in woodland groves. Mix species or use the current brush, with varied heights and clearance around roads, pit ribbons/bays, buildings, barriers, and existing trees. Each batch is undoable; the scene supports 300 trees.
 - North-aligned 3D preview, **Top view**, and **Reset view** controls make the layout easier to compare with the drawing.
 - Four new building models: trackside café with an awning and tables, medical center with a roof cross, fuel station with pumps and a canopy, and a hospitality building with a terrace.
 - Five wall finishes, five roof finishes, optional glass panels, a footprint preview, and **Duplicate nearby**. Building clearances include awnings and roof overhangs.

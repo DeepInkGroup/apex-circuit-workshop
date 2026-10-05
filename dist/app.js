@@ -1,21 +1,23 @@
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js';
-import {ReferenceLayer} from './tracing.js';
-import {mountTracer} from './tracer-ui.js';
-import {TrackPreview} from './preview3d.js';
-import {DEFAULT_EXPORT} from './ac-export.js';
-import {ASPHALT,asphaltPattern} from './surfaces.js';
-import {mountAnalysis} from './analysis-ui.js';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js';
-import {mountDrawStudio} from './studio-ui.js';
-import {cornerSettings,kerbSides} from './corner-settings.js';
-import {mountCorners} from './corner-ui.js';
-import {mountGenerator} from './generator-ui.js';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js';
-import {mountScenery} from './scenery-ui.js';
-import {mountACSetup} from './ac-setup-ui.js';
-import {mountSharing} from './sharing.js';
-import {mountWorkspaceNavigation} from './workspace-ui.js';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261006-scene';
+import {ReferenceLayer} from './tracing.js?v=20261006-scene';
+import {mountTracer} from './tracer-ui.js?v=20261006-scene';
+import {TrackPreview} from './preview3d.js?v=20261006-scene';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261006-scene';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-scene';
+import {mountAnalysis} from './analysis-ui.js?v=20261006-scene';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261006-scene';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261006-scene';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261006-scene';
+import {toGamePoint} from './coordinates.js?v=20261006-scene';
+import {mountDrawStudio} from './studio-ui.js?v=20261006-scene';
+import {cornerSettings,kerbSides} from './corner-settings.js?v=20261006-scene';
+import {mountCorners} from './corner-ui.js?v=20261006-scene';
+import {mountGenerator} from './generator-ui.js?v=20261006-scene';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261006-scene';
+import {mountScenery} from './scenery-ui.js?v=20261006-scene';
+import {mountACSetup} from './ac-setup-ui.js?v=20261006-scene';
+import {mountSharing} from './sharing.js?v=20261006-scene';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261006-scene';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -71,7 +73,7 @@ function validateTrack(data) {
   const barriers=Array.isArray(data.barriers)?data.barriers.slice(0,40).filter(b=>b&&Array.isArray(b.points)).map(b=>({points:b.points.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)).slice(0,100).map(p=>({x:clamp(p.x,0,1000),y:clamp(p.y,0,740),elevation:clamp(Number(p.elevation)||0,-100,500)})),height:clamp(Number(b.height)||1.2,.4,4),width:clamp(Number(b.width)||.4,.15,2),style:b.style==='striped'?'striped':'concrete'})).filter(b=>b.points.length):[];
   const details={description:String(data.details?.description||'').slice(0,1500),type:['circuit','kart','test'].includes(data.details?.type)?data.details.type:'circuit',tags:String(data.details?.tags||'').slice(0,200),version:String(data.details?.version||'1.0').slice(0,20),website:/^https?:\/\//i.test(data.details?.website||'')?String(data.details.website).slice(0,200):''};
   const scaleSource=['map','calibrated','manual'].includes(data.scaleSource)?data.scaleSource:background?.type==='map'?'map':'manual',scaleVerification=Number.isFinite(data.scaleVerification?.distanceMeters)&&Number.isFinite(data.scaleVerification?.referencePixels)&&data.scaleVerification.distanceMeters>0&&data.scaleVerification.referencePixels>0?{distanceMeters:data.scaleVerification.distanceMeters,referencePixels:data.scaleVerification.referencePixels}:null;
-  const trees=Array.isArray(data.trees)?data.trees.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)).slice(0,300).map(p=>({x:clamp(p.x,0,1000),y:clamp(p.y,0,740),height:clamp(Number(p.height)||8,3,18),type:p.type==='pine'?'pine':'broadleaf'})):[];
+  const trees=Array.isArray(data.trees)?data.trees.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)).slice(0,300).map(p=>({x:clamp(p.x,0,1000),y:clamp(p.y,0,740),...treeSettings(p)})):[];
   return {name:typeof data.name==='string'?data.name.slice(0,60)||'Untitled Circuit':'Untitled Circuit',points:data.points.map(p=>({x:p.x,y:p.y,elevation:clamp(Number(p.elevation)||0,-100,500),bank:clamp(Number(p.bank)||0,-15,15),...cornerSettings(p)})),generator:data.generator&&typeof data.generator.seed==='string'?{seed:data.generator.seed.slice(0,32),style:['flowing','technical','fast'].includes(data.generator.style)?data.generator.style:'flowing',complexity:clamp(Number(data.generator.complexity)||12,8,24),length:clamp(Number(data.generator.length)||900,300,5000)}:null,width:clamp(Number(data.width)||12,4,30),scale:clamp(Number(data.scale)||.2,.02,10),scaleSource,scaleVerification,smooth:data.smooth!==false,line:!!data.line,start:Number.isFinite(data.start)?((data.start%1)+1)%1:0,preset:['club','technical','speedway'].includes(data.preset)?data.preset:null,id:typeof data.id==='string'?data.id:null,pit,pitSettings:pitSettings(data),barriers,trees,buildings,grass:GRASS[data.grass]?data.grass:'mown',weather:WEATHER[data.weather]?data.weather:'sunny',details,complete:data.complete!==false&&data.points.length>=3,asphalt:ASPHALT[data.asphalt]?data.asphalt:'fresh',background,export:exportOptions};
 }
 function emptyTrack(){return {...presetTrack('club'),name:'Untitled Circuit',points:[],preset:null,complete:false};}
@@ -183,13 +185,7 @@ function drawBarriers(){
   });
 }
 function drawTrees(){
-  const meter=1/(track.scale||.2),weather=track.weather||'sunny';(track.trees||[]).forEach((tree,i)=>{
-    const r=tree.height*.3*meter;ctx.save();ctx.translate(tree.x,tree.y);ctx.fillStyle=weather==='sunset'?'#7f6b3833':'#304e3138';ctx.beginPath();ctx.ellipse(r*.45,r*.3,r*1.12,r*.75,.25,0,Math.PI*2);ctx.fill();
-    const colors=tree.type==='pine'?['#386e5c','#4b8268','#679e7b']:['#487447','#6b9456','#88ac64'];
-    if(tree.type==='pine'){for(let layer=0;layer<3;layer++){const size=r*(1-layer*.22);ctx.fillStyle=colors[layer];ctx.beginPath();ctx.moveTo(0,-size);ctx.lineTo(size*.85,size*.65);ctx.lineTo(-size*.85,size*.65);ctx.closePath();ctx.fill();}}
-    else{for(let j=0;j<5;j++){const a=j*Math.PI*2/5;ctx.fillStyle=colors[j%3];ctx.beginPath();ctx.arc(Math.cos(a)*r*.34,Math.sin(a)*r*.34,r*.72,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#99ba7255';ctx.beginPath();ctx.arc(-r*.17,-r*.16,r*.49,0,Math.PI*2);ctx.fill();}
-    if(i===selectedTree){ctx.beginPath();ctx.arc(0,0,r+4/scale,0,Math.PI*2);ctx.strokeStyle='#ef9d5e';ctx.lineWidth=2/scale;ctx.stroke();}ctx.restore();
-  });
+  (track.trees||[]).forEach((tree,i)=>drawTree(ctx,tree,track.scale,i===selectedTree,scale));
 }
 function drawPitLane(){
   if(track.points.length<2&&track.pit.length<2)return;const plan=pitLayout,meter=1/(track.scale||.2),style=PIT_STYLES[plan.settings.style],color=`rgb(${style.color.join(',')})`;
@@ -204,7 +200,7 @@ function drawPlacement(){
   if(cursorPoint&&tool==='building'){ctx.save();ctx.globalAlpha=.65;drawBuilding(ctx,{...cursorPoint,...buildingBrush},track.scale,true,scale);ctx.restore();return;}
   if(!cursorPoint||!['draw','tree','pit'].includes(tool))return;const p=cursorPoint;
   if(tool==='draw'&&track.points.length){ctx.setLineDash([5/scale,4/scale]);if(track.complete!==false){const i=sampleSegments[nearest(p).index]||0;strokePath('#da9569',1.4/scale,[track.points[i],p,track.points[(i+1)%track.points.length]],false);}else strokePath('#da9569',1.4/scale,[track.points[track.points.length-1],p],false);ctx.setLineDash([]);}
-  ctx.beginPath();ctx.arc(p.x,p.y,tool==='tree'?treeBrush.height*.3/(track.scale||.2):4/scale,0,Math.PI*2);ctx.fillStyle=tool==='tree'?'#5d966c33':'#ef9d5e44';ctx.fill();ctx.strokeStyle=tool==='tree'?'#589065':'#db8955';ctx.lineWidth=1/scale;ctx.stroke();
+  ctx.beginPath();ctx.arc(p.x,p.y,tool==='tree'?treeRadius(treeBrush)/(track.scale||.2):4/scale,0,Math.PI*2);ctx.fillStyle=tool==='tree'?'#5d966c33':'#ef9d5e44';ctx.fill();ctx.strokeStyle=tool==='tree'?'#589065':'#db8955';ctx.lineWidth=1/scale;ctx.stroke();
 }
 function drawAnalysisOverlay(){
   if(analysisOverlay&&analysisData){
@@ -228,11 +224,9 @@ function draw() {
   ctx.restore();
 }
 
-function buildingClear(b){const corners=buildingCorners(b,track.scale);if(corners.some(p=>p.x<0||p.x>1000||p.y<0||p.y>740))return false;const pad=track.width/2+1;if(samples.some(p=>buildingContains(b,p,track.scale,pad)))return false;const pitPoints=[...pitLayout.path,...pitLayout.parkingPath,...pitLayout.connector,...pitLayout.exitConnector,...pitLayout.entryConnection,...pitLayout.exitConnection,...pitLayout.bays.flatMap(v=>v.corners)];if(pitPoints.some(p=>buildingContains(b,p,track.scale,pitLayout.settings.width/2+1)))return false;if((track.trees||[]).some(p=>buildingContains(b,p,track.scale,p.height*.3)))return false;if((track.barriers||[]).some(v=>v.points.some(p=>buildingContains(b,p,track.scale,v.width/2+1))))return false;return !(track.buildings||[]).some(v=>buildingsOverlap(b,v,track.scale));}
+function buildingClear(b){const corners=buildingCorners(b,track.scale);if(corners.some(p=>p.x<0||p.x>1000||p.y<0||p.y>740))return false;const pad=track.width/2+1;if(samples.some(p=>buildingContains(b,p,track.scale,pad)))return false;const pitPoints=[...pitLayout.path,...pitLayout.parkingPath,...pitLayout.connector,...pitLayout.exitConnector,...pitLayout.entryConnection,...pitLayout.exitConnection,...pitLayout.bays.flatMap(v=>v.corners)];if(pitPoints.some(p=>buildingContains(b,p,track.scale,pitLayout.settings.width/2+1)))return false;if((track.trees||[]).some(p=>buildingContains(b,p,track.scale,treeRadius(p))))return false;if((track.barriers||[]).some(v=>v.points.some(p=>buildingContains(b,p,track.scale,v.width/2+1))))return false;return !(track.buildings||[]).some(v=>buildingsOverlap(b,v,track.scale));}
 function canPlantTree(p){
-  if((track.buildings||[]).some(b=>buildingContains(b,p,track.scale,treeBrush.height*.3)))return false;
-  const clearance=(track.width/2+2)/(track.scale||.2);if(samples.length&&nearest(p).distance<clearance)return false;
-  const padding=(pitLayout.settings.width/2+2)/(track.scale||.2);return ![...pitLayout.path,...pitLayout.parkingPath,...pitLayout.connector,...pitLayout.exitConnector,...pitLayout.entryConnection,...pitLayout.exitConnection].some(v=>dist(v,p)<padding)&&!pitLayout.stalls.some(v=>dist(v,p)<5/(track.scale||.2));
+  return treeClear({...treeBrush,...p},track,geometry,pitLayout);
 }
 canvas.addEventListener('pointerdown',e=>{
   if(mode!=='build')return;canvas.focus({preventScroll:true});canvas.setPointerCapture(e.pointerId);const p=screenToWorld(e),hit=pointHit(p);
@@ -251,7 +245,7 @@ canvas.addEventListener('pointerdown',e=>{
     if(!canPlantTree(p)){toast('Leave space between trees, the road, and the pit lane.');return;}
     remember();track.trees||=[];track.trees.push({...p,...treeBrush});selectedTree=track.trees.length-1;selectedPoint=selectedBarrier=-1;commit();return;
   }
-  let treeHit=-1;(track.trees||[]).forEach((v,i)=>{if(dist(v,p)<Math.max(12/scale,v.height*.3/(track.scale||.2)))treeHit=i;});
+  let treeHit=-1;(track.trees||[]).forEach((v,i)=>{if(dist(v,p)<Math.max(12/scale,treeRadius(v)/(track.scale||.2)))treeHit=i;});
   if(treeHit>=0&&hit<0&&tool==='move'){selectedTree=treeHit;selectedPoint=selectedBarrier=-1;drag={kind:'tree',index:treeHit,before:snapshot(),changed:false};syncUI();return;}
   if(treeHit>=0&&hit<0&&tool==='erase'){remember();track.trees.splice(treeHit,1);selectedTree=-1;commit();return;}
   selectedTree=-1;
@@ -284,7 +278,7 @@ canvas.addEventListener('pointerdown',e=>{
   }
 });
 canvas.addEventListener('pointermove',e=>{
-  if(mode!=='build')return;const p=screenToWorld(e);cursorPoint=p;hoverPoint=pointHit(p);const coordinates=$('#cursor-coordinates');if(coordinates)coordinates.textContent=`X ${((p.x-500)*track.scale).toFixed(1)} m / Z ${((p.y-370)*track.scale).toFixed(1)} m`;
+  if(mode!=='build')return;const p=screenToWorld(e);cursorPoint=p;hoverPoint=pointHit(p);const coordinates=$('#cursor-coordinates'),game=toGamePoint(p,track);if(coordinates)coordinates.textContent=`X ${game[0].toFixed(1)} m / Z ${game[2].toFixed(1)} m`;
   if(drag?.kind==='sketch'){if(drag.points.length<1200&&dist(p,drag.points[drag.points.length-1])>5/scale)drag.points.push(p);return;}
   if(drag?.kind==='pan'){view.panX=drag.panX+e.clientX-drag.x;view.panY=drag.panY+e.clientY-drag.y;updateTransform();return;}
   if(drag?.kind==='point'){const v=track.points[drag.index];v.x=clamp(p.x,40,960);v.y=clamp(p.y,70,670);drag.changed=true;track.preset=null;rebuild();syncUI();}
@@ -388,7 +382,8 @@ const editorApi={
   selectBuilding(index){selectedBuilding=track.buildings?.[index]?index:-1;selectedTree=selectedPoint=selectedBarrier=-1;if(selectedBuilding>=0)setTool('move');syncUI();},
   setSnap(enabled,meters){snapEnabled=enabled;snapMeters=meters;},
   setTreeBrush(values){treeBrush={...treeBrush,...values};},
-  scatterTrees(){if(!samples.length){toast('Draw a road before scattering trees.');return;}const added=[],s=track.scale||.2,count=Math.min(120,Math.floor(length*s/12));for(let i=0;i<count;i++){const p=pointAt(i/count),v={x:p.x+Math.sin(p.angle)*pitLayout.side*(track.width/2+9)/s,y:p.y-Math.cos(p.angle)*pitLayout.side*(track.width/2+9)/s,...treeBrush};if(v.x>20&&v.x<980&&v.y>20&&v.y<720&&canPlantTree(v)&&![...(track.trees||[]),...added].some(t=>dist(t,v)<7/s))added.push(v);}if(!added.length){toast('No clear space for edge trees. Place them individually.');return;}remember();track.trees=[...(track.trees||[]),...added].slice(0,300);commit();toast('Trees added beside the circuit. Undo restores the scene.');},
+  scatterTrees(){editorApi.plantRandomTrees({count:40,distribution:'edge',mix:false});},
+  plantRandomTrees(settings){if(!geometry.length){toast('Draw the road before planting automatic trees.');return;}if((track.trees||[]).length>=300){toast('Maximum of 300 trees reached. Remove trees before planting more.');return;}const added=randomTrees(track,geometry,pitLayout,treeBrush,settings);if(!added.length){toast('No clear ground available. Try fewer trees or a different placement style.');return;}remember();track.trees=[...(track.trees||[]),...added];selectedTree=-1;commit();toast(`${added.length} trees planted${added.length<Number(settings.count)?' · remaining spaces were too close to scenery':''}. Undo removes this planting.`);},
   getTrack:()=>track,getSelected:()=>selectedPoint,getBarrier:()=>selectedBarrier,reference:referenceLayer,toast,setTool,preview:showPreview,
   selectBarrier(index){if(mode!=='build')stopPreview();selectedBarrier=index;selectedPoint=-1;setTool('move');tracerUI.refresh();studioUI?.refresh();cornerUI?.refresh();},
   newBarrier(){if(mode==='preview')stopPreview();activeBarrier=-1;selectedBarrier=-1;setTool('barrier');tracerUI.refresh();studioUI?.refresh();cornerUI?.refresh();},
