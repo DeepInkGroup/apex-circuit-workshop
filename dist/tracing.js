@@ -17,7 +17,7 @@ export function tilePlan(lat,lon,zoom){
 function loadImage(src){return new Promise((resolve,reject)=>{const image=new Image();image.crossOrigin='anonymous';image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('Reference imagery could not be loaded. Try another zoom or upload an image.'));image.src=src;});}
 function assetDb(){return new Promise((resolve,reject)=>{const request=indexedDB.open('apex-reference-images',1);request.onupgradeneeded=()=>request.result.createObjectStore('images');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}
 export async function saveImage(key,data){const db=await assetDb();try{await new Promise((resolve,reject)=>{const tx=db.transaction('images','readwrite');tx.objectStore('images').put(data,key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}finally{db.close();}}
-async function readImage(key){const db=await assetDb();try{return await new Promise((resolve,reject)=>{const request=db.transaction('images').objectStore('images').get(key);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}finally{db.close();}}
+export async function readImage(key){const db=await assetDb();try{return await new Promise((resolve,reject)=>{const request=db.transaction('images').objectStore('images').get(key);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});}finally{db.close();}}
 export class ReferenceLayer {
   constructor(onChange,onError){this.onChange=onChange;this.onError=onError;this.cache=new Map();this.pending=new Set();this.image=null;this.currentKey='';}
   key(desc){return desc?JSON.stringify(desc):'';}

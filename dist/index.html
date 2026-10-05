@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./workshop.css" />
   <link rel="stylesheet" href="./scenery.css" />
   <link rel="stylesheet" href="./release8.css" />
+  <link rel="stylesheet" href="./friendly.css" />
 </head>
 <body>
   <header class="topbar">
@@ -48,7 +49,7 @@
     </section>
     <section class="below-studio"><div class="tip"><span class="tip-icon">↗</span><p><strong>Every great circuit starts with a corner.</strong><br />Refine your geometry, inspect its data, and export your track.</p></div><div class="workflow"><span><b>01</b> Design</span><i>→</i><span><b>02</b> Analyze</span><i>→</i><span><b>03</b> Refine</span></div></section>
   </main>
-  <footer><span>APEX <span class="footer-slash">/</span> From real places to racing circuits.</span><span>TRACE. INSPECT. EXPORT. <span class="orange-dash"></span></span></footer>
+  <footer class="apex-footer"><span class="footer-version">V 1.3.2</span><span class="footer-brand">APEX Design.</span><a class="footer-telegram" href="https://t.me/DeepInkGroup" target="_blank" rel="noopener noreferrer" aria-label="DeepInk Group on Telegram" title="DeepInk Group on Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.7 3.4 18.5 20c-.2 1.2-.9 1.5-1.8.9l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.1-8.2c.4-.4-.1-.6-.6-.3L6.1 13.7 1.3 12.2c-1-.3-1-1 .2-1.5L20.2 3.5c.9-.3 1.6.2 1.5-.1Z"/></svg></a></footer>
 
   <dialog id="help-dialog"><div class="dialog-top"><p class="eyebrow">WELCOME TO THE WORKSHOP</p><button class="icon-button close-dialog" aria-label="Close help">×</button></div><h2>Trace. Analyze. Export.</h2><div class="help-steps"></div><p class="help-note"></p><button class="primary-button close-dialog">Let’s build <span>↗</span></button></dialog>
   <dialog id="library-dialog"><div class="dialog-top"><p class="eyebrow">YOUR CIRCUITS</p><button class="icon-button close-dialog" aria-label="Close circuit library">×</button></div><h2>My circuits<span>.</span></h2><p class="dialog-description">Your layouts, saved in this browser.</p><div id="library-list"></div><div class="library-actions"><button id="import-btn" class="subtle-button"><i data-icon="upload"></i> Import</button><button id="export-current" class="subtle-button"><i data-icon="download"></i> Export current</button><input id="import-file" type="file" accept=".json,application/json" hidden /><button class="primary-button close-dialog">Back to studio ↗</button></div></dialog>

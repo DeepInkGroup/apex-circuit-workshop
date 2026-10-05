@@ -1,10 +1,18 @@
-# APEX 8.0 — Circuit Studio for Assetto Corsa
+# APEX 1.3.2 — Circuit Studio for Assetto Corsa
 
 **[Open the website](https://deepinkgroup.github.io/apex-circuit-workshop/)**
 
-Trace a racing circuit over satellite imagery or an uploaded reference, refine its geometry, analyze its data, and export a native Assetto Corsa track ZIP for Content Manager. No account, build step, or server is required.
+Trace a racing circuit over satellite imagery or an uploaded reference, refine its geometry, analyze its data, and export a native Assetto Corsa track ZIP for Content Manager. The editor runs on GitHub Pages without an account or build step. Cross-device sharing uses a public Sites Worker with persistent R2 storage.
 
 **[Tracing, export, installation, and limitations](docs/ASSETTO_CORSA.md)**
+
+## New in 1.3.2
+
+- **Share** creates a real 14-digit code for an immutable circuit snapshot. Another user pastes it, previews the layout, and opens an editable copy. Copy a code or a direct editor link. Leading zeros are preserved.
+- Sharing includes road geometry, corner styles, pit paths, trees, buildings, scale, circuit details, and mod settings. Uploaded reference images are optional; satellite references share coordinates. Anyone with a code can retrieve its snapshot. Create a fresh code to share later edits.
+- **Corners** has independent entry/exit reach, five presets, an actual curve preview, turn deflection, elevation, banking, and style copy/paste. Geometry changes carry into the exported mod.
+- Task tabs organize Design, Corners, Scenery, Export, and Share. A first-circuit guide makes the starting actions clear.
+- Footer: `V 1.3.2` / `APEX Design.` / Telegram.
 
 ## Trace → inspect → export
 

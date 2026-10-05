@@ -4,7 +4,7 @@ const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const wrap = n => ((n % 1) + 1) % 1;
 
 function spline(a, b, c, d, t) {
-  const t2=t*t,t3=t2*t,start=clamp(Number.isFinite(b.rounding)?b.rounding:1,0,1),end=clamp(Number.isFinite(c.rounding)?c.rounding:1,0,1);
+  const t2=t*t,t3=t2*t,start=clamp(Number.isFinite(b.rounding)?b.rounding:1,0,1)*clamp(Number.isFinite(b.exitStrength)?b.exitStrength:1,0,1.6),end=clamp(Number.isFinite(c.rounding)?c.rounding:1,0,1)*clamp(Number.isFinite(c.entryStrength)?c.entryStrength:1,0,1.6);
   return Object.fromEntries(['x','y'].map(k=>[k,(2*t3-3*t2+1)*b[k]+(t3-2*t2+t)*(c[k]-a[k])*.5*start+(-2*t3+3*t2)*c[k]+(t3-t2)*(d[k]-b[k])*.5*end]));
 }
 
