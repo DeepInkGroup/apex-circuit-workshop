@@ -1,5 +1,5 @@
-import {closestOnTrack,pointOnTrack} from './engine.js?v=20261006-race';
-import {buildingContains} from './scenery.js?v=20261006-race';
+import {closestOnTrack,pointOnTrack} from './engine.js?v=20261006-finish';
+import {buildingContains} from './scenery.js?v=20261006-finish';
 
 export const TREE_SPECIES={
   broadleaf:{label:'Oak · broad canopy',radius:.37,height:8,colors:['#487447','#6b9456','#88ac64']},
@@ -28,10 +28,11 @@ export function drawTree(ctx,source,scale=.2,selected=false,zoom=1){
   if(selected){ctx.beginPath();ctx.arc(0,0,r+4/zoom,0,Math.PI*2);ctx.strokeStyle='#ef9d5e';ctx.lineWidth=2/zoom;ctx.stroke();}ctx.restore();
 }
 function pathNear(points,p,distance){return points.slice(1).some((b,i)=>{const a=points[i],dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=l?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/l)):0;return Math.hypot(p.x-a.x-dx*t,p.y-a.y-dy*t)<distance;});}
-export function treeClear(p,track,geometry,pit,existing=track.trees||[]){
+export function treeClear(p,track,geometry,pit,existing=track.trees||[],gantry=null){
   const scale=track.scale||.2,r=treeRadius(p),padding=(r+1)/scale;
   if(p.x<padding||p.x>1000-padding||p.y<padding||p.y>740-padding)return false;
   if(geometry.length&&closestOnTrack(geometry,p).distance*scale<track.width/2+r+1)return false;
+  if(gantry?.supports.some(v=>Math.hypot(v.x-p.x,v.y-p.y)*scale<r+1))return false;
   if((track.buildings||[]).some(b=>buildingContains(b,p,scale,r+1)))return false;
   if((track.barriers||[]).some(b=>pathNear(b.points,p,(b.width/2+r+1)/scale)))return false;
   if([...pit.path,...pit.parkingPath].length&&[pit.path,pit.parkingPath,pit.connector,pit.exitConnector,pit.entryConnection,pit.exitConnection].some(path=>pathNear(path,p,(pit.settings.width/2+r+1)/scale)))return false;
@@ -46,7 +47,7 @@ export function randomTrees(track,geometry,pit,brush,settings={}){
     let p={x:Math.random()*1000,y:Math.random()*740};
     if(settings.distribution==='edge'){const road=pointOnTrack(geometry,Math.random()),offset=(Math.random()<.5?-1:1)*(track.width/2+treeRadius({type,height})+4+Math.random()*18)/scale;p={x:road.x+Math.sin(road.angle)*offset,y:road.y-Math.cos(road.angle)*offset};}
     if(settings.distribution==='groves'){const center=centers[Math.floor(Math.random()*centers.length)],a=Math.random()*Math.PI*2,r=Math.sqrt(Math.random())*22/scale;p={x:center.x+Math.cos(a)*r,y:center.y+Math.sin(a)*r};}
-    const tree={...p,...treeSettings({type,height:Math.round(height*2)/2})};if(treeClear(tree,track,geometry,pit,[...(track.trees||[]),...added]))added.push(tree);
+    const tree={...p,...treeSettings({type,height:Math.round(height*2)/2})};if(treeClear(tree,track,geometry,pit,[...(track.trees||[]),...added],settings.gantry))added.push(tree);
   }
   return added;
 }

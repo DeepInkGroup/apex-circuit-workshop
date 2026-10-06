@@ -1,6 +1,6 @@
-import {clamp,closestOnTrack} from './engine.js?v=20261006-race';
-import {buildingContains} from './scenery.js?v=20261006-race';
-import {treeRadius} from './trees.js?v=20261006-race';
+import {clamp,closestOnTrack} from './engine.js?v=20261006-finish';
+import {buildingContains} from './scenery.js?v=20261006-finish';
+import {treeRadius} from './trees.js?v=20261006-finish';
 
 function distanceToSegment(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
 function simplify(points,tolerance){if(points.length<3)return points;const keep=new Set([0,points.length-1]),pending=[[0,points.length-1]];while(pending.length){const [a,b]=pending.pop();let max=tolerance,index=-1;for(let i=a+1;i<b;i++){const distance=distanceToSegment(points[i],points[a],points[b]);if(distance>max){max=distance;index=i;}}if(index>=0){keep.add(index);pending.push([a,index],[index,b]);}}return [...keep].sort((a,b)=>a-b).map(i=>points[i]);}
@@ -8,6 +8,7 @@ export function automaticBarriers(track,geometry,road,pit,options={}){
  const scale=track.scale||.2,gap=clamp(Number(options.gap)||4,2,20),width=.4,height=1.2,style=options.style==='striped'?'striped':'concrete';
  const sides=options.side==='left'?[1]:options.side==='right'?[-1]:[1,-1],paths=[],routes=[pit.path,pit.parkingPath,pit.connector,pit.exitConnector,pit.entryConnection,pit.exitConnection],padding=(pit.settings.width/2+width/2+1.5)/scale;
  function clear(p){if(p.x<2||p.x>998||p.y<2||p.y>738)return false;if(closestOnTrack(geometry,p).distance*scale<track.width/2+gap*.7)return false;
+  if(options.gantry?.supports.some(v=>Math.hypot(v.x-p.x,v.y-p.y)*scale<1.4))return false;
   if(routes.some(path=>path.slice(1).some((b,i)=>distanceToSegment(p,path[i],b)<padding)))return false;
   if(pit.bays.some(b=>Math.hypot(p.x-b.center.x,p.y-b.center.y)*scale<4.7))return false;
   if((track.buildings||[]).some(b=>buildingContains(b,p,scale,width/2+1)))return false;

@@ -17,9 +17,11 @@ APEX 8.0 traces a circuit and generates a prototype track ZIP entirely in the br
 
 ## Random layouts and custom corners
 
-**A little inspiration** now generates random layouts. Choose a character, target length, control-point count, and seed. **New idea** changes the seed and preview. **Use this circuit** applies the idea as a closed, editable circuit. The seed is saved in circuit JSON. Target length sets the physical scale; no satellite calibration is implied.
+The inspiration generator has been removed. Start from scratch, draw a road, trace a reference or open a shared code. Existing saved circuits remain editable.
 
 Select a road handle, then use **Corner workshop** to name it, adjust rounding, choose sharp/tight/rounded geometry, set banking, and select kerb side and width for its outgoing section. Enable **Smooth corners** for rounding; the global **Generate kerbs** toggle controls all kerbs. These changes carry into the 3D preview and mod.
+
+Kerbs have no raised collision lip: their vertices use the same height and banking as the road edge. Both sine displacement and extra kerb vibration are zero in surfaces.ini. The flat grass base is placed below the lowest paved edge, so it cannot protrude through the low side of a banked corner. Red/white stripes remain flat strips outside the road.
 
 Sharp corners retain their exact control points in the road mesh. Road and kerbs share joined boundary vertices; oversized corner extensions are bounded and local inner-edge loops are trimmed. Kerb width changes use shared endpoints, and pit openings are consistent in the drawing, 3D model, and color preview. Corners tighter than half the road width still need visual review because the road itself may overlap.
 
@@ -33,7 +35,7 @@ Select a garage, control tower, pavilion, covered grandstand, workshop/warehouse
 
 **Assetto Corsa setup** provides Solo practice (1 pit, AI off), Kart session (8 pits, AI on), and Race session (16 pits, AI on) presets. These configure the package, not car classes or game sessions. Set creator and location, edit the full circuit profile, choose 1–16 pit boxes, and set grid row spacing (4–12 m). **Design pit lane** opens the pit editor.
 
-Surface controls write asphalt/kerb/pit friction (0.8–1.2) and grass friction (0.3–0.9) to the existing surface definitions. Defaults are 1.00 and 0.70. Inclusion switches control generated kerbs, outer boundary walls, placed trees, placed buildings, and AI files. Boundary height is adjustable from 0.5–4 m. Grass and custom drawn barriers remain part of the track. The 3D preview shows the selected mod contents. **Grass blades in game · CSP** enables a Grass FX definition when Custom Shaders Patch is installed and Grass FX is enabled. Road, pits, kerbs, walls, and buildings occlude blades; the opaque grass base remains visible without CSP.
+**Surface grip** provides independent road friction (0.8–1.2), flat kerb friction (0.6–1.2), pit friction (0.7–1.1), and grass friction (0.3–0.9). New circuit defaults are 1.00 / 0.96 / 0.95 / 0.65. Grass drag controls DAMPING from 0–0.05; dirt pickup controls DIRT_ADDITIVE from 0–1. Existing saved road/grass values are preserved. Club circuit, High grip and Low grip practice presets apply a complete starting setup; every value remains adjustable. Reset restores the new circuit defaults. These are friction configurations, not rain physics. Choose game weather in Content Manager. Inclusion switches control generated kerbs, outer boundary walls, placed trees, placed buildings, and AI files. Boundary height is adjustable from 0.5–4 m. Grass and custom drawn barriers remain part of the track. The 3D preview shows the selected mod contents. **Grass blades in game · CSP** enables a Grass FX definition when Custom Shaders Patch is installed and Grass FX is enabled. Road, pits, kerbs, walls, and buildings occlude blades; the opaque grass base remains visible without CSP.
 
 The package summary displays the generated track folder, pit count, grass finish, and included scenery counts. Review the export notes and inspect spawns and pit routes. Drop the downloaded ZIP into Content Manager, install it, select the track, choose one car, and start Practice. Game weather and cars are selected in Content Manager.
 
@@ -50,6 +52,8 @@ Choose oak, pine, white-bark birch, cypress, palm, or cherry blossom in **Weathe
 ### Driving direction
 
 The export preserves the point order and the editor's turn direction. Painted road arrows show the forward direction in 3D and the mod. The native car convention is +Z forward and +X left, confirmed from the stock car's wheel nodes; the editor uses +Y downward and converts it to native +Z. Minimap image projection is separate from driving coordinates. Re-export and replace an old installed mod to get the corrected geometry; existing ZIP files do not update themselves.
+
+**Start/Finish Gantry** is enabled by default in Export → Paddock & starting grid. The overhead beam carries readable START / FINISH signs on both faces and red/white checkers. Posts stand outside the racing road; the span expands over adjacent pit lanes and bays at the finish gate. Clearance is measured above the high side of the crossing pavement and can be set from 4.5–8 m. The gantry moves with start/finish, appears in the drawing, 3D model and color overview, and is exported as native collision geometry. Disable it with its inclusion switch. Fit view and the grass base include its supports. New tree planting, building placement and generated walls avoid the supports; existing scenery collisions appear in export review notes.
 
 The start/finish checkerboard is a separate visual paint mesh, without a physical surface prefix. Its white tiles follow road-triangle elevation with a 2 mm display offset, and dark tiles show the underlying asphalt. The collision road contains no raised start/finish tiles.
 

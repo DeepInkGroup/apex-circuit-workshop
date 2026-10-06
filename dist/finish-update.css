@@ -1,0 +1,9 @@
+.surface-presets{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.surface-presets button{flex:1;min-width:85px;border:1px solid #c4d2bd;border-radius:7px;background:#f6f9f0;padding:10px 7px;font:inherit;font-size:11px;color:#35513f;cursor:pointer}
+.surface-presets button[aria-pressed=true]{background:#304c40;color:#fff;border-color:#304c40}
+.surface-comparison{padding:12px;border:1px solid #d4dfcc;background:#eef3e7;border-radius:8px}
+.surface-comparison>div{display:grid;grid-template-columns:85px minmax(0,1fr) 30px;gap:8px;align-items:center;margin:8px 0;font-size:10px;color:#5b705b}
+.surface-comparison i{display:block;height:6px;background:linear-gradient(to right,#52775c var(--grip),#d6e0ce var(--grip));border-radius:4px}
+.surface-comparison b{font:10px ui-monospace,monospace;text-align:right}
+.gantry-controls{padding:12px;margin:12px 0;border:1px solid #d5dfce;border-radius:8px;background:#f1f5eb}
+.gantry-controls .toggle-row{padding-top:0}.gantry-controls .studio-field{margin-bottom:0}

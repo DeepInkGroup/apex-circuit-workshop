@@ -1,18 +1,20 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261006-race';
-import {BinaryWriter,zipFiles} from './binary.js?v=20261006-race';
-import {ASPHALT} from './surfaces.js?v=20261006-race';
-import {analyzeTrack} from './analysis.js?v=20261006-race';
-import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261006-race';
-import {WEATHER} from './environment.js?v=20261006-race';
-import {TREE_SPECIES,treeSettings} from './trees.js?v=20261006-race';
-import {buildRoadLayout} from './road-layout.js?v=20261006-race';
-import {createTrackMap,mapIni} from './track-map.js?v=20261006-race';
-import {createTexture,materialProperties} from './textures.js?v=20261006-race';
-import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261006-race';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261006-race';
-import {buildTimingPlan,sectionsIni} from './timing.js?v=20261006-race';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261006-finish';
+import {BinaryWriter,zipFiles} from './binary.js?v=20261006-finish';
+import {ASPHALT} from './surfaces.js?v=20261006-finish';
+import {analyzeTrack} from './analysis.js?v=20261006-finish';
+import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261006-finish';
+import {WEATHER} from './environment.js?v=20261006-finish';
+import {TREE_SPECIES,treeSettings} from './trees.js?v=20261006-finish';
+import {buildRoadLayout} from './road-layout.js?v=20261006-finish';
+import {createTrackMap,mapIni} from './track-map.js?v=20261006-finish';
+import {createTexture,materialProperties} from './textures.js?v=20261006-finish';
+import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261006-finish';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261006-finish';
+import {buildTimingPlan,sectionsIni} from './timing.js?v=20261006-finish';
+import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261006-finish';
+import {gantryPlan,addGantry} from './gantry.js?v=20261006-finish';
 
-export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true,trees:true,buildings:true,roadGrip:1,grassGrip:.7,grassFx:true,gridSpacing:6,wallHeight:2};
+export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true,trees:true,buildings:true,...surfaceSettings(),grassFx:true,gridSpacing:6,wallHeight:2,gantry:true,gantryClearance:6};
 export function trackSlug(name){return ('apex_'+name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'')).slice(0,32).replace(/_+$/,'')||'apex_circuit';}
 const unit=trackScale;
 const world=toGamePoint;
@@ -58,21 +60,27 @@ function openFrames(points,t){
   return sampled.map((p,i)=>{const a=sampled[Math.max(0,i-1)],b=sampled[Math.min(sampled.length-1,i+1)];return frame({...p,angle:Math.atan2(b.y-a.y,b.x-a.x)},t);});
 }
 export function createScene(track){
-  const closed=track.complete!==false,g=buildGeometry(track.points,track.smooth,closed),options={...DEFAULT_EXPORT,...track.export},s=unit(track),total=g.length*s;
+  const closed=track.complete!==false,g=buildGeometry(track.points,track.smooth,closed),options={...DEFAULT_EXPORT,...track.export,...surfaceSettings(track.export)},s=unit(track),total=g.length*s;
   const pitCount=clamp(Math.round(Number(options.pitboxes)||8),1,16);
   const count=clamp(Math.ceil(total/1.5),64,4000),frames=Array.from({length:count},(_,i)=>frame(pointOnTrack(g,closed?track.start+i/count:i/(count-1)),track));
   const pitPlan=buildPitPlan(track),weather=WEATHER[track.weather]||WEATHER.sunny;
   const meshes=[],dummies=[],half=track.width/2;
   const add=(name,mat)=>{const m=mesh(name,mat);meshes.push(m);return m;};
-  const ground=add('1GRASS_TERRAIN',1),base=Math.min(...frames.map(f=>f.pos[1]))-.08;
-  const footprint=(options.buildings?(track.buildings||[]):[]).flatMap(b=>buildingCorners({...b,...buildingSettings(b)},s)).map(p=>world(p,track));
+  const roadLayout=buildRoadLayout(track,g,pitPlan);
+  // Keep the flat terrain BELOW banked road/kerb edges. Centerline height
+  // alone could let grass collision protrude through the low side of a bend.
+  const paved=[...roadLayout.left,...roadLayout.right,...(options.kerbs?roadLayout.kerbs.flatMap(p=>p.corners):[])],pitPaved=[...pitPlan.path,...pitPlan.parkingPath,...pitPlan.connector,...pitPlan.exitConnector,...pitPlan.entryConnection,...pitPlan.exitConnection,...pitPlan.bays.flatMap(b=>b.corners)];
+  let base=frames.reduce((height,f)=>Math.min(height,f.pos[1]),Infinity);for(const p of paved)base=Math.min(base,p.elevation||0);for(const p of pitPaved)base=Math.min(base,(p.elevation||0)-Math.abs(Math.tan((p.bank||0)*Math.PI/180))*pitPlan.settings.width/2);base-=.08;const ground=add('1GRASS_TERRAIN',1);
+  const timingPlan=buildTimingPlan(track,g,roadLayout),gantry=gantryPlan(track,timingPlan,pitPlan,base);
+  const footprint=(options.buildings?(track.buildings||[]):[]).flatMap(b=>buildingCorners({...b,...buildingSettings(b)},s)).map(p=>world(p,track));footprint.push(...(gantry?.supports||[]).map(p=>world(p,track)));
   const xmin=Math.min(-500*s,...footprint.map(p=>p[0]-2),(pitPlan.bounds.minX-500)*s-12),xmax=Math.max(500*s,...footprint.map(p=>p[0]+2),(pitPlan.bounds.maxX-500)*s+12),zmin=Math.min(-370*s,...footprint.map(p=>p[2]-2),(pitPlan.bounds.minY-370)*s-12),zmax=Math.max(370*s,...footprint.map(p=>p[2]+2),(pitPlan.bounds.maxY-370)*s+12);
   quad(ground,[xmin,base,zmin],[xmin,base,zmax],[xmax,base,zmax],[xmax,base,zmin],18);
-  const roadLayout=buildRoadLayout(track,g,pitPlan),road=add('1ROAD_SURFACE',0);
+  const road=add('1ROAD_SURFACE',0);
   roadLayout.quads.forEach(corners=>quad(road,...corners.map(p=>world(p,track))));
   if(options.kerbs){
     const white=add('1KERB_WHITE',2),red=add('1KERB_RED',3);
-    roadLayout.kerbs.forEach(panel=>quad(panel.white?white:red,...panel.corners.map(p=>{const v=world(p,track);v[1]+=.035;return v;})));
+    // Flush collision strips share the road edge exactly: no raised tiles.
+    roadLayout.kerbs.forEach(panel=>quad(panel.white?white:red,...panel.corners.map(p=>world(p,track))));
   }
   const markings=add('ROAD_MARKINGS',2);for(const corners of [...roadLayout.bands(half-.15,half-.28),...roadLayout.bands(-half+.28,-half+.15)])quad(markings,...corners.map(p=>{const v=world(p,track);v[1]+=.002;return v;}));
   const start=frames[0];
@@ -107,7 +115,6 @@ export function createScene(track){
     dummy(`AC_PIT_${i}`,frame(pitPlan.stalls[i],track));
   }
   dummy('AC_HOTLAP_START_0',frame(pointOnTrack(g,track.start-25/total),track));
-  const timingPlan=buildTimingPlan(track,g,roadLayout);
   for(const gate of timingPlan.gates)for(const [side,p] of [['L',gate.left],['R',gate.right]])dummies.push({name:`AC_TIME_${gate.id}_${side}`,pos:world(p,track),forward:gameDirection(gate.point.angle).forward});
   if(options.barriers){const wall=add('1WALL_BOUNDARY',4),width=xmax-xmin,depth=zmax-zmin,cx=(xmin+xmax)/2,cz=(zmin+zmax)/2;
     const height=clamp(Number(options.wallHeight)||2,.5,4);box(wall,cx,base,zmin,width,height,.4);box(wall,cx,base,zmax,width,height,.4);box(wall,xmin,base,cz,.4,height,depth);box(wall,xmax,base,cz,.4,height,depth);
@@ -130,6 +137,7 @@ export function createScene(track){
   const crown=(m,x,y,z,r,h)=>{const ring=[[x+r,y,z],[x,y,z+r],[x-r,y,z],[x,y,z-r]],top=[x,y+h,z],bottom=[x,y-h*.6,z];for(let i=0;i<4;i++){triangle(m,ring[(i+1)%4],ring[i],top);triangle(m,ring[i],ring[(i+1)%4],bottom);}};
   materials.push({name:'Building plaster',color:[196,191,172],noise:4},{name:'Roof graphite',color:[74,85,90],noise:5},{name:'Building glass',color:[57,91,105],noise:2},{name:'Building trim',color:[211,220,210],noise:2},{name:'Roof terracotta',color:[160,105,78],noise:6},{name:'Roof blue',color:[75,115,133],noise:5},{name:'Grandstand seats',color:[151,87,49],noise:3});
   materials[8].tree=materials[9].tree=materials[10].tree=true;
+  if(gantry){const signMaterial=materials.length;materials.push({name:'Gantry sign',color:[35,45,52],noise:2});addGantry(gantry,add,quad,signMaterial);}
   const foliage={broadleaf:[leaves,leafHighlights],pine:[leaves,leafHighlights]},used=new Set((options.trees?track.trees||[]:[]).map(t=>treeSettings(t).type));
   for(const type of used)if(!foliage[type])foliage[type]=TREE_SPECIES[type].colors.slice(0,2).map((color,i)=>{const mat=materials.length;materials.push({name:`Tree ${type} ${i?'highlight':'foliage'}`,color:[1,3,5].map(j=>parseInt(color.slice(j,j+2),16)),noise:7,tree:true});return add(`SCENERY_TREE_${type.toUpperCase()}_${i}`,mat);});
   let birchBark=trunks;if(used.has('birch')){const mat=materials.length;materials.push({name:'Tree birch bark',color:[212,212,187],noise:16,tree:true});birchBark=add('1WALL_TREE_BIRCH_TRUNKS',mat);}
@@ -193,7 +201,7 @@ export function createScene(track){
     if(!b.windows){glass.vertices=[];glass.indices=[];}
     const r=b.rotation*Math.PI/180,c=Math.cos(r),s=Math.sin(r);for(const m of parts)for(const v of m.vertices){const [x,y,z]=v.pos,[nx,ny,nz]=v.normal,[tx,ty,tz]=v.tangent;v.pos=[center[0]+x*c-z*s,base+y,center[2]+x*s+z*c];v.normal=[nx*c-nz*s,ny,nx*s+nz*c];v.tangent=[tx*c-tz*s,ty,tx*s+tz*c];}
   });
-  return {meshes:meshes.filter(m=>m.indices.length),dummies,materials,frames,pitFrames,pitPlan,roadLayout,timingPlan,weather,length:total,pitCount,options};
+  return {meshes:meshes.filter(m=>m.indices.length),dummies,materials,frames,pitFrames,pitPlan,roadLayout,timingPlan,gantry,weather,length:total,pitCount,options};
 }
 
 export function writeKn5(scene){
@@ -241,7 +249,6 @@ export function writeAi(frames,width,closed=true){
   });
   w.u32(0);return w.finish();
 }
-function surface(key,valid,pit=false,options=DEFAULT_EXPORT){return `KEY=${key}\nFRICTION=${key==='GRASS'?clamp(Number(options.grassGrip)||.7,.3,.9):['ROAD','PIT','KERB'].includes(key)?clamp(Number(options.roadGrip)||1,.8,1.2):1}\nDAMPING=0\nWAV=\nWAV_PITCH=0\nFF_EFFECT=NULL\nDIRT_ADDITIVE=${valid?0:1}\nIS_VALID_TRACK=${valid?1:0}\nBLACK_FLAG_TIME=0\nSIN_HEIGHT=0\nSIN_LENGTH=0\nIS_PITLANE=${pit?1:0}\nVIBRATION_GAIN=${key==='KERB'?.1:0}\nVIBRATION_LENGTH=.2\n`;}
 export function validateExport(track){
   const errors=[],warnings=[],g=buildGeometry(track.points||[],track.smooth),s=unit(track);
   if((track.points?.length||0)<3||g.length*s<60)errors.push('Create a closed circuit at least 60 meters long.');
@@ -265,11 +272,12 @@ export function validateExport(track){
   if(track.export?.ai!==false)warnings.push('Generated AI follows the centerline. Refine it in-game for competitive races.');
   const slots=clamp(Math.round(Number(track.export?.pitboxes)||8),1,16),gridLength=8+Math.floor((slots-1)/2)*clamp(Number(track.export?.gridSpacing)||6,4,12);if(track.points?.length>=3&&gridLength>=g.length*s)warnings.push('The starting grid wraps around this short circuit. Reduce pit count or grid row spacing.');
   const buildingPitPlan=buildPitPlan(track);if(buildingPitPlan.overlapsRoad)warnings.push('The custom service lane overlaps the racing road. Use Fit automatic connected lane or move the pit handles onto clear ground.');
+  if(g.length&&track.export?.gantry!==false){const gantry=gantryPlan(track,buildTimingPlan(track,g),buildingPitPlan);if(gantry){if((track.export?.buildings!==false?track.buildings||[]:[]).some(b=>gantry.supports.some(p=>buildingContains(b,p,s,1))))warnings.push('A building overlaps a gantry support. Move the building or start/finish line.');if((track.export?.trees!==false?track.trees||[]:[]).some(t=>gantry.supports.some(p=>Math.hypot(t.x-p.x,t.y-p.y)*s<treeSettings(t).height*.42+1)))warnings.push('Trees overlap the gantry supports. Move them or reposition start/finish.');}}
   for(const [index,raw] of (track.export?.buildings!==false?(track.buildings||[]):[]).entries()){const b={...raw,...buildingSettings(raw)},plan=buildingPitPlan,corners=buildingCorners(b,s);if(poly.some(p=>buildingContains(b,p,s,track.width/2))||[...plan.path,...plan.parkingPath,...plan.entryConnection,...plan.exitConnection,...plan.bays.flatMap(v=>v.corners)].some(p=>buildingContains(b,p,s,plan.settings.width/2)))warnings.push(`Building ${index+1} overlaps road or pits. Move it before driving.`);if(corners.some(p=>p.x<0||p.x>1000||p.y<0||p.y>740))warnings.push(`Building ${index+1} extends beyond the editor area. The exported grass base will expand to support it.`);}
   return {errors,warnings,length:g.length*s};
 }
 function sceneExtension(scene,track){
-  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=11.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
+  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=12.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
   scene.materials.forEach((m,index)=>{lines.push(`[SHADER_REPLACEMENT_${index}]`,`MATERIALS=${m.name}`,'SHADER=ksPerPixel','RESOURCE_0=txDiffuse',`RESOURCE_TEXTURE_0=${scene.textures[index].name}`);Object.entries(materialProperties(m)).forEach(([key,value],i)=>lines.push(`PROP_${i}=${key}, ${Array.isArray(value)?value.join(', '):value}`));lines.push('');});
   const grass=GRASS[track.grass]||GRASS.mown;lines.push('[GRASS_FX]',`ACTIVE=${scene.options.grassFx?1:0}`,'GRASS_MESHES=1GRASS_TERRAIN','GRASS_MATERIALS=Grass',`OCCLUDING_MATERIALS=${scene.materials.filter(m=>m.name!=='Grass'&&!m.tree).map(m=>m.name).join(', ')}`,'ORIGINAL_GRASS_MATERIALS=','MASK_MAIN_THRESHOLD=-1','MASK_RED_THRESHOLD=0','MASK_MIN_LUMINANCE=-1','MASK_MAX_LUMINANCE=1',`SHAPE_SIZE=${grass.size}`,`SHAPE_TIDY=${grass.tidy}`,`SHAPE_CUT=${grass.cut}`,'SHAPE_WIDTH=1','');return lines.join('\n');
 }
@@ -279,7 +287,7 @@ export function exportFiles(track,images={}){
   const put=(p,v)=>files[root+p]=v;
   put(`${slug}.kn5`,writeKn5(scene));put('models.ini',`[MODEL_0]\nFILE=${slug}.kn5\nPOSITION=0,0,0\nROTATION=0,0,0\n`);
   scene.textures.forEach(texture=>put(`texture/${texture.name}`,texture.bytes));
-  put('data/surfaces.ini',['ROAD','GRASS','KERB','PIT','WALL'].map((key,i)=>`[SURFACE_${i}]\n${surface(key,!['GRASS','WALL'].includes(key),key==='PIT',scene.options)}`).join('\n'));
+  put('data/surfaces.ini',['ROAD','GRASS','KERB','PIT','WALL'].map((key,i)=>`[SURFACE_${i}]\n${surfaceRecord(key,!['GRASS','WALL'].includes(key),key==='PIT',scene.options)}`).join('\n'));
   put('data/lighting.ini',`[LIGHTING]\nSUN_PITCH_ANGLE=${scene.weather.sunPitch}\nSUN_HEADING_ANGLE=${scene.weather.sunHeading}\n`);
   put('data/crew.ini','[HEADER]\nSIDE=1\n');
   put('data/sections.ini',sectionsIni(scene.timingPlan));
@@ -289,9 +297,9 @@ export function exportFiles(track,images={}){
   if(scene.options.ai){put('ai/fast_lane.ai',writeAi(scene.frames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitFrames,scene.pitPlan.settings.width,false));}
   for(const [name,bytes] of Object.entries(images))put(name,bytes);
   if(images['map.png'])put('data/map.ini',mapIni(createTrackMap(track,undefined,scene.pitPlan,scene.roadLayout)));
-  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:11,background:null},null,2));
+  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:12,background:null},null,2));
   put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
-  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.options.gridSpacing} m row spacing\nRoad grip ${scene.options.roadGrip} · grass grip ${scene.options.grassGrip}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nOpaque uncompressed BGRA DDS textures with mipmaps are embedded in the KN5 and copied to texture/. Opaque materials include explicit shader properties with moderated diffuse lighting and zero emissive output. An extension/ext_config.ini supplies explicit texture bindings and optional Grass FX for CSP; the colored base works without CSP. Textured grass covers the empty ground. Placed buildings have collision bodies and detailed roofs, windows, and garage doors. Trees and buildings follow the scenery switches in Assetto Corsa setup. Custom corners and styled pit lanes are included. Road and kerbs share joined boundary geometry at sharp turns. Start/finish white tiles are visual paint on a non-collision mesh; no raised tiles are added to the collision road. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nLap timing uses start/finish plus S1 and S2 in driving order. Exported gates span the actual joined road edges, and sections.ini follows the configured split percentages. apex_timing.json lists native checkpoint positions and sector lengths. Fast-lane AI uses unique cyclic points and local segment lengths, with progress starting at the same finish line. Replace both AI files when updating an installed mod; old AI data can misreport progress. AI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nThe minimap PNG and map.ini share one native X/Z projection, including pits beyond the drawing bounds. Image dimensions are pixels, offsets are world meters, and SCALE_FACTOR is meters per pixel. Replace both map.png and data/map.ini when updating an installed track. Exit the current driving session, export a fresh ZIP, and replace the old track files in Content Manager. Re-enter the session to load the new model and versioned textures. Old downloads cannot update themselves. ui/preview.png is the color overview; map.png and ui/outline.png are white route masks by design. This export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
+  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.options.gridSpacing} m row spacing\nRoad grip ${scene.options.roadGrip} · kerb grip ${scene.options.kerbGrip} · pit grip ${scene.options.pitGrip} · grass grip ${scene.options.grassGrip}\nGrass drag ${scene.options.grassDrag} · dirt pickup ${scene.options.grassDirt}\nStart/Finish Gantry: ${scene.gantry?"included":"off"}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nNative KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional centerline AI are generated in the browser. No Blender or ksEditor conversion is required.\nOpaque uncompressed BGRA DDS textures with mipmaps are embedded in the KN5 and copied to texture/. Opaque materials include explicit shader properties with moderated diffuse lighting and zero emissive output. An extension/ext_config.ini supplies explicit texture bindings and optional Grass FX for CSP; the colored base works without CSP. Textured grass covers the empty ground. Placed buildings have collision bodies and detailed roofs, windows, and garage doors. Trees and buildings follow the scenery switches in Assetto Corsa setup. Custom corners and styled pit lanes are included. Road and kerbs share joined boundary geometry at sharp turns. Kerbs are flush with the road, with no 35 mm lift, sine displacement or extra vibration. Road, pit, kerb and grass friction are configured independently. The signed start/finish gantry follows the timing gate, with supports beside road and adjacent pit pavement. Start/finish white tiles are visual paint on a non-collision mesh; no raised tiles are added to the collision road. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Manual elevation is exported; surrounding terrain is a flat base.\nLap timing uses start/finish plus S1 and S2 in driving order. Exported gates span the actual joined road edges, and sections.ini follows the configured split percentages. apex_timing.json lists native checkpoint positions and sector lengths. Fast-lane AI uses unique cyclic points and local segment lengths, with progress starting at the same finish line. Replace both AI files when updating an installed mod; old AI data can misreport progress. AI is a starting line, not a tuned racing line. Inspect spawn positions and test the track in-game.\nThe minimap PNG and map.ini share one native X/Z projection, including pits beyond the drawing bounds. Image dimensions are pixels, offsets are world meters, and SCALE_FACTOR is meters per pixel. Replace both map.png and data/map.ini when updating an installed track. Exit the current driving session, export a fresh ZIP, and replace the old track files in Content Manager. Re-enter the session to load the new model and versioned textures. Old downloads cannot update themselves. ui/preview.png is the color overview; map.png and ui/outline.png are white route masks by design. This export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
   put('extension/ext_config.ini',sceneExtension(scene,track));
   return {files,scene,slug,report};
 }

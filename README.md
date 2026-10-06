@@ -8,6 +8,11 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Kerbs are flush with the racing road. Removed the 35 mm collision lift and extra vibration; shared road-edge elevation and banking are preserved. The grass collision base stays below banked edges.
+- Added a signed **START / FINISH** gantry in the drawing, 3D preview, color overview and native KN5. It follows the finish gate and spans adjacent pit pavement; clearance is adjustable from 4.5–8 m.
+- Removed the inspiration section and random-generator entry points. **Start from scratch**, tracing and shared circuits remain available.
+- Surface grip now has independent road, flat kerb, pit and grass friction, grass drag and dirt pickup, three presets, a friction comparison and a reset action. All settings persist in saved circuits, shared codes and native exports.
+
 - Pit entry/exit now branch from the actual road shoulder, with only 25 cm of asphalt overlap and bank-aware height. Old custom route ends on the racing road are treated as join hints.
 - Corrected AI extra-record segment lengths and removed the duplicate closed-loop seam point. Configurable native timing gates, visible S1/S2 markers, and matching sector metadata share one start-relative plan. Sector lengths are included in analysis.
 - **Generate circuit barriers** adds editable left/right/both-side walls with a run-off gap, pit-access openings, and scenery clearance. Regenerate after road edits; Undo restores the previous set.
@@ -47,7 +52,7 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 - Select trees and buildings for the mod, inspect overlap warnings, and review the package before downloading. The 3D renderer uses the same procedural texture pixels as exported DDS files.
 
 - Per-point corner rounding, sharp/tight/rounded shapes, corner names, banking, and configurable kerb sides and widths.
-- Seeded random circuits replace the sample buttons. Choose flowing, technical, or fast layouts; preview an idea before applying it. Saved seeds are reproducible.
+- The Design panel focuses on drawing and tracing; the inspiration generator has been removed.
 - A larger canvas, compact drawing controls, and **Focus canvas** for a full-window drawing workspace.
 - Improved export materials: opaque uncompressed BGRA DDS textures with nine mip levels, explicit shader settings, content-based texture names, and embedded plus separate DDS assets.
 - A color overview in the export dialog and a separate preview-image download. White minimap and outline masks remain available for their game UI roles.

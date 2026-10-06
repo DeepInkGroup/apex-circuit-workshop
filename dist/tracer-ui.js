@@ -1,14 +1,16 @@
-import {buildGeometry} from './engine.js?v=20261006-race';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261006-race';
-import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261006-race';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-race';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261006-race';
-import {WEATHER} from './environment.js?v=20261006-race';
-import {drawTree} from './trees.js?v=20261006-race';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261006-race';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261006-race';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261006-race';
-import {toGamePoint} from './coordinates.js?v=20261006-race';
+import {buildGeometry} from './engine.js?v=20261006-finish';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261006-finish';
+import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261006-finish';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-finish';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261006-finish';
+import {WEATHER} from './environment.js?v=20261006-finish';
+import {drawTree} from './trees.js?v=20261006-finish';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261006-finish';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261006-finish';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261006-finish';
+import {toGamePoint} from './coordinates.js?v=20261006-finish';
+import {buildTimingPlan} from './timing.js?v=20261006-finish';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261006-finish';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
@@ -16,7 +18,8 @@ function header(eyebrow,title){return `<div class="dialog-top"><p class="eyebrow
 function png(canvas){return new Promise((resolve,reject)=>canvas.toBlob(async b=>b?resolve(new Uint8Array(await b.arrayBuffer())):reject(new Error('Preview image creation failed.')),'image/png'));}
 export async function exportImages(track){
   const geometry=buildGeometry(track.points,track.smooth,track.complete!==false),s=track.scale||.2,plan=buildPitPlan(track),road=buildRoadLayout(track,geometry,plan),mapLayout=createTrackMap(track,geometry,plan,road);
-  const footprint=(track.export?.buildings!==false?(track.buildings||[]):[]).flatMap(b=>buildingCorners(b,s)),margin=track.width/s+20,minX=Math.min(0,...footprint.map(p=>p.x-margin),plan.bounds.minX-margin),maxX=Math.max(1000,...footprint.map(p=>p.x+margin),plan.bounds.maxX+margin),minY=Math.min(0,...footprint.map(p=>p.y-margin),plan.bounds.minY-margin),maxY=Math.max(740,...footprint.map(p=>p.y+margin),plan.bounds.maxY+margin),factor=Math.min(960/(maxX-minX),580/(maxY-minY)),tx=500-(minX+maxX)/2*factor,ty=310-(minY+maxY)/2*factor;
+  const gantry=gantryPlan(track,buildTimingPlan(track,geometry,road),plan);
+  const footprint=[...(gantry?.supports||[]),...(track.export?.buildings!==false?(track.buildings||[]):[]).flatMap(b=>buildingCorners(b,s))],margin=track.width/s+20,minX=Math.min(0,...footprint.map(p=>p.x-margin),plan.bounds.minX-margin),maxX=Math.max(1000,...footprint.map(p=>p.x+margin),plan.bounds.maxX+margin),minY=Math.min(0,...footprint.map(p=>p.y-margin),plan.bounds.minY-margin),maxY=Math.max(740,...footprint.map(p=>p.y+margin),plan.bounds.maxY+margin),factor=Math.min(960/(maxX-minX),580/(maxY-minY)),tx=500-(minX+maxX)/2*factor,ty=310-(minY+maxY)/2*factor;
   const routes=[plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection];
   const draw=(canvas,background)=>{
     const ctx=canvas.getContext('2d');if(background){ctx.fillStyle=grassPattern(ctx,track.grass);ctx.fillRect(0,0,canvas.width,canvas.height);}
@@ -29,6 +32,7 @@ export async function exportImages(track){
       (track.barriers||[]).forEach(b=>path(b.points,Math.max(2,b.width/s),'#bdc0bd'));
       (track.export?.buildings!==false?(track.buildings||[]):[]).forEach(b=>drawBuilding(ctx,b,s,false,factor));
       (track.export?.trees!==false?(track.trees||[]):[]).forEach(t=>drawTree(ctx,t,s,false,factor));
+      drawGantry(ctx,gantry,factor);
     }
     ctx.restore();
   };

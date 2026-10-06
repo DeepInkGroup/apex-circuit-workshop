@@ -1,7 +1,7 @@
-import {buildGeometry} from './engine.js?v=20261006-race';
-import {buildPitPlan} from './pit-plan.js?v=20261006-race';
-import {trackScale,toGamePoint} from './coordinates.js?v=20261006-race';
-import {buildRoadLayout} from './road-layout.js?v=20261006-race';
+import {buildGeometry} from './engine.js?v=20261006-finish';
+import {buildPitPlan} from './pit-plan.js?v=20261006-finish';
+import {trackScale,toGamePoint} from './coordinates.js?v=20261006-finish';
+import {buildRoadLayout} from './road-layout.js?v=20261006-finish';
 
 // Content Manager's map projection: pixel = (native position + offset) / scale.
 // WIDTH/HEIGHT are pixels; SCALE_FACTOR is meters per pixel. No Z reflection.
