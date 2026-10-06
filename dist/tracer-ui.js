@@ -1,14 +1,14 @@
-import {buildGeometry} from './engine.js?v=20261006-surfaces';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261006-surfaces';
-import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261006-surfaces';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-surfaces';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261006-surfaces';
-import {WEATHER} from './environment.js?v=20261006-surfaces';
-import {drawTree} from './trees.js?v=20261006-surfaces';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261006-surfaces';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261006-surfaces';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261006-surfaces';
-import {toGamePoint} from './coordinates.js?v=20261006-surfaces';
+import {buildGeometry} from './engine.js?v=20261006-race';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261006-race';
+import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261006-race';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-race';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261006-race';
+import {WEATHER} from './environment.js?v=20261006-race';
+import {drawTree} from './trees.js?v=20261006-race';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261006-race';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261006-race';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261006-race';
+import {toGamePoint} from './coordinates.js?v=20261006-race';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
@@ -104,6 +104,8 @@ export function mountTracer(api){
   $('#reopen-circuit').onclick=()=>api.setComplete(false);
   $('#road-asphalt').onchange=()=>api.updateTrack(t=>t.asphalt=$('#road-asphalt').value);
   $('#add-barrier').onclick=()=>{api.newBarrier();api.toast('Click to draw a new barrier. Finish barrier ends this path.');};$('#finish-barrier').onclick=()=>api.finishBarrier();
+  const automatic=document.createElement('div');automatic.className='auto-barrier-card';automatic.innerHTML='<h3>Automatic circuit barriers</h3><label>Placement<select id="auto-barrier-side"><option value="both">Both sides of circuit</option><option value="left">Left side</option><option value="right">Right side</option></select></label><div class="studio-fields"><label>Run-off gap · m<input id="auto-barrier-gap" type="number" min="2" max="20" step="1" value="4"></label><label>Appearance<select id="auto-barrier-style"><option value="concrete">Concrete</option><option value="striped">Red & white</option></select></label></div><button id="auto-barriers" class="outline-button">Generate circuit barriers</button><p class="field-hint">Leaves openings for pit access and avoids placed scenery. All generated paths remain editable. Generate again after reshaping the road; drawn barriers are kept. Undo restores the previous set.</p>';$('#barrier-list').before(automatic);
+  $('#auto-barriers').onclick=async()=>{const gap=Number($('#auto-barrier-gap').value);if(!Number.isFinite(gap)||gap<2||gap>20){api.toast('Choose a barrier gap between 2 and 20 meters.');return;}const button=$('#auto-barriers');button.disabled=true;button.textContent='Placing barriers…';try{await new Promise(requestAnimationFrame);api.generateBarriers({gap,side:$('#auto-barrier-side').value,style:$('#auto-barrier-style').value});}finally{button.disabled=false;button.textContent='Generate circuit barriers';}};
   ['height','width','style'].forEach(key=>$('#barrier-'+key).onchange=()=>{const i=api.getBarrier(),value=$('#barrier-'+key).value;if(i<0)return;const min=key==='height'?.4:.15,max=key==='height'?4:2;if(key!=='style'&&(!Number.isFinite(Number(value))||Number(value)<min||Number(value)>max)){api.toast(`Enter a value between ${min} and ${max} meters.`);refresh();return;}api.updateTrack(t=>t.barriers[i][key]=key==='style'?value:Number(value));});
   $('#remove-barrier').onclick=()=>{const i=api.getBarrier();if(i>=0)api.updateTrack(t=>t.barriers.splice(i,1));};
   const clearer=dialog('clear-dialog',`${header('EDITING / CLEAR ITEMS','Make room for a fresh idea.')}<p class="dialog-description">Choose what to clear from the current circuit. Your name and circuit profile stay in place. Undo can restore the removed items.</p><div class="clear-options"><label><input type="radio" name="clear-scope" value="geometry" checked><span><b>All circuit geometry</b><small>Remove road, pits, barriers, trees, and buildings. Keep your reference.</small></span></label><label><input type="radio" name="clear-scope" value="road"><span><b>Road only</b><small>Keep your pits, barriers, and reference.</small></span></label><label><input type="radio" name="clear-scope" value="barriers"><span><b>Custom barriers</b><small>Keep the road and pits.</small></span></label><label><input type="radio" name="clear-scope" value="pits"><span><b>Pit path</b><small>Return to the automatic pit lane.</small></span></label><label><input type="radio" name="clear-scope" value="trees"><span><b>Placed trees</b><small>Keep roads, pits, barriers, and your reference.</small></span></label><label><input type="radio" name="clear-scope" value="buildings"><span><b>Placed buildings</b><small>Keep roads, pits, trees, and your reference.</small></span></label><label><input type="radio" name="clear-scope" value="reference"><span><b>Reference image / map</b><small>Keep all circuit geometry and its scale.</small></span></label></div><div class="dialog-actions"><button data-close class="subtle-button">Cancel</button><button id="apply-clear" class="clear-apply">Clear selected items</button></div>`);
@@ -155,7 +157,7 @@ export function mountTracer(api){
     Object.entries(exportFields).forEach(([id,key])=>{const input=$('#export-'+id);if(input.type==='checkbox')input.checked=options[key];else input.value=options[key];});
     const complete=t.complete!==false;$('.studio').classList.toggle('circuit-complete',complete);$('#circuit-state').textContent=complete?'Closed / editable':'Open / editable';$('#circuit-state-hint').textContent=complete?'Drag points and keep refining. Open circuit separates the ends.':'Complete circuit joins the ends and keeps editing enabled.';$('#complete-circuit').disabled=complete||t.points.length<3;$('#reopen-circuit').disabled=!complete;$('#save-btn span').textContent=complete?'Save circuit':'Save draft';$('#road-asphalt').value=t.asphalt||'fresh';$('#asphalt-swatch').dataset.style=t.asphalt||'fresh';
     ['#road-asphalt','#add-barrier','#finish-barrier','#remove-barrier','#barrier-height','#barrier-width','#barrier-style','#draw-pit','#clear-pit','#point-height','#point-bank'].forEach(s=>$(s).disabled=false);
-    const list=$('#barrier-list');list.replaceChildren();const walls=t.barriers||[],selectedWall=api.getBarrier();if(!walls.length){const p=document.createElement('p');p.className='field-hint';p.textContent='No custom barriers yet.';list.append(p);}walls.forEach((b,i)=>{const button=document.createElement('button');button.className='barrier-row'+(i===selectedWall?' selected':'');button.textContent=`Barrier ${String(i+1).padStart(2,'0')} · ${b.points.length} points · ${b.height} m high`;button.onclick=()=>api.selectBarrier(i);list.append(button);});
+    const list=$('#barrier-list');list.replaceChildren();const walls=t.barriers||[],selectedWall=api.getBarrier();if(!walls.length){const p=document.createElement('p');p.className='field-hint';p.textContent='No custom barriers yet.';list.append(p);}walls.forEach((b,i)=>{const button=document.createElement('button');button.className='barrier-row'+(i===selectedWall?' selected':'');button.textContent=`${b.automatic?'Auto barrier':'Barrier'} ${String(i+1).padStart(2,'0')} · ${b.points.length} points · ${b.height} m high`;button.onclick=()=>api.selectBarrier(i);list.append(button);});
     $('#barrier-properties').hidden=!walls[selectedWall];if(walls[selectedWall])['height','width','style'].forEach(key=>$('#barrier-'+key).value=walls[selectedWall][key]);
     $('#ac-export-btn').disabled=!complete||t.points.length<3;
   }

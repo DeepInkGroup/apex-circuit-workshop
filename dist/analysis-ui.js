@@ -1,5 +1,5 @@
-import {analyzeTrack} from './analysis.js?v=20261006-surfaces';
-import {validateExport,trackSlug} from './ac-export.js?v=20261006-surfaces';
+import {analyzeTrack} from './analysis.js?v=20261006-race';
+import {validateExport,trackSlug} from './ac-export.js?v=20261006-race';
 
 const $=s=>document.querySelector(s),num=(n,d=0)=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:d}):'—';
 function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -27,6 +27,7 @@ export function mountAnalysis(api){
     $('#reverse-circuit').disabled=t.points.length<2;$('#analysis-overlay').checked=api.getOverlay();
     $('#analysis-name').textContent=t.name;$('#analysis-status').textContent=`${t.complete===false?'Open road':'Closed, editable circuit'} · ${m.direction} · ${t.points.length} control points`;
     const full=$('#analysis-full-metrics');full.replaceChildren(metric('Centerline length',num(m.lengthMeters,1),'m'),metric('3D path length',num(m.surfaceLengthMeters,1),'m'),metric('Road width',num(m.widthMeters,1),'m'),metric('Approx. paved area',num(m.pavedAreaSquareMeters),'m²'),metric('Left / right bends',`${m.leftCorners} / ${m.rightCorners}`),metric('Tightest radius',num(m.minRadiusMeters,1),'m'),metric('Longest straight',num(m.longestStraightMeters,1),'m'),metric('Max. slope',num(m.maxGradePercent,1),'%'),metric('Total climb',num(m.climbMeters,1),'m'),metric('Maximum banking',num(m.maxBankDegrees,1),'°'),metric('Custom barriers',num(m.barrierLengthMeters,1),'m'),metric('Fitted pit bays',`${m.pitCapacity} / ${m.pitBoxes}`,'fitted / selected'),metric('Pit track joins',m.pitConnected?'Connected':'Manual'),metric('Pit connectors',num(m.pitConnectionMeters,1),'m'),metric('Placed trees',String(m.trees)),metric('Placed buildings',String(m.buildings)),metric('Building footprints',num(m.buildingFootprintSquareMeters),'m²'),metric('Grass finish',m.grassFinish),metric('Preview weather',m.previewWeather));
+    full.append(...data.timing.sectorLengths.map((length,i)=>metric(`Sector ${i+1} length`,num(length,1),'m')));
     $('#elevation-profile').innerHTML=profile(data.closed&&data.samples.length?[...data.samples,{...data.samples[0],distance:m.lengthMeters}]:data.samples);
     const checks=$('#analysis-checks');checks.replaceChildren();const entries=[...check.errors.map(text=>({text,level:'error'})),...check.warnings.map(text=>({text,level:'warning'}))];if(ready)entries.unshift({text:'Geometry and package requirements met.',level:'pass'});entries.forEach(item=>{const p=document.createElement('p');p.className='analysis-check '+item.level;p.textContent=item.text;checks.append(p);});
     $('#use-pit-capacity').hidden=!(m.pitCapacity>0&&m.pitBoxes>m.pitCapacity);
@@ -39,6 +40,6 @@ export function mountAnalysis(api){
   $('#analysis-inspect').onclick=()=>{dialog.close();api.preview();};$('#edit-analysis-details').onclick=()=>{dialog.close();$('#circuit-details-btn').click();};
   $('#use-pit-capacity').onclick=()=>{const capacity=analyzeTrack(api.getTrack()).metrics.pitCapacity;if(capacity>0){api.updateTrack(t=>t.export={...t.export,pitboxes:capacity});clearTimeout(timer);render();}};
   $('#analysis-json').onclick=()=>{const data=report();download(`${trackSlug(api.getTrack().name)}_analysis.json`,JSON.stringify(data,null,2),'application/json');};
-  $('#analysis-csv').onclick=()=>{const data=report(),s=data.scale.metersPerPixel,header='distance_m,progress,x_m,z_m,elevation_m,grade_percent,bank_degrees,radius_m,section';const rows=data.samples.map(r=>[r.distance,r.progress,(r.x-500)*s,(370-r.y)*s,r.elevation,r.grade,r.bank,r.radius??'',r.kind].map(v=>typeof v==='number'?v.toFixed(5):v).join(','));download(`${trackSlug(api.getTrack().name)}_samples.csv`,[header,...rows].join('\n'),'text/csv');};
+  $('#analysis-csv').onclick=()=>{const data=report(),s=data.scale.metersPerPixel,header='distance_m,progress,x_m,z_m,elevation_m,grade_percent,bank_degrees,radius_m,section';const rows=data.samples.map(r=>[r.distance,r.progress,(r.x-500)*s,(r.y-370)*s,r.elevation,r.grade,r.bank,r.radius??'',r.kind].map(v=>typeof v==='number'?v.toFixed(5):v).join(','));download(`${trackSlug(api.getTrack().name)}_samples.csv`,[header,...rows].join('\n'),'text/csv');};
   render();return {refresh};
 }

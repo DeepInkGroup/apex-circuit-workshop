@@ -1,0 +1,18 @@
+/* More canvas space while keeping the complete inspector within reach. */
+.tracer-app main{max-width:2000px;padding-left:18px;padding-right:18px}
+.tracer-app .workspace{grid-template-columns:minmax(0,1fr) 300px;height:max(1120px,120dvh)}
+.tracer-app .canvas-wrap{min-height:800px}
+.tracer-app .settings-page>.panel-section{padding:20px 15px}
+.auto-barrier-card,.timing-card{margin:16px 0;padding:14px;background:#edf2e5;border:1px solid #cbd8c1;border-radius:10px}
+.auto-barrier-card h3,.timing-card h3{font-size:13px;margin:0 0 12px;color:#304c40}
+.auto-barrier-card button,.timing-card button{width:100%;margin-top:10px}
+.auto-barrier-card label,.timing-card label{display:block;font-size:11px;color:#53664e;margin:9px 0}
+.auto-barrier-card select,.auto-barrier-card input,.timing-card select,.timing-card input{width:100%;margin-top:5px}
+.sector-lengths{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:12px 0}
+.sector-lengths span{padding:9px 3px;background:#fafcf5;border-radius:6px;font-size:10px;text-align:center;color:#4b665b}
+.sector-lengths b{display:block;margin-top:4px;font-size:12px}
+.tracer-app .studio.drawing-focus .canvas-wrap,.tracer-app .studio.expanded .canvas-wrap{min-height:0}
+@media(min-width:1400px){.tracer-app .workspace{grid-template-columns:minmax(0,1fr) 310px}.tracer-app .canvas-wrap{min-height:860px}}
+@media(max-width:1000px) and (min-width:801px){.tracer-app .workspace{grid-template-columns:minmax(0,1fr) 280px}}
+@media(max-width:800px){.tracer-app main{padding-left:10px;padding-right:10px}.tracer-app .workspace{grid-template-columns:1fr;height:auto}.tracer-app .canvas-wrap{height:88dvh;min-height:640px}.tracer-app .studio.drawing-focus .canvas-wrap{height:auto;min-height:0}}
+@media(max-width:540px){.tracer-app .canvas-wrap{min-height:560px}}

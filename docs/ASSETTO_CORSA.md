@@ -41,7 +41,7 @@ The package summary displays the generated track folder, pit count, grass finish
 
 Automatic pits use a separate straight service lane beside a clear section of the circuit. The planner searches for a shoulder outside the racing surface, fits the selected number of bays, and connects both ends with curved ribbons. **Minimum road gap** sets the requested separation; the planner increases it when nearby road sections need more clearance. **Pit side** chooses automatic outside, left, or right. Use **Fit automatic connected lane** to replace a custom route with the generated layout; Undo restores your route. Pits extending outside the canvas receive an expanded grass base in the mod. Fit view includes the pit layout.
 
-Custom pit paths automatically gain curved entry and exit ribbons anchored to the centerline in the driving direction. The connector positions recalculate when the road or pit points move. They carry road/pit elevation and banking, and taper their road join height to avoid a sharp 35 mm step. Draw the service route on clear ground beside the road. Overlapping custom routes receive a placement note and remain editable. Connections appear in 2D, 3D, route images, KN5 geometry, and pit AI. Turn off **Connect entry & exit to track** for manual joins. Inspect complex nearby corners and crossing paths in 3D.
+Custom pit paths automatically gain curved entry and exit ribbons anchored to the joined road shoulder in the driving direction. The connector positions recalculate when the road or pit points move. They carry road/pit elevation and banking, and taper their road join height to avoid a sharp 35 mm step. Draw the service route on clear ground beside the road. Overlapping custom routes receive a placement note and remain editable. Connections appear in 2D, 3D, route images, KN5 geometry, and pit AI. Turn off **Connect entry & exit to track** for manual joins. Inspect complex nearby corners and crossing paths in 3D.
 
 ### Trees and automatic planting
 
@@ -61,6 +61,18 @@ The exporter now writes opaque uncompressed 32-bit BGRA DDS assets with full mip
 
 Exit your active game session, export a fresh ZIP, install it with Content Manager replacing the old model/config files, then start Practice again. An already downloaded or installed ZIP cannot pick up website fixes automatically. If white surfaces persist, capture the in-game image and game log; the previous installed material table contained colored textures and zero emissive values, so the exact cause has not yet been confirmed.
 
+## Lap timing, sectors, and automatic barriers
+
+In **Export → Lap detection & sectors**, choose automatic split placement (prefers straights near one-third and two-thirds) or custom lap percentages. S1 and S2 appear as teal dashed lines in the drawing. Each sector must contain at least 10% of the lap. Move start/finish with its placement tool; all split progress follows that point. Native AC_TIME_0/1/2 gates span the actual joined road boundaries, including sharp-corner extensions, at 1.2 m above their respective road edges. The native gate names follow the [Kunos timing instructions quoted in the track guide](https://assettocorsamods.net/threads/build-your-first-track-basic-guide.12/).
+
+Lap order is start/finish → S1 → S2 → start/finish. The game measures times; APEX shows sector geometry and lengths, not estimated lap times. Exported **sections.ini**, **apex_timing.json**, and analysis data use the same split plan. AI uses unique cyclic points, correct local segment lengths in the extra records, Direction=-1, and bank-aware normals, matching the installed Kunos track and [Content Manager’s AiPointExtra reader](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiPointExtra.cs). When updating, exit the game and replace the model, AI files, and data together. Drive through all checkpoints in Practice to assess native timing.
+
+In **Scenery → Asphalt & barriers**, use **Generate circuit barriers**. Choose both sides, left, or right, a 2–20 m run-off gap, and concrete or red/white styling. Generated walls leave openings for pit paths and bays, avoid placed trees/buildings, and use joined curve geometry with conservative chord checks. They are ordinary editable collision barriers. Generating again replaces the previous generated set and keeps drawn walls. Regenerate after moving the road or pits; Undo restores the previous set. Paths outside the canvas are omitted.
+
+Pit connectors overlap only the outer 25 cm of road, rather than ending on the racing centerline. Their anchors follow the actual joined road edge and banked height. With automatic connections enabled, old custom routes that include road-overlapping start/end clicks have those terminal sections removed; a fully overlapping custom trace falls back to an automatic service lane. The editable input points are preserved.
+
+The default canvas is wider with a 300 px inspector and at least 800 px desktop drawing height (860 px on wide screens). Phone/tablet layouts use a taller drawing area. **Focus canvas** continues to fill the window.
+
 ## Scene and drawing tools
 
 Use **Freehand** (K) to sketch a road section, then refine its editable points. **Snap** aligns placement in meters; Shift temporarily enables it. **Fit view** frames the circuit and generated pits.
@@ -71,7 +83,7 @@ In **Weather & trees**, choose a preview mood, place trees with T, or scatter ed
 
 Click **Export to Assetto Corsa**, review the report, and download the ZIP. Drop the ZIP into Content Manager and install the detected track. Alternatively extract its `content/` folder into the Assetto Corsa game directory.
 
-The exported KN5 embeds colored opaque DXT1 DDS textures with complete mip chains. Matching copies are included in `texture/` for editing. All materials explicitly set diffuse, ambient, specular, and zero emissive properties. Texture names include a content checksum. When updating an installed circuit, replace its old version. The export dialog displays the color overview before downloading; `map.png` and `ui/outline.png` are intentionally white route masks for the game UI.
+The exported KN5 embeds colored opaque BGRA DDS textures with complete mip chains. Matching copies are included in `texture/` for editing. All materials explicitly set diffuse, ambient, specular, and zero emissive properties. Texture names include a content checksum. When updating an installed circuit, replace its old version. The export dialog displays the color overview before downloading; `map.png` and `ui/outline.png` are intentionally white route masks for the game UI.
 
 Start with a single-car Practice session. Check spawn placement, collision surfaces, timing, and elevation transitions before attempting races. APEX's automated file checks do **not** certify in-game compatibility.
 

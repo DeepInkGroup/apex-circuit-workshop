@@ -8,6 +8,11 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Pit entry/exit now branch from the actual road shoulder, with only 25 cm of asphalt overlap and bank-aware height. Old custom route ends on the racing road are treated as join hints.
+- Corrected AI extra-record segment lengths and removed the duplicate closed-loop seam point. Configurable native timing gates, visible S1/S2 markers, and matching sector metadata share one start-relative plan. Sector lengths are included in analysis.
+- **Generate circuit barriers** adds editable left/right/both-side walls with a run-off gap, pit-access openings, and scenery clearance. Regenerate after road edits; Undo restores the previous set.
+- A wider, taller drawing workspace, with at least 800 px desktop canvas height and a narrower inspector.
+
 - Sharp corners now retain their exact vertices and use joined road/kerb edges with bounded corner extensions and trimmed inner loops. The drawing, 3D preview, and color export share the same kerb geometry and pit openings.
 - Start/finish checkerboard tiles are visual paint on a separate non-collision mesh. Dark squares use the underlying asphalt; no elevated checkerboard faces are added to the road collision mesh. Paint follows the actual road triangles, including elevation and banking.
 - Corrected minimap Z direction and shared its world-to-pixel transform with `map.ini`. Image dimensions, offsets, and meters per pixel are calculated together; the map also includes connected pits and parking bays outside the drawing area.

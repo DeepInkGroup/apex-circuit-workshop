@@ -1,24 +1,27 @@
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261006-surfaces';
-import {ReferenceLayer} from './tracing.js?v=20261006-surfaces';
-import {mountTracer} from './tracer-ui.js?v=20261006-surfaces';
-import {TrackPreview} from './preview3d.js?v=20261006-surfaces';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261006-surfaces';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-surfaces';
-import {mountAnalysis} from './analysis-ui.js?v=20261006-surfaces';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261006-surfaces';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261006-surfaces';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261006-surfaces';
-import {toGamePoint} from './coordinates.js?v=20261006-surfaces';
-import {buildRoadLayout,drawRoadLayout} from './road-layout.js?v=20261006-surfaces';
-import {mountDrawStudio} from './studio-ui.js?v=20261006-surfaces';
-import {cornerSettings} from './corner-settings.js?v=20261006-surfaces';
-import {mountCorners} from './corner-ui.js?v=20261006-surfaces';
-import {mountGenerator} from './generator-ui.js?v=20261006-surfaces';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261006-surfaces';
-import {mountScenery} from './scenery-ui.js?v=20261006-surfaces';
-import {mountACSetup} from './ac-setup-ui.js?v=20261006-surfaces';
-import {mountSharing} from './sharing.js?v=20261006-surfaces';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261006-surfaces';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261006-race';
+import {ReferenceLayer} from './tracing.js?v=20261006-race';
+import {mountTracer} from './tracer-ui.js?v=20261006-race';
+import {TrackPreview} from './preview3d.js?v=20261006-race';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261006-race';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-race';
+import {mountAnalysis} from './analysis-ui.js?v=20261006-race';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261006-race';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261006-race';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261006-race';
+import {toGamePoint} from './coordinates.js?v=20261006-race';
+import {buildRoadLayout,drawRoadLayout} from './road-layout.js?v=20261006-race';
+import {mountDrawStudio} from './studio-ui.js?v=20261006-race';
+import {cornerSettings} from './corner-settings.js?v=20261006-race';
+import {mountCorners} from './corner-ui.js?v=20261006-race';
+import {mountGenerator} from './generator-ui.js?v=20261006-race';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261006-race';
+import {mountScenery} from './scenery-ui.js?v=20261006-race';
+import {mountACSetup} from './ac-setup-ui.js?v=20261006-race';
+import {mountSharing} from './sharing.js?v=20261006-race';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261006-race';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261006-race';
+import {automaticBarriers} from './auto-barriers.js?v=20261006-race';
+import {mountTiming} from './timing-ui.js?v=20261006-race';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -71,11 +74,11 @@ function validateTrack(data) {
   for(const [key,min,max] of [['roadGrip',.8,1.2],['grassGrip',.3,.9],['gridSpacing',4,12],['wallHeight',.5,4]])exportOptions[key]=clamp(Number(data.export?.[key])||DEFAULT_EXPORT[key],min,max);
   const buildings=Array.isArray(data.buildings)?data.buildings.filter(b=>b&&Number.isFinite(b.x)&&Number.isFinite(b.y)).slice(0,60).map(b=>({x:clamp(b.x,0,1000),y:clamp(b.y,0,740),...buildingSettings(b)})):[];
   const pit=Array.isArray(data.pit)?data.pit.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.x>=0&&p.x<=1000&&p.y>=0&&p.y<=740).slice(0,100).map(p=>({x:p.x,y:p.y,elevation:clamp(Number(p.elevation)||0,-100,500)})):[];
-  const barriers=Array.isArray(data.barriers)?data.barriers.slice(0,40).filter(b=>b&&Array.isArray(b.points)).map(b=>({points:b.points.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)).slice(0,100).map(p=>({x:clamp(p.x,0,1000),y:clamp(p.y,0,740),elevation:clamp(Number(p.elevation)||0,-100,500)})),height:clamp(Number(b.height)||1.2,.4,4),width:clamp(Number(b.width)||.4,.15,2),style:b.style==='striped'?'striped':'concrete'})).filter(b=>b.points.length):[];
+  const barriers=Array.isArray(data.barriers)?data.barriers.slice(0,40).filter(b=>b&&Array.isArray(b.points)).map(b=>({points:b.points.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)).slice(0,100).map(p=>({x:clamp(p.x,0,1000),y:clamp(p.y,0,740),elevation:clamp(Number(p.elevation)||0,-100,500)})),height:clamp(Number(b.height)||1.2,.4,4),width:clamp(Number(b.width)||.4,.15,2),style:b.style==='striped'?'striped':'concrete',automatic:b.automatic===true})).filter(b=>b.points.length):[];
   const details={description:String(data.details?.description||'').slice(0,1500),type:['circuit','kart','test'].includes(data.details?.type)?data.details.type:'circuit',tags:String(data.details?.tags||'').slice(0,200),version:String(data.details?.version||'1.0').slice(0,20),website:/^https?:\/\//i.test(data.details?.website||'')?String(data.details.website).slice(0,200):''};
   const scaleSource=['map','calibrated','manual'].includes(data.scaleSource)?data.scaleSource:background?.type==='map'?'map':'manual',scaleVerification=Number.isFinite(data.scaleVerification?.distanceMeters)&&Number.isFinite(data.scaleVerification?.referencePixels)&&data.scaleVerification.distanceMeters>0&&data.scaleVerification.referencePixels>0?{distanceMeters:data.scaleVerification.distanceMeters,referencePixels:data.scaleVerification.referencePixels}:null;
   const trees=Array.isArray(data.trees)?data.trees.filter(p=>p&&Number.isFinite(p.x)&&Number.isFinite(p.y)).slice(0,300).map(p=>({x:clamp(p.x,0,1000),y:clamp(p.y,0,740),...treeSettings(p)})):[];
-  return {name:typeof data.name==='string'?data.name.slice(0,60)||'Untitled Circuit':'Untitled Circuit',points:data.points.map(p=>({x:p.x,y:p.y,elevation:clamp(Number(p.elevation)||0,-100,500),bank:clamp(Number(p.bank)||0,-15,15),...cornerSettings(p)})),generator:data.generator&&typeof data.generator.seed==='string'?{seed:data.generator.seed.slice(0,32),style:['flowing','technical','fast'].includes(data.generator.style)?data.generator.style:'flowing',complexity:clamp(Number(data.generator.complexity)||12,8,24),length:clamp(Number(data.generator.length)||900,300,5000)}:null,width:clamp(Number(data.width)||12,4,30),scale:clamp(Number(data.scale)||.2,.02,10),scaleSource,scaleVerification,smooth:data.smooth!==false,line:!!data.line,start:Number.isFinite(data.start)?((data.start%1)+1)%1:0,preset:['club','technical','speedway'].includes(data.preset)?data.preset:null,id:typeof data.id==='string'?data.id:null,pit,pitSettings:pitSettings(data),barriers,trees,buildings,grass:GRASS[data.grass]?data.grass:'mown',weather:WEATHER[data.weather]?data.weather:'sunny',details,complete:data.complete!==false&&data.points.length>=3,asphalt:ASPHALT[data.asphalt]?data.asphalt:'fresh',background,export:exportOptions};
+  return {name:typeof data.name==='string'?data.name.slice(0,60)||'Untitled Circuit':'Untitled Circuit',points:data.points.map(p=>({x:p.x,y:p.y,elevation:clamp(Number(p.elevation)||0,-100,500),bank:clamp(Number(p.bank)||0,-15,15),...cornerSettings(p)})),generator:data.generator&&typeof data.generator.seed==='string'?{seed:data.generator.seed.slice(0,32),style:['flowing','technical','fast'].includes(data.generator.style)?data.generator.style:'flowing',complexity:clamp(Number(data.generator.complexity)||12,8,24),length:clamp(Number(data.generator.length)||900,300,5000)}:null,width:clamp(Number(data.width)||12,4,30),scale:clamp(Number(data.scale)||.2,.02,10),scaleSource,scaleVerification,smooth:data.smooth!==false,line:!!data.line,start:Number.isFinite(data.start)?((data.start%1)+1)%1:0,preset:['club','technical','speedway'].includes(data.preset)?data.preset:null,id:typeof data.id==='string'?data.id:null,pit,pitSettings:pitSettings(data),timing:timingSettings(data),barriers,trees,buildings,grass:GRASS[data.grass]?data.grass:'mown',weather:WEATHER[data.weather]?data.weather:'sunny',details,complete:data.complete!==false&&data.points.length>=3,asphalt:ASPHALT[data.asphalt]?data.asphalt:'fresh',background,export:exportOptions};
 }
 function emptyTrack(){return {...presetTrack('club'),name:'Untitled Circuit',points:[],preset:null,complete:false};}
 const recoveredDraft=validateTrack(readStorage(DRAFT,null));
@@ -88,13 +91,14 @@ let samples=[], sampleSegments=[], cumulative=[], length=0, roadWidth=track.widt
 let showGrid=true, view={zoom:1,panX:0,panY:0}, drag=null, widthBefore=null;
 let cssW=0,cssH=0,dpr=1,scale=1,offsetX=0,offsetY=0;
 let selectedPoint=-1,tracerUI=null,analysisUI=null,studioUI=null,cornerUI=null,referenceLayer=null,preview3D=null,referenceOpacity=.75,traceOverlay=true,measurement=[];
-let sceneryUI=null,acSetupUI=null,shareUI=null,workspaceUI=null,selectedBuilding=-1,buildingBrush=buildingSettings();
+let sceneryUI=null,acSetupUI=null,timingUI=null,shareUI=null,workspaceUI=null,selectedBuilding=-1,buildingBrush=buildingSettings();
 let selectedTree=-1,treeBrush={height:8,type:'broadleaf'},cursorPoint=null,snapEnabled=false,snapMeters=5;
 let selectedBarrier=-1,activeBarrier=-1;const asphaltTextures=new Map();
 const canvas=$('#track-canvas'),ctx=canvas.getContext('2d');
 let geometry=buildGeometry(track.points,track.smooth);
 let pitLayout=buildPitPlan(track);
 let roadLayout=buildRoadLayout(track,geometry,pitLayout);
+let timingLayout=buildTimingPlan(track,geometry,roadLayout);
 let analysisOverlay=false,analysisData=null,analysisFocus=null;
 
 function toast(message) {const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),3200);}
@@ -111,6 +115,7 @@ function rebuild() {
   roadWidth=track.width/(track.scale||.2);
   pitLayout=buildPitPlan(track);
   roadLayout=buildRoadLayout(track,geometry,pitLayout);
+  timingLayout=buildTimingPlan(track,geometry,roadLayout);
 }
 const pointAt = fraction => pointOnTrack(geometry,fraction);
 const nearest = p => closestOnTrack(geometry,p);
@@ -124,7 +129,7 @@ function syncUI() {
   $$('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset===track.preset));
   $('#editor-status').textContent=track.complete!==false?'Closed circuit · Editable':'Open road · Editable';
   $('#layout-label').textContent=track.preset?'LAYOUT '+({club:'01',technical:'02',speedway:'03'}[track.preset]):'CUSTOM LAYOUT';
-  updateUndo();tracerUI?.refresh();analysisUI?.refresh();studioUI?.refresh();cornerUI?.refresh();sceneryUI?.refresh();acSetupUI?.refresh();shareUI?.refresh();workspaceUI?.refresh();
+  updateUndo();tracerUI?.refresh();analysisUI?.refresh();studioUI?.refresh();cornerUI?.refresh();sceneryUI?.refresh();acSetupUI?.refresh();timingUI?.refresh();shareUI?.refresh();workspaceUI?.refresh();
   if(referenceLayer && referenceLayer.currentKey!==referenceLayer.key(track.background))referenceLayer.ensure(track.background);
 }
 function setTool(value) {if(mode==='preview')stopPreview();if(value==='measure')measurement=[];if(value!=='barrier')activeBarrier=-1;tool=value;$$('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===value));canvas.style.cursor=value==='pan'?'grab':value==='move'?'default':'crosshair';$('#canvas-hint span').textContent=({move:'Drag road, pit, barrier, or tree handles.',draw:track.complete!==false?'Click to insert a point. Shift snaps to the grid.':'Click road points. Click START to close the circuit.',sketch:'Drag to sketch a road section. Release to create editable points.',erase:'Click a road, pit, barrier, or tree to remove it.',start:'Click the road to place your start line.',pan:'Drag to move your canvas.',measure:'Click two reference points to calibrate the scale.',pit:'Click a pit route. Parking bays are fitted automatically.',barrier:'Click to draw a barrier path. Finish barrier ends this path.',building:'Click clear ground to place a building. Use Move to edit it.',tree:'Click beside the circuit to plant a tree.'})[value];studioUI?.refresh();cornerUI?.refresh();}
@@ -169,6 +174,10 @@ function drawTrack() {
   ctx.restore();
 }
 function drawHandles() {
+  if(track.complete!==false)for(const gate of timingLayout.gates.filter(g=>g.id)){
+    ctx.strokeStyle='#79d8cd';ctx.lineWidth=1.6/scale;ctx.setLineDash([5/scale,4/scale]);ctx.beginPath();ctx.moveTo(gate.left.x,gate.left.y);ctx.lineTo(gate.right.x,gate.right.y);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#244d49';ctx.font=`bold ${10/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(gate.label,gate.left.x,gate.left.y-8/scale);
+  }
   const rad=5/scale;
   track.points.forEach((p,i)=>{
     ctx.beginPath();ctx.arc(p.x,p.y,(i===hoverPoint||i===activePoint||i===selectedPoint?7:5)/scale,0,Math.PI*2);ctx.fillStyle=i===selectedPoint?'#ec7c44':i===hoverPoint&&tool==='erase'?'#d44235':'#f6f2dc';ctx.fill();ctx.lineWidth=1.5/scale;ctx.strokeStyle='#dc7952';ctx.stroke();
@@ -378,6 +387,8 @@ const editorApi={
   selectPoint(index){if(!track.points[index])return;if(mode==='preview')stopPreview();selectedPoint=index;selectedBarrier=selectedTree=selectedBuilding=-1;setTool('move');syncUI();},
   useGenerated(candidate){changeLayout(()=>{const previous=snapshot();remember();track={...emptyTrack(),...clone(candidate),complete:true,width:previous.width,weather:previous.weather,asphalt:previous.asphalt,grass:previous.grass,export:previous.export};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;analysisFocus=null;measurement=[];commit();setTool('move');fitView();toast('Generated circuit loaded. Every point is editable.');});},
   getTool:()=>tool,getTree:()=>selectedTree,getTreeBrush:()=>({...treeBrush}),getPitPlan:()=>pitLayout,fitView,
+  getTimingPlan:()=>timingLayout,
+  generateBarriers(options){if(!geometry.length){toast('Draw the circuit before adding automatic barriers.');return;}const generated=automaticBarriers(track,geometry,roadLayout,pitLayout,options);if(!generated.length){toast('No clear barrier route found. Try a smaller gap or remove nearby scenery.');return;}remember();track.barriers=[...(track.barriers||[]).filter(b=>!b.automatic),...generated];selectedBarrier=-1;activeBarrier=-1;commit();setTool('move');toast(`${generated.length} editable barrier paths added. Pit access stays open. Undo restores the previous barriers.`);},
   getBuilding:()=>selectedBuilding,getBuildingBrush:()=>({...buildingBrush}),setBuildingBrush(values){buildingBrush=buildingSettings(values);},
   duplicateBuilding(){const source=track.buildings?.[selectedBuilding];if(!source)return;if(track.buildings.length>=60){toast('Maximum of 60 buildings reached.');return;}const s=track.scale||.2,r=source.rotation*Math.PI/180;for(let ring=1;ring<=4;ring++)for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1]]){const x=dx*(source.width+4)*ring/s,y=dy*(source.depth+4)*ring/s,b={...source,x:source.x+x*Math.cos(r)-y*Math.sin(r),y:source.y+x*Math.sin(r)+y*Math.cos(r)};if(!buildingClear(b))continue;remember();track.buildings.push(b);selectedBuilding=track.buildings.length-1;selectedPoint=selectedTree=selectedBarrier=-1;buildingBrush=buildingSettings(b);commit();setTool('move');toast('Building duplicated on clear ground. Drag it to refine placement.');return;}toast('No clear space nearby. Use Place building to choose another location.');},
   rotateBuilding(degrees){const b=track.buildings?.[selectedBuilding];if(b){remember();b.rotation=((b.rotation+degrees)%360+360)%360;buildingBrush={...buildingBrush,rotation:b.rotation};commit();}else{buildingBrush.rotation=((buildingBrush.rotation+degrees)%360+360)%360;sceneryUI?.refresh();} },
@@ -394,13 +405,13 @@ const editorApi={
   editView(){if(mode==='preview')stopPreview();},
   updateTrack(fn){remember();fn(track);commit();updateTransform();},
   clear(scope){if(mode==='preview')stopPreview();finishDrag();remember();if(scope==='geometry'||scope==='road'){track.points=[];track.complete=false;track.start=0;}if(scope==='geometry'||scope==='pits')track.pit=[];if(scope==='geometry'||scope==='barriers')track.barriers=[];if(scope==='geometry'||scope==='trees')track.trees=[];if(scope==='geometry'||scope==='buildings')track.buildings=[];selectedBuilding=-1;if(scope==='reference'){track.background=null;}selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;analysisData=null;measurement=[];commit();setTool(track.points.length?'move':'draw');toast('Selected items cleared. Undo restores them.');},
-  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start);remember();const previousCorners=track.points.map(cornerSettings).reverse();track.points.reverse();track.points.forEach((p,i)=>{p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();rebuild();track.start=nearest(start).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
+  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start);remember();const previousCorners=track.points.map(cornerSettings).reverse();track.points.reverse();track.points.forEach((p,i)=>{p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
   onAnalysis(data){analysisData=data;},getOverlay:()=>analysisOverlay,setOverlay(value){analysisOverlay=value;analysisFocus=null;},
   focusProgress(progress){if(mode==='preview')stopPreview();analysisFocus=progress;const p=pointAt(progress);view.zoom=2.4;const base=Math.min(cssW/1000,cssH/740)*view.zoom;view.panX=(500-p.x)*base;view.panY=(370-p.y)*base;updateTransform();},
   setOpacity(value){referenceOpacity=value;},setTraceOverlay(value){traceOverlay=value;},
   setReference(desc,meters,fresh){const apply=()=>{remember();if(fresh){track={...presetTrack('club'),name:'Traced Circuit',points:[],complete:false,preset:null,background:desc,scale:meters};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;}else{track.background=desc;track.scale=meters;}track.scaleSource=desc.type==='map'?'map':'manual';track.scaleVerification=null;analysisFocus=null;view={zoom:1,panX:0,panY:0};updateTransform();commit();referenceLayer.ensure(track.background);setTool(fresh?'draw':'move');};fresh?changeLayout(apply):apply();}
 };
-tracerUI=mountTracer(editorApi);studioUI=mountDrawStudio(editorApi);cornerUI=mountCorners(editorApi);mountGenerator(editorApi);sceneryUI=mountScenery(editorApi);acSetupUI=mountACSetup(editorApi);analysisUI=mountAnalysis(editorApi);shareUI=mountSharing(editorApi);workspaceUI=mountWorkspaceNavigation(editorApi);
+tracerUI=mountTracer(editorApi);studioUI=mountDrawStudio(editorApi);cornerUI=mountCorners(editorApi);mountGenerator(editorApi);sceneryUI=mountScenery(editorApi);acSetupUI=mountACSetup(editorApi);timingUI=mountTiming(editorApi);analysisUI=mountAnalysis(editorApi);shareUI=mountSharing(editorApi);workspaceUI=mountWorkspaceNavigation(editorApi);
 $('#build-mode').onclick=stopPreview;
 $('#width-range').setAttribute('min','4');$('#width-range').setAttribute('max','30');
 rebuild();syncUI();resize();setTool(track.points.length?'move':'draw');requestAnimationFrame(frame);
