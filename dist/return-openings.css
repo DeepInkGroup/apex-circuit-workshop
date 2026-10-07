@@ -1,0 +1,32 @@
+/* Larger creation area, with an optional full-width layout. */
+.tracer-app main{max-width:none;padding-left:10px;padding-right:10px}
+.tracer-app .workspace{height:max(1320px,140dvh);grid-template-columns:minmax(0,1fr) 300px}
+.tracer-app .canvas-wrap{min-height:1000px}
+.tracer-app .intro{margin-bottom:12px}
+.tracer-app .studio.canvas-wide .workspace{height:auto;grid-template-columns:minmax(0,1fr);overflow:visible}
+.tracer-app .studio.canvas-wide .editor-column{border-right:0}
+.tracer-app .studio.canvas-wide .canvas-wrap{height:max(1000px,110dvh);flex:none}
+.tracer-app .studio.canvas-wide .settings-panel{border-top:1px solid var(--border);overflow:visible;max-height:none}
+.tracer-app .studio.canvas-wide .settings-page,.tracer-app .studio.canvas-wide .workspace-tabs{max-width:1100px;margin-left:auto;margin-right:auto}
+.tracer-app .studio.canvas-wide .settings-page>.panel-section{padding:22px}
+.tracer-app .studio.panel-hidden .workspace{grid-template-columns:minmax(0,1fr)}
+.tracer-app .studio.drawing-focus .workspace,.tracer-app .studio.expanded .workspace{height:auto;min-height:0;overflow:hidden;flex:1;grid-template-columns:minmax(0,1fr)}
+.tracer-app .studio.drawing-focus .canvas-wrap,.tracer-app .studio.expanded .canvas-wrap{height:auto;min-height:0;flex:1}
+.auto-barrier-card .toggle-row{display:flex;align-items:center;gap:8px;margin-top:16px}
+.auto-barrier-card .toggle-row input{width:auto;margin:0}
+.barrier-return-controls{margin:18px 0;padding:14px;border:1px solid #cbd8c1;border-radius:10px;background:#edf2e5}
+.barrier-return-controls h3{margin:0 0 12px;font-size:13px;color:#304c40}
+.barrier-return-controls label{font-size:11px;color:#53664e}
+.barrier-return-controls input{width:100%;margin-top:5px}
+.barrier-return-controls button{width:100%;margin-top:12px}
+#wide-canvas[aria-pressed=true]{color:#31543d;background:#e8f0e2;border-color:#b7cdb0}
+@media(max-width:1000px) and (min-width:801px){.tracer-app .workspace{grid-template-columns:minmax(0,1fr) 280px}}
+@media(max-width:800px){
+ .tracer-app main{padding-left:6px;padding-right:6px}
+ .tracer-app .workspace{height:auto;grid-template-columns:minmax(0,1fr)}
+ .tracer-app .canvas-wrap,.tracer-app .studio.canvas-wide .canvas-wrap{height:96dvh;min-height:720px;flex:none}
+ .tracer-app .studio.panel-hidden .canvas-wrap{height:96dvh}
+ #wide-canvas{display:none}
+ .tracer-app .studio.drawing-focus .canvas-wrap,.tracer-app .studio.expanded .canvas-wrap{height:auto;min-height:0;flex:1}
+}
+@media(max-width:540px){.tracer-app .canvas-wrap,.tracer-app .studio.canvas-wide .canvas-wrap{min-height:660px}.tracer-app .studio.drawing-focus .canvas-wrap,.tracer-app .studio.expanded .canvas-wrap{min-height:0}}

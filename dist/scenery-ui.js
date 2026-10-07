@@ -1,4 +1,4 @@
-import {GRASS,BUILDINGS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,drawBuilding} from './scenery.js?v=20261007-online';
+import {GRASS,BUILDINGS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,drawBuilding} from './scenery.js?v=20261007-return';
 const $=s=>document.querySelector(s);
 const keys=['type','width','depth','height','rotation','roof','facade','windows'];
 const themes={medical:{facade:'concrete',roof:'white'},cafe:{facade:'brick',roof:'terracotta'},fuel:{facade:'concrete',roof:'white'},hospitality:{facade:'plaster',roof:'green'}};

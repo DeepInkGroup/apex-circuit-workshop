@@ -132,3 +132,11 @@ Existing checks cover native KN5 decoding, road orientation, AI records, spawn p
 - **05 / Online server** copies matching `TRACK`, empty `CONFIG_TRACK`, and pit-limited `MAX_CLIENTS` settings and downloads a server data ZIP. Every full client ZIP also includes server instructions, a configuration snippet and a revision manifest. Install the same revision on server and clients.
 
 Native online hosting still needs an in-game check with your particular server manager. See [the installation guide](docs/ASSETTO_CORSA.md) for naming and replacement instructions.
+
+## Return openings and larger drawing workspace
+
+Automatic circuit barriers now leave staggered return openings by default: 8 m wide, spaced around 150 m apart, with up to 10 per side. Adjust width (6?16 m), spacing (50?300 m), or disable openings under **Asphalt & barriers**. Regenerate previously placed automatic barriers to apply these settings. Pit-access and scenery clearances remain part of the placement calculation.
+
+For a drawn barrier, select it and use **Cut opening in selected barrier**. Choose the gap width and its percentage along the path. This splits the real barrier geometry into two editable paths; the exported collision model contains the gap too. Undo restores the original.
+
+The default drawing canvas is taller and the page width cap has been removed. **Full-width canvas** moves settings below the drawing, while **Side-by-side layout** restores the inspector on the right. The layout preference is saved in this browser. Focus canvas still fills the screen. The reference tip and Trace ? Analyze ? Export strip below the studio have been removed.

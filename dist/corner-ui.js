@@ -1,5 +1,5 @@
-import {cornerSettings,KERB_MODES} from './corner-settings.js?v=20261007-online';
-import {buildGeometry} from './engine.js?v=20261007-online';
+import {cornerSettings,KERB_MODES} from './corner-settings.js?v=20261007-return';
+import {buildGeometry} from './engine.js?v=20261007-return';
 const $=s=>document.querySelector(s);
 const PRESETS={balanced:{rounding:1,entryStrength:1,exitStrength:1},late:{rounding:.85,entryStrength:.6,exitStrength:1.4},early:{rounding:.85,entryStrength:1.4,exitStrength:.6},hairpin:{rounding:.35,entryStrength:.65,exitStrength:.65},sweeper:{rounding:1,entryStrength:1.5,exitStrength:1.5}};
 export function mountCorners(api){

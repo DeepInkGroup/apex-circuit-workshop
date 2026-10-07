@@ -1,7 +1,7 @@
-import {trackFolder,newTrackId,validTrackId,serverConfig} from './mod-identity.js?v=20261007-online';
-import {exportImages} from './tracer-ui.js?v=20261007-online';
-import {DEFAULT_EXPORT,validateExport,exportServerZip} from './ac-export.js?v=20261007-online';
-import {GRASS} from './scenery.js?v=20261007-online';
+import {trackFolder,newTrackId,validTrackId,serverConfig} from './mod-identity.js?v=20261007-return';
+import {exportImages} from './tracer-ui.js?v=20261007-return';
+import {DEFAULT_EXPORT,validateExport,exportServerZip} from './ac-export.js?v=20261007-return';
+import {GRASS} from './scenery.js?v=20261007-return';
 const $=s=>document.querySelector(s);
 export function mountACSetup(api){const section=$('.export-settings'),body=section.querySelector('.details-body');
  const inputs=Object.fromEntries(['author','country','city','pits','kerbs','barriers','ai'].map(k=>[k,$('#export-'+k)]));

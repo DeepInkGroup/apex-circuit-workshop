@@ -157,3 +157,11 @@ If an unrelated mod already has the same ID, use **New unique ID** and install t
 5. If a content checksum fails, compare matching exports. `APEX_MANIFEST.json` lists CRC32 values for the model and native data as revision identifiers; it does not alter the game’s checksum protection.
 
 The naming/layout handling follows [Content Manager’s server preset implementation](https://github.com/gro-ove/actools/blob/master/AcManager.Tools/Objects/ServerPresetObject.cs). The metadata and base-layout structure follow [Assetto Server Manager’s track loader](https://github.com/JustaPenguin/assetto-server-manager/blob/master/content_tracks.go). The ideal spline’s binary records follow the native AI writer and [the author’s AI import tool](https://github.com/leBluem/io_import_accsv/blob/master/import_ai.py); the `data/ideal_line.ai` location was checked against installed Kunos track files. Actual server acceptance depends on the host’s installation and manager, and has not been verified in a live online session.
+
+## Returning through circuit barriers
+
+**Automatic circuit barriers ? Leave return openings** defaults on. The generator omits entire wall sections at staggered positions along each side. Opening width is 6?16 meters (8 by default) and desired spacing is 50?300 meters (150 by default). There are up to ten planned openings per side, so spacing grows on long circuits. Existing pit/scenery exclusions may create further gaps. These are actual separate wall paths in the editor and native collision model, not transparent wall textures.
+
+For barriers already in a saved draft, regenerate automatic barriers to add the planned openings. Drawn barriers are preserved. For individual drawn barriers, select one and use **Cut opening in selected barrier** with a width and position along the path. The original barrier must be at least the opening width plus 4 meters long; the cut creates two editable paths and requires a free slot within the 40-path limit. Undo restores either operation.
+
+Export a fresh client ZIP after changing walls. Online drivers and the server should use the matching revision. Review openings beside trees, buildings and manually placed walls, which remain editable scenery.

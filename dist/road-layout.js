@@ -1,6 +1,6 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261007-online';
-import {trackScale} from './coordinates.js?v=20261007-online';
-import {kerbSides} from './corner-settings.js?v=20261007-online';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261007-return';
+import {trackScale} from './coordinates.js?v=20261007-return';
+import {kerbSides} from './corner-settings.js?v=20261007-return';
 
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};

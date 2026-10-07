@@ -4,7 +4,7 @@ export const WEATHER={
   sunset:{label:'Golden hour',sky:[.91,.72,.56],ground:'#e2d8bd',ambient:.88,tint:[1,.87,.71],fog:.12,sunPitch:9,sunHeading:75},
   rain:{label:'Rainy mood',sky:[.40,.49,.56],ground:'#bac9c3',ambient:.7,tint:[.77,.88,1],fog:.30,sunPitch:25,sunHeading:0}
 };
-export {TREE_TYPES} from './trees.js?v=20261007-online';
+export {TREE_TYPES} from './trees.js?v=20261007-return';
 export function simplifyStroke(points,tolerance){
   if(points.length<3)return points;
   const a=points[0],b=points[points.length-1],dx=b.x-a.x,dy=b.y-a.y,l2=dx*dx+dy*dy;let index=0,best=0;

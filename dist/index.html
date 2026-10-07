@@ -7,17 +7,18 @@
   <meta name="description" content="Create circuits with textured asphalt and grass, editable buildings and barriers, and full track details. Trace maps, inspect in 3D, analyze, and export native Assetto Corsa mods." />
   <title>APEX — Circuit Studio & Analysis for Assetto Corsa</title>
   <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="./style.css?v=20261007-online" />
-  <link rel="stylesheet" href="./tracer.css?v=20261007-online" />
-  <link rel="stylesheet" href="./analysis.css?v=20261007-online" />
-  <link rel="stylesheet" href="./studio.css?v=20261007-online" />
-  <link rel="stylesheet" href="./workshop.css?v=20261007-online" />
-  <link rel="stylesheet" href="./scenery.css?v=20261007-online" />
-  <link rel="stylesheet" href="./release8.css?v=20261007-online" />
-  <link rel="stylesheet" href="./friendly.css?v=20261007-online" />
-  <link rel="stylesheet" href="./building-options.css?v=20261007-online" />
-  <link rel="stylesheet" href="./race-setup.css?v=20261007-online" />
-  <link rel="stylesheet" href="./finish-update.css?v=20261007-online" />
+  <link rel="stylesheet" href="./style.css?v=20261007-return" />
+  <link rel="stylesheet" href="./tracer.css?v=20261007-return" />
+  <link rel="stylesheet" href="./analysis.css?v=20261007-return" />
+  <link rel="stylesheet" href="./studio.css?v=20261007-return" />
+  <link rel="stylesheet" href="./workshop.css?v=20261007-return" />
+  <link rel="stylesheet" href="./scenery.css?v=20261007-return" />
+  <link rel="stylesheet" href="./release8.css?v=20261007-return" />
+  <link rel="stylesheet" href="./friendly.css?v=20261007-return" />
+  <link rel="stylesheet" href="./building-options.css?v=20261007-return" />
+  <link rel="stylesheet" href="./race-setup.css?v=20261007-return" />
+  <link rel="stylesheet" href="./return-openings.css?v=20261007-return" />
+  <link rel="stylesheet" href="./finish-update.css?v=20261007-return" />
 </head>
 <body>
   <header class="topbar">
@@ -35,7 +36,7 @@
         <div class="editor-column">
           <div class="canvas-top"><div class="mode-switch" role="group" aria-label="Workshop mode"><button class="active" id="build-mode"><i data-icon="pen"></i> Build</button></div><span class="canvas-caption" id="canvas-caption">CIRCUIT EDITOR <span>/</span> TOP VIEW</span><button id="fullscreen-btn" class="icon-button" title="Expand canvas" aria-label="Expand canvas"><i data-icon="expand"></i></button></div>
           <div class="canvas-wrap" id="canvas-wrap">
-            <canvas id="track-canvas" tabindex="0" aria-label="Circuit editor. Click to place road points, use Freehand to sketch, or generate a random circuit." ></canvas>
+            <canvas id="track-canvas" tabindex="0" aria-label="Circuit editor. Click to place road points, use Freehand to sketch, and refine an editable circuit." ></canvas>
             <div class="tools" id="editor-tools" role="group" aria-label="Editor tools"><button class="tool active" data-tool="move" title="Move points (V)" aria-label="Move points"><i data-icon="cursor"></i><span>V</span></button><button class="tool" data-tool="draw" title="Add points (P)" aria-label="Draw track points"><i data-icon="pen"></i><span>P</span></button><button class="tool" data-tool="erase" title="Remove points (E)" aria-label="Remove points"><i data-icon="eraser"></i><span>E</span></button><div class="tool-divider"></div><button class="tool" data-tool="start" title="Place start line (S)" aria-label="Place start line"><i data-icon="flag"></i><span>S</span></button><button class="tool" data-tool="pan" title="Pan canvas (H)" aria-label="Pan canvas"><i data-icon="hand"></i><span>H</span></button></div>
             <div class="canvas-label" id="canvas-label"><span class="tiny-square"></span><span id="layout-label">CUSTOM LAYOUT</span></div>
             <div class="canvas-zoom" id="canvas-zoom"><button id="zoom-out" aria-label="Zoom out">−</button><button id="zoom-reset" title="Fit circuit">100%</button><button id="zoom-in" aria-label="Zoom in">+</button></div>
@@ -50,7 +51,6 @@
         </aside>
       </div>
     </section>
-    <section class="below-studio"><div class="tip"><span class="tip-icon">↗</span><p><strong>Every great circuit starts with a corner.</strong><br />Refine your geometry, inspect its data, and export your track.</p></div><div class="workflow"><span><b>01</b> Design</span><i>→</i><span><b>02</b> Analyze</span><i>→</i><span><b>03</b> Refine</span></div></section>
   </main>
   <footer class="apex-footer"><span class="footer-version">V 1.3.2</span><span class="footer-brand">APEX Design.</span><a class="footer-telegram" href="https://t.me/DeepInkGroup" target="_blank" rel="noopener noreferrer" aria-label="DeepInk Group on Telegram" title="DeepInk Group on Telegram"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.7 3.4 18.5 20c-.2 1.2-.9 1.5-1.8.9l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.4-5 9.1-8.2c.4-.4-.1-.6-.6-.3L6.1 13.7 1.3 12.2c-1-.3-1-1 .2-1.5L20.2 3.5c.9-.3 1.6.2 1.5-.1Z"/></svg></a></footer>
 
@@ -58,6 +58,6 @@
   <dialog id="library-dialog"><div class="dialog-top"><p class="eyebrow">YOUR CIRCUITS</p><button class="icon-button close-dialog" aria-label="Close circuit library">×</button></div><h2>My circuits<span>.</span></h2><p class="dialog-description">Your layouts, saved in this browser.</p><div id="library-list"></div><div class="library-actions"><button id="import-btn" class="subtle-button"><i data-icon="upload"></i> Import</button><button id="export-current" class="subtle-button"><i data-icon="download"></i> Export current</button><input id="import-file" type="file" accept=".json,application/json" hidden /><button class="primary-button close-dialog">Back to studio ↗</button></div></dialog>
   <dialog id="confirm-dialog"><div class="dialog-top"><p class="eyebrow">NEW LAYOUT</p><button class="icon-button close-dialog" aria-label="Cancel">×</button></div><h2>A fresh starting line.</h2><p class="dialog-description">This will replace your current layout. Save it first if you want to keep it.</p><div class="confirm-actions"><button class="subtle-button close-dialog">Cancel</button><button id="confirm-save" class="subtle-button">Save & continue</button><button id="confirm-replace" class="primary-button">Continue ↗</button></div></dialog>
   <div id="toast" class="toast" role="status"></div>
-  <script type="module" src="./app.js?v=20261007-online"></script>
+  <script type="module" src="./app.js?v=20261007-return"></script>
 </body>
 </html>
