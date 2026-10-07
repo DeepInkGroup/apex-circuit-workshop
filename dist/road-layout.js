@@ -1,6 +1,6 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261006-finish';
-import {trackScale} from './coordinates.js?v=20261006-finish';
-import {kerbSides} from './corner-settings.js?v=20261006-finish';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261007-online';
+import {trackScale} from './coordinates.js?v=20261007-online';
+import {kerbSides} from './corner-settings.js?v=20261007-online';
 
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};
@@ -27,7 +27,7 @@ function trimLoops(rail,center,closed,radius){
 }
 function pitOpening(p,plan,scale){
   if(!plan)return false;const padding=(plan.settings.width/2+.25)/scale;
-  return [plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection].some(path=>path.slice(1).some((b,i)=>{const a=path[i];if(p.x<Math.min(a.x,b.x)-padding||p.x>Math.max(a.x,b.x)+padding||p.y<Math.min(a.y,b.y)-padding||p.y>Math.max(a.y,b.y)+padding)return false;const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;return Math.hypot(p.x-a.x-dx*t,p.y-a.y-dy*t)<padding;}));
+  return [plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection].some(path=>path.slice(1).some((b,i)=>{const a=path[i];if(p.x<Math.min(a.x,b.x)-padding||p.x>Math.max(a.x,b.x)+padding||p.y<Math.min(a.y,b.y)-padding||p.y>Math.max(a.y,b.y)+padding)return false;const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;const localPadding=(((a.width||plan.settings.width)*(1-t)+(b.width||plan.settings.width)*t)/2+.25)/scale;return Math.hypot(p.x-a.x-dx*t,p.y-a.y-dy*t)<localPadding;}));
 }
 export function buildRoadLayout(track,geometry=buildGeometry(track.points||[],track.smooth,track.complete!==false),pit=null){
   const s=trackScale(track),closed=track.complete!==false,total=geometry.length,half=track.width/2;
@@ -53,11 +53,12 @@ export function buildRoadLayout(track,geometry=buildGeometry(track.points||[],tr
     }
   }
   const cache=new Map(),bands=(a,b)=>{const key=a+','+b;if(cache.has(key))return cache.get(key);const inner=rail(a),outer=rail(b),result=Array.from({length:segments},(_,i)=>{const j=(i+1)%n;return [inner[i],inner[j],outer[j],outer[i]];});cache.set(key,result);return result;};
-  return {center,left,right,quads,kerbs,bands,half,whiteKerbs:kerbs.filter(p=>p.white).map(p=>p.corners),redKerbs:kerbs.filter(p=>!p.white).map(p=>p.corners)};
+  const edgeMarkings=[...bands(half-.15,half-.28),...bands(-half+.28,-half+.15)].filter(corners=>!corners.some(p=>pitOpening(p,pit,s)));
+  return {center,left,right,quads,kerbs,bands,half,edgeMarkings,totalMeters:total*s,whiteKerbs:kerbs.filter(p=>p.white).map(p=>p.corners),redKerbs:kerbs.filter(p=>!p.white).map(p=>p.corners)};
 }
 export function fillRoadPolygons(ctx,polygons,color){ctx.beginPath();for(const corners of polygons){corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();}ctx.fillStyle=color;ctx.fill();}
 export function drawRoadLayout(ctx,layout,surface,kerbs=true){
   if(kerbs){fillRoadPolygons(ctx,layout.whiteKerbs||[],'#eee9d9');fillRoadPolygons(ctx,layout.redKerbs||[],'#b95040');}
   fillRoadPolygons(ctx,layout.quads,surface);if(!layout.quads.length)return;
-  fillRoadPolygons(ctx,[...layout.bands(layout.half-.15,layout.half-.28),...layout.bands(-layout.half+.28,-layout.half+.15)],'#e5e4d9');
+  fillRoadPolygons(ctx,layout.edgeMarkings||[],'#e5e4d9');
 }

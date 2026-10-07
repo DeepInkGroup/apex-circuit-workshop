@@ -7,3 +7,8 @@
 .surface-comparison b{font:10px ui-monospace,monospace;text-align:right}
 .gantry-controls{padding:12px;margin:12px 0;border:1px solid #d5dfce;border-radius:8px;background:#f1f5eb}
 .gantry-controls .toggle-row{padding-top:0}.gantry-controls .studio-field{margin-bottom:0}
+
+.online-setup pre{margin:12px 0;padding:14px;border:1px solid #d5ddd5;border-radius:10px;background:#edf2eb;color:#30443a;font:12px/1.7 ui-monospace,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;user-select:all}
+#ac-track-id{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.ideal-line-legend{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 12px;font-size:11px;font-weight:600}
+.ideal-line-legend span:nth-child(1){color:#338261}.ideal-line-legend span:nth-child(2){color:#a7821e}.ideal-line-legend span:nth-child(3){color:#bd5638}

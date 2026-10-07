@@ -1,5 +1,5 @@
-import {analyzeTrack} from './analysis.js?v=20261006-finish';
-import {validateExport,trackSlug} from './ac-export.js?v=20261006-finish';
+import {analyzeTrack} from './analysis.js?v=20261007-online';
+import {validateExport,trackSlug} from './ac-export.js?v=20261007-online';
 
 const $=s=>document.querySelector(s),num=(n,d=0)=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:d}):'—';
 function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}

@@ -1,16 +1,19 @@
-import {buildGeometry} from './engine.js?v=20261006-finish';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261006-finish';
-import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261006-finish';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261006-finish';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261006-finish';
-import {WEATHER} from './environment.js?v=20261006-finish';
-import {drawTree} from './trees.js?v=20261006-finish';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261006-finish';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261006-finish';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261006-finish';
-import {toGamePoint} from './coordinates.js?v=20261006-finish';
-import {buildTimingPlan} from './timing.js?v=20261006-finish';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261006-finish';
+import {pitRibbons} from './pit-ribbon.js?v=20261007-online';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261007-online';
+import {trackFolder} from './mod-identity.js?v=20261007-online';
+import {buildGeometry} from './engine.js?v=20261007-online';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261007-online';
+import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261007-online';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261007-online';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261007-online';
+import {WEATHER} from './environment.js?v=20261007-online';
+import {drawTree} from './trees.js?v=20261007-online';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261007-online';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261007-online';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261007-online';
+import {toGamePoint} from './coordinates.js?v=20261007-online';
+import {buildTimingPlan} from './timing.js?v=20261007-online';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261007-online';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
@@ -20,13 +23,14 @@ export async function exportImages(track){
   const geometry=buildGeometry(track.points,track.smooth,track.complete!==false),s=track.scale||.2,plan=buildPitPlan(track),road=buildRoadLayout(track,geometry,plan),mapLayout=createTrackMap(track,geometry,plan,road);
   const gantry=gantryPlan(track,buildTimingPlan(track,geometry,road),plan);
   const footprint=[...(gantry?.supports||[]),...(track.export?.buildings!==false?(track.buildings||[]):[]).flatMap(b=>buildingCorners(b,s))],margin=track.width/s+20,minX=Math.min(0,...footprint.map(p=>p.x-margin),plan.bounds.minX-margin),maxX=Math.max(1000,...footprint.map(p=>p.x+margin),plan.bounds.maxX+margin),minY=Math.min(0,...footprint.map(p=>p.y-margin),plan.bounds.minY-margin),maxY=Math.max(740,...footprint.map(p=>p.y+margin),plan.bounds.maxY+margin),factor=Math.min(960/(maxX-minX),580/(maxY-minY)),tx=500-(minX+maxX)/2*factor,ty=310-(minY+maxY)/2*factor;
-  const routes=[plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection];
+  const ribbons=pitRibbons(plan),routes=[plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection];
   const draw=(canvas,background)=>{
     const ctx=canvas.getContext('2d');if(background){ctx.fillStyle=grassPattern(ctx,track.grass);ctx.fillRect(0,0,canvas.width,canvas.height);}
     ctx.save();ctx.translate(tx,ty);ctx.scale(factor,factor);
     const path=(points,width,color)=>{if(points.length<2)return;ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.lineWidth=width;ctx.strokeStyle=color;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();};
     if(background)drawRoadLayout(ctx,road,asphaltPattern(ctx,track.asphalt),track.export?.kerbs!==false);else fillRoadPolygons(ctx,road.quads,'#fff');
-    routes.forEach(p=>path(p,plan.settings.width/s,background?`rgb(${PIT_STYLES[plan.settings.style].color.join(',')})`:'#fff'));
+    fillRoadPolygons(ctx,ribbons.map(r=>r.corners),background?`rgb(${PIT_STYLES[plan.settings.style].color.join(',')})`:'#fff');
+    if(background){fillRoadPolygons(ctx,ribbons.flatMap(r=>r.paint),'#eee9d7');if(track.export?.idealLine)drawIdealLine(ctx,idealLine(track,road),s,factor,track.complete!==false);}
     if(background){
       plan.bays.forEach(b=>{fillRoadPolygons(ctx,[b.corners],'#acb4ab');ctx.strokeStyle='#e8cf88';ctx.lineWidth=.14/s;ctx.stroke();});
       (track.barriers||[]).forEach(b=>path(b.points,Math.max(2,b.width/s),'#bdc0bd'));
@@ -43,8 +47,7 @@ export async function exportImages(track){
   // fitted color preview transform out of the car-marker/minimap calculation.
   const map=document.createElement('canvas');map.width=mapLayout.width;map.height=mapLayout.height;const mc=map.getContext('2d'),project=p=>worldToMap(toGamePoint(p,track),mapLayout);
   fillRoadPolygons(mc,road.quads.map(corners=>corners.map(project)),'#fff');
-  mc.strokeStyle='#fff';mc.lineWidth=plan.settings.width/mapLayout.scaleFactor;mc.lineCap='round';mc.lineJoin='round';
-  routes.forEach(path=>{if(path.length<2)return;mc.beginPath();path.map(project).forEach((p,i)=>i?mc.lineTo(p.x,p.y):mc.moveTo(p.x,p.y));mc.stroke();});
+  fillRoadPolygons(mc,ribbons.map(r=>r.corners.map(project)),'#fff');
   fillRoadPolygons(mc,plan.bays.map(b=>b.corners.map(project)),'#fff');
   return {'ui/preview.png':await png(preview),'ui/outline.png':await png(outline),'map.png':await png(map)};
 }
@@ -140,11 +143,11 @@ export function mountTracer(api){
   const previewActions=document.createElement('div');previewActions.className='export-preview-actions';previewActions.innerHTML='<span>Track preview · asphalt, kerbs & scenery</span><button id="download-color-preview" class="outline-button" disabled>Download color preview</button>';colorPreview.after(previewActions);
   let previewUrl='',cachedImages=null,cachedKey='',previewRequest=0;
   async function preparePreview(){const request=++previewRequest,t=JSON.parse(JSON.stringify(api.getTrack())),key=JSON.stringify(t);colorPreview.hidden=true;$('#download-color-preview').disabled=true;try{const images=await exportImages(t);if(request!==previewRequest)return;cachedImages=images;cachedKey=key;if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(new Blob([images['ui/preview.png']],{type:'image/png'}));colorPreview.src=previewUrl;colorPreview.hidden=false;$('#download-color-preview').disabled=false;}catch(error){if(request===previewRequest)$('#export-error').textContent='Preview could not be created: '+error.message;}}
-  $('#download-color-preview').onclick=()=>{if(!previewUrl)return;const a=document.createElement('a');a.href=previewUrl;a.download=trackSlug(api.getTrack().name)+'_color_preview.png';a.click();};
+  $('#download-color-preview').onclick=()=>{if(!previewUrl)return;const a=document.createElement('a');a.href=previewUrl;a.download=trackFolder(api.getTrack())+'_color_preview.png';a.click();};
   function openExport(){
     stopForDialog();const track=api.getTrack(),report=validateExport(track);$('#export-track-title').textContent=track.name;$('#export-track-details').textContent=`${Math.round(report.length)} m · ${track.width} m wide · ${track.export?.pitboxes||8} pit boxes · ${track.export?.buildings!==false?(track.buildings||[]).length:0} buildings · ${track.export?.trees!==false?(track.trees||[]).length:0} trees`;
     const reportEl=$('#export-report');reportEl.replaceChildren();[...report.errors.map(text=>({text,error:true})),...report.warnings.map(text=>({text,error:false}))].forEach(item=>{const p=document.createElement('p');p.className=item.error?'export-issue error':'export-issue';p.textContent=(item.error?'× ':'↳ ')+item.text;reportEl.append(p);});
-    $('#download-ac').disabled=!!report.errors.length;$('#ai-included').hidden=track.export?.ai===false;$('#export-error').textContent='';exporter.showModal();preparePreview();
+    $('#download-ac').disabled=!!report.errors.length;$('#ai-included').hidden=track.export?.ai===false&&!track.export?.idealLine;$('#export-error').textContent='';exporter.showModal();preparePreview();
   }
   $('#ac-export-btn').onclick=openExport;$('#export-inspect').onclick=()=>{exporter.close();api.preview();};
   $('#download-ac').onclick=async()=>{

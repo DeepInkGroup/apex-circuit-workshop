@@ -115,13 +115,13 @@ content/tracks/apex_your_circuit/
 INSTALL.txt
 ```
 
-AI files are omitted when disabled. The website generates preview and map PNGs during export. The model contains road, grass, optional kerbs and boundary walls, start-grid and pit spawn dummies, a hotlap spawn, and three left/right timing-gate pairs.
+AI files are omitted when both Driving AI and Show ideal racing line are disabled. The website generates preview and map PNGs during export. The model contains road, grass, optional kerbs and boundary walls, start-grid and pit spawn dummies, a hotlap spawn, and three left/right timing-gate pairs.
 
 ## Current limits
 
 - Analysis uses the scaled, traced geometry. Bend counts and straight lengths use curvature thresholds; paved area is length × width. Pit bay counts follow the generated layout. Methods are included in `apex_analysis.json`.
 - Manual elevation and banking affect the road; surrounding terrain is a flat base. This is not a terrain/LIDAR reconstruction tool.
-- The automatically generated AI line follows the centerline with curvature-based speed hints. Record or refine AI in-game for competitive racing.
+- The automatically generated AI follows the centerline, or the visible racing guide when enabled, with curvature-based speed hints. Record or refine AI in-game for competitive racing.
 - Automatic pit-lane geometry needs inspection. For unusual tracks, draw a dedicated lane and choose a suitable pit-box count.
 - Tight corners can cause inner-edge overlap. The export report flags this; adjust the trace or width in 3D.
 - Self-crossing centerlines are rejected. Overpasses and separate layouts are not generated.
@@ -137,3 +137,23 @@ AI files are omitted when disabled. The website generates preview and map PNGs d
 CSP references: [Grass FX](https://github.com/ac-custom-shaders-patch/acc-extension-config/wiki/Tracks-%E2%80%93-Grass-FX) and [shader/texture replacement syntax](https://github.com/ac-custom-shaders-patch/acc-extension-config/wiki/General-%E2%80%93-Shader-replacements).
 
 Format research references: [Content Manager's AcTools KN5 writer](https://github.com/gro-ove/actools/blob/master/AcTools/Kn5File/Kn5Writer.cs), [Direct3D DDS header](https://learn.microsoft.com/en-us/windows/win32/direct3ddds/dds-header) and [pixel masks](https://learn.microsoft.com/en-us/windows/win32/direct3ddds/dds-pixelformat), [Content Manager material implementation](https://github.com/gro-ove/actools/blob/master/AcTools.Render/Kn5SpecificForward/Materials/Kn5MaterialSimple.cs), [AI spline reader](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiSpline.cs), [AI extra-point structure](https://github.com/gro-ove/actools/blob/master/AcTools/AiFile/AiPointExtra.cs), and the original [track authoring guide](https://assettocorsamods.net/threads/build-your-first-track-basic-guide.12/). The tracing workflow was informed by [TrackTracer](https://tracktracer.trackgrind.com/); APEX is independent of it and of Kunos Simulazioni.
+
+## Pit merges and optional racing guide
+
+Pit mouths narrow to 2.2–3.2 meters, meet the outer driving lane and widen toward the separate service route. The **Entry / exit approach** setting changes the approach distance (12–60 meters, limited by the available lap length). The shared pavement ribbon is used for the drawing, minimap and KN5. The road-facing portion uses the ROAD surface, so it does not place pit speed limiting at the initial merge mouth. Road edge markings and kerbs leave access openings. Custom service points remain editable; review unusual layouts in 3D.
+
+Enable **Show ideal racing line** under **04 / Include in mod** for a dashed guide colored by local corner radius: green for flowing sections, yellow for corners, orange for tight turns. The generator smooths positions within the actual joined road cross-sections and retains clearance to each edge. The guide paint uses a non-collision mesh draped above the road, and `data/ideal_line.ai` carries the same positions. It also includes fast-lane and pit guidance if the Driving AI switch is off. This is a learning guide, not a car-specific braking prediction or lap-time optimizer; refine generated AI in-game for races.
+
+## Online server installation and track names
+
+The circuit name shown to drivers is separate from its **Mod folder / server track ID**. Renaming the display name keeps the exported folder, KN5 name and server ID unchanged. New circuits receive a unique random suffix; older saved circuits retain the previous name-derived folder. The ID accepts a lowercase initial letter followed by lowercase letters, numbers or underscores, up to 32 characters. It is saved in JSON drafts, mod sources and shared snapshots.
+
+If an unrelated mod already has the same ID, use **New unique ID** and install the newly exported mod on every driver’s client and the server. For a revision of the same mod, keep the ID and replace matching content together. A server may reject duplicate uploads until its existing track is replaced through that manager’s update workflow.
+
+1. Download the full **track ZIP** for clients. Everyone installs this identical revision in Content Manager.
+2. Download the **server ZIP** under **05 / Online server**. Extract its `content/tracks/<id>/` folder into the dedicated server. It contains `models.ini`, native data (including `surfaces.ini` and `drs_zones.ini`) and display metadata. Managers requiring a KN5 or preview should import the full client ZIP instead. Avoid an extra ZIP-name folder around `content/`.
+3. Merge the three keys in `SERVER_CONFIG.txt` into the server’s existing `[SERVER]` section. `TRACK` is the exact folder ID; `CONFIG_TRACK` is empty for this single-layout export. `MAX_CLIENTS` must not exceed the generated pit count. Keep existing cars, ports, session settings and credentials.
+4. Rescan/restart the server manager. For an update, stop the server and replace the old revision on clients and server; avoid leaving an old `data.acd`, AI cache or minimap beside new exported files.
+5. If a content checksum fails, compare matching exports. `APEX_MANIFEST.json` lists CRC32 values for the model and native data as revision identifiers; it does not alter the game’s checksum protection.
+
+The naming/layout handling follows [Content Manager’s server preset implementation](https://github.com/gro-ove/actools/blob/master/AcManager.Tools/Objects/ServerPresetObject.cs). The metadata and base-layout structure follow [Assetto Server Manager’s track loader](https://github.com/JustaPenguin/assetto-server-manager/blob/master/content_tracks.go). The ideal spline’s binary records follow the native AI writer and [the author’s AI import tool](https://github.com/leBluem/io_import_accsv/blob/master/import_ai.py); the `data/ideal_line.ai` location was checked against installed Kunos track files. Actual server acceptance depends on the host’s installation and manager, and has not been verified in a live online session.

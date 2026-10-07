@@ -123,3 +123,12 @@ npm test
 ```
 
 Existing checks cover native KN5 decoding, road orientation, AI records, spawn positions, ZIP integrity, circuit geometry, and map scale. Every push to `main` runs the checks and deploys `dist/` to GitHub Pages through `.github/workflows/pages.yml`.
+
+## Connected pits, racing guide and online export
+
+- Tapered pit entry and exit merge into the outer driving lane. Adjust approach length in **Pit lane design**. Editor, native pavement and minimap use the same variable-width geometry; kerbs and road edge paint leave openings. Merge collision follows the road height.
+- **04 / Include in mod → Show ideal racing line** adds a dashed green/yellow/orange guide in the drawing, 3D and native model, plus `data/ideal_line.ai`. The paint has no collision. It is a generated learning guide, not a calibrated braking or optimal lap-time solution. Driving AI follows the guide when enabled.
+- **Track identity** separates the display name from a stable lowercase mod folder ID. New circuits receive a random suffix; saved circuits keep their previous folder ID. **New unique ID** creates a separate mod when another track already uses the name.
+- **05 / Online server** copies matching `TRACK`, empty `CONFIG_TRACK`, and pit-limited `MAX_CLIENTS` settings and downloads a server data ZIP. Every full client ZIP also includes server instructions, a configuration snippet and a revision manifest. Install the same revision on server and clients.
+
+Native online hosting still needs an in-game check with your particular server manager. See [the installation guide](docs/ASSETTO_CORSA.md) for naming and replacement instructions.
