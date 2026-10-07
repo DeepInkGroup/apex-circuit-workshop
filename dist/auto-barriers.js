@@ -1,6 +1,7 @@
-import {clamp,closestOnTrack} from './engine.js?v=20261007-return';
-import {buildingContains} from './scenery.js?v=20261007-return';
-import {treeRadius} from './trees.js?v=20261007-return';
+import {barrierProperties,BARRIER_TYPES} from './barriers.js?v=20261007-safety';
+import {clamp,closestOnTrack} from './engine.js?v=20261007-safety';
+import {buildingContains} from './scenery.js?v=20261007-safety';
+import {treeRadius} from './trees.js?v=20261007-safety';
 
 function distanceToSegment(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
 function simplify(points,tolerance){if(points.length<3)return points;const keep=new Set([0,points.length-1]),pending=[[0,points.length-1]];while(pending.length){const [a,b]=pending.pop();let max=tolerance,index=-1;for(let i=a+1;i<b;i++){const distance=distanceToSegment(points[i],points[a],points[b]);if(distance>max){max=distance;index=i;}}if(index>=0){keep.add(index);pending.push([a,index],[index,b]);}}return [...keep].sort((a,b)=>a-b).map(i=>points[i]);}
@@ -18,7 +19,7 @@ export function cutBarrierOpening(barrier,scale,width=8,position=.5){
  return [pathSlice(barrier.points,stations,0,center-width/2),pathSlice(barrier.points,stations,center+width/2,total)].map(points=>({...barrier,points}));
 }
 export function automaticBarriers(track,geometry,road,pit,options={}){
- const scale=track.scale||.2,gap=clamp(Number(options.gap)||4,2,20),width=.4,height=1.2,style=options.style==='striped'?'striped':'concrete';
+ const scale=track.scale||.2,gap=clamp(Number(options.gap)||4,2,20),type=BARRIER_TYPES[options.type]?options.type:'concrete',width=BARRIER_TYPES[type].width,height=1.2,style=options.style==='striped'?'striped':'concrete';
  const access=barrierSettings({barrierSettings:{...barrierSettings(track),...options}});
  const sides=options.side==='left'?[1]:options.side==='right'?[-1]:[1,-1],paths=[],routes=[pit.path,pit.parkingPath,pit.connector,pit.exitConnector,pit.entryConnection,pit.exitConnection],padding=(pit.settings.width/2+width/2+1.5)/scale;
  function clear(p){if(p.x<2||p.x>998||p.y<2||p.y>738)return false;if(closestOnTrack(geometry,p).distance*scale<track.width/2+gap*.7)return false;
@@ -37,7 +38,7 @@ export function automaticBarriers(track,geometry,road,pit,options={}){
   const isOpening=(from,to)=>centers.some(center=>to>center-access.openingWidth/2&&from<center+access.openingWidth/2);
   // Limit curve deviation to 20 cm, then check each chord at 75 cm intervals.
   // This keeps long circuits within the editable point/path limits.
-  let segment=[];const finish=()=>{if(segment.length>1)paths.push({points:segment,height,width,style,automatic:true});segment=[];};
+  let segment=[];const finish=()=>{if(segment.length>1)paths.push({points:segment,type,height,width,style,automatic:true});segment=[];};
   const append=p=>{const n=segment.length;if(n&&Math.hypot(p.x-segment[n-1].x,p.y-segment[n-1].y)<1e-7)return;if(n>=2){const a=segment[n-2],b=segment[n-1],distance=Math.hypot(p.x-a.x,p.y-a.y),t=distance?Math.hypot(b.x-a.x,b.y-a.y)/distance:0;if(distanceToSegment(b,a,p)<.01/scale&&Math.abs(b.elevation-(a.elevation+(p.elevation-a.elevation)*t))<.01)segment.pop();}segment.push({...p});if(segment.length===100){const end=segment.at(-1);finish();segment.push(end);}};
   const count=rail.length-1;
   for(let i=0;i<count;i++){const a=rail[i],b=rail[i+1],steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)*scale/.75)),at=t=>({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,elevation:a.elevation+(b.elevation-a.elevation)*t});

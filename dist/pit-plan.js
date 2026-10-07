@@ -1,8 +1,9 @@
-import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261007-return';
-import {buildRoadLayout} from './road-layout.js?v=20261007-return';
+import {BARRIER_TYPES} from './barriers.js?v=20261007-safety';
+import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261007-safety';
+import {buildRoadLayout} from './road-layout.js?v=20261007-safety';
 const lerp=(a,b,t)=>a+(b-a)*t;
 export const PIT_STYLES={blue:{label:'Blue pit lane',color:[60,89,108],line:'#81c1d4'},classic:{label:'Classic asphalt',color:[61,65,69],line:'#e3d79c'}};
-export function pitSettings(track){return {width:clamp(Number(track.pitSettings?.width)||6,4,10),setback:clamp(Number(track.pitSettings?.setback)||5,3,30),mergeLength:clamp(Number(track.pitSettings?.mergeLength)||28,12,60),style:PIT_STYLES[track.pitSettings?.style]?track.pitSettings.style:'blue',side:['left','right'].includes(track.pitSettings?.side)?track.pitSettings.side:'auto',autoConnect:track.pitSettings?.autoConnect!==false};}
+export function pitSettings(track){return {width:clamp(Number(track.pitSettings?.width)||6,4,10),setback:clamp(Number(track.pitSettings?.setback)||5,3,30),mergeLength:clamp(Number(track.pitSettings?.mergeLength)||28,12,60),style:PIT_STYLES[track.pitSettings?.style]?track.pitSettings.style:'blue',side:['left','right'].includes(track.pitSettings?.side)?track.pitSettings.side:'auto',outerBarriers:track.pitSettings?.outerBarriers!==false,barrierType:BARRIER_TYPES[track.pitSettings?.barrierType]?track.pitSettings.barrierType:'concrete',barrierHeight:clamp(Number(track.pitSettings?.barrierHeight)||1.2,1,4),autoConnect:track.pitSettings?.autoConnect!==false};}
 export function resamplePath(points,scale){
   if(points.length<2)return points.map(p=>({...p}));
   const stat=stations(points,scale),count=clamp(Math.ceil(stat.length/1.5),1,3500),result=[],plan={path:points,...stat};for(let i=0;i<=count;i++)result.push(pointOnPit(plan,stat.length*i/count));return result;

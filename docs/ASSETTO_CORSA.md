@@ -165,3 +165,19 @@ The naming/layout handling follows [Content Manager’s server preset implementa
 For barriers already in a saved draft, regenerate automatic barriers to add the planned openings. Drawn barriers are preserved. For individual drawn barriers, select one and use **Cut opening in selected barrier** with a width and position along the path. The original barrier must be at least the opening width plus 4 meters long; the cut creates two editable paths and requires a free slot within the 40-path limit. Undo restores either operation.
 
 Export a fresh client ZIP after changing walls. Online drivers and the server should use the matching revision. Review openings beside trees, buildings and manually placed walls, which remain editable scenery.
+
+## Barrier construction and pit protection
+
+New, selected and automatic barrier paths support concrete, tyres and steel. Appearance (natural or red/white) is independent of type. Older paths load as concrete. Thin legacy widths and low heights are raised to the structural minimums: 0.8 m thickness for concrete/steel, 1.1 m for tyres, and 1 m height above the authored/banked reference level.
+
+The native exporter builds joined rails and outward-facing faces along the path, closes both ends, adds a top and buried bottom, and extends foundations below the exported flat terrain. This addresses gaps between independent blocks and routes beneath floating elevated barriers. Faces are subdivided, with a bounded face budget for extreme path lengths, and split into mesh chunks within the KN5 vertex limit. Tyre stacks and raised steel ribs are visual detail over a continuous physical core. Return openings remain separate empty path gaps. Outer terrain-boundary walls also receive a thicker body and buried footing.
+
+**Outside pit barriers** in Pit lane design creates a back wall beyond the parking bays. It trims the first/last 6 meters of the service row and leaves openings at entry/exit connectors, apron connections, conflicting scenery and nearby track pavement. For expanded pits, it follows the outside of the parking row. Type, height and inclusion are saved in pit settings and exported. Inspect custom, elevated or unusually tight pit layouts in 3D. This is separate from the outer-terrain boundary switch.
+
+The exporter preserves active native mesh nodes and physical `1WALL` names. Naming follows the [track authoring guide](https://assettocorsamods.net/threads/build-your-first-track-basic-guide.12/); the serialized node layout follows [AcTools? KN5 node implementation](https://github.com/gro-ove/actools/blob/master/AcTools/Kn5File/Kn5Node.cs). Closed geometry corrects structural gaps; real collision behavior at high speed or with unusual car mods has not been verified in-game.
+
+## Editing several road points together
+
+Use Move and Shift-click the road handles. Orange handles are selected; the last active point supplies the values shown in Corner workshop. Release Shift before dragging. Movement keeps the spacing of the group and clamps its overall bounds to the drawing limits. Snapping rounds the group?s movement rather than independently relocating each point.
+
+Changing a corner field applies that field to all selected points, preserving their other properties. Presets, style paste and curve/banking reset also apply to the selection. Each completed group drag or property change makes one undo entry. A normal click on an unselected handle selects that point alone; Shift-click toggles selection membership. Escape clears selection. Delete/Backspace removes the selected road points, and Ctrl+A selects all when the editor canvas has focus. Road drawing still uses Shift for snapping.

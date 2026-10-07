@@ -1,5 +1,5 @@
-import {closestOnTrack,pointOnTrack} from './engine.js?v=20261007-return';
-import {buildingContains} from './scenery.js?v=20261007-return';
+import {closestOnTrack,pointOnTrack} from './engine.js?v=20261007-safety';
+import {buildingContains} from './scenery.js?v=20261007-safety';
 
 export const TREE_SPECIES={
   broadleaf:{label:'Oak · broad canopy',radius:.37,height:8,colors:['#487447','#6b9456','#88ac64']},

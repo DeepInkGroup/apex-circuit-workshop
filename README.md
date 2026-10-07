@@ -140,3 +140,12 @@ Automatic circuit barriers now leave staggered return openings by default: 8 m w
 For a drawn barrier, select it and use **Cut opening in selected barrier**. Choose the gap width and its percentage along the path. This splits the real barrier geometry into two editable paths; the exported collision model contains the gap too. Undo restores the original.
 
 The default drawing canvas is taller and the page width cap has been removed. **Full-width canvas** moves settings below the drawing, while **Side-by-side layout** restores the inspector on the right. The layout preference is saved in this browser. Focus canvas still fills the screen. The reference tip and Trace ? Analyze ? Export strip below the studio have been removed.
+
+## Barrier types, pit protection and group editing
+
+- Choose **Concrete safety wall**, **Tyre wall**, or **Steel crash barrier** for new, selected, and automatic barriers. Natural finish and red/white markings are separate appearance choices. Types and settings persist in saved/shared circuits.
+- Collision geometry is now a joined, closed wall with outward-facing surfaces, end caps, top and buried bottom. Foundations extend below the flat terrain; corners share joined edges instead of independent thin blocks. Minimum thickness is 0.8 m (1.1 m for tyres), and minimum height above the reference surface is 1 m. Large walls are split into native mesh chunks. Tyre stacks and steel ribs decorate the solid collision body. Intended return openings remain empty.
+- **Pit lane design ? Outside pit barriers** defaults on. The back wall sits outside the bays, follows the fitted/custom service route, and leaves access joins and ends open. Choose its type and height independently. It appears in the editor, 3D, color overview and native mod.
+- In **Move**, Shift-click road points to add or remove them from the selection. Release Shift and drag any selected handle to move the group. Corner controls, presets, paste, reset, height and banking apply to all selected points in one undo action. Values displayed are those of the active point. Escape clears the selection; Delete removes the selected points. Ctrl+A selects all road points when the canvas has focus.
+
+Re-export existing tracks to get the new collision and pit wall geometry. The native collision response still requires an in-game check with the cars and speeds used on your server.
