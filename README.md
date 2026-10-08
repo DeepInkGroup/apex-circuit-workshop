@@ -8,7 +8,10 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
-- Kerbs are flush with the racing road. Removed the 35 mm collision lift and extra vibration; shared road-edge elevation and banking are preserved. The grass collision base stays below banked edges.
+- Road elevation and banking now reshape the surrounding grass in 3D and native exports, with smooth transitions, pavement cutouts and shared terrain edges. Trees, building pads, gantry posts and barrier foundations follow local terrain.
+- Transparent footer with a new serif APEX Design. wordmark and GitHub/Telegram links. Removed the “REAL PLACES. YOUR RACING LINE.” label.
+
+- Kerbs are flush with the racing road. Removed the 35 mm collision lift and extra vibration; shared road-edge elevation and banking are preserved. Grass is cut out beneath pavement and meets the banked edges.
 - Added a signed **START / FINISH** gantry in the drawing, 3D preview, color overview and native KN5. It follows the finish gate and spans adjacent pit pavement; clearance is adjustable from 4.5–8 m.
 - Removed the inspiration section and random-generator entry points. **Start from scratch**, tracing and shared circuits remain available.
 - Surface grip now has independent road, flat kerb, pit and grass friction, grass drag and dirt pickup, three presets, a friction comparison and a reset action. All settings persist in saved circuits, shared codes and native exports.
@@ -36,7 +39,7 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 - Sharing includes road geometry, corner styles, pit paths, trees, buildings, scale, circuit details, and mod settings. Uploaded reference images are optional; satellite references share coordinates. Anyone with a code can retrieve its snapshot. Create a fresh code to share later edits.
 - **Corners** has independent entry/exit reach, five presets, an actual curve preview, turn deflection, elevation, banking, and style copy/paste. Geometry changes carry into the exported mod.
 - Task tabs organize Design, Corners, Scenery, Export, and Share. A first-circuit guide makes the starting actions clear.
-- Footer: `V 1.3.2` / `APEX Design.` / Telegram.
+- Footer: `V 1.3.2` / `APEX Design.` / GitHub + Telegram.
 
 ## Trace → inspect → export
 

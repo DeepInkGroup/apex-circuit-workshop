@@ -120,7 +120,7 @@ AI files are omitted when both Driving AI and Show ideal racing line are disable
 ## Current limits
 
 - Analysis uses the scaled, traced geometry. Bend counts and straight lengths use curvature thresholds; paved area is length × width. Pit bay counts follow the generated layout. Methods are included in `apex_analysis.json`.
-- Manual elevation and banking affect the road; surrounding terrain is a flat base. This is not a terrain/LIDAR reconstruction tool.
+- Manual elevation and banking also reshape the surrounding grass. The terrain meets the actual exported pavement edges and blends out into the landscape; grass triangles are cut out under road, kerb and pit collision surfaces. This is procedural terrain, not surveyed terrain/LIDAR reconstruction; bridges and stacked road crossings are not supported.
 - The automatically generated AI follows the centerline, or the visible racing guide when enabled, with curvature-based speed hints. Record or refine AI in-game for competitive racing.
 - Automatic pit-lane geometry needs inspection. For unusual tracks, draw a dedicated lane and choose a suitable pit-box count.
 - Tight corners can cause inner-edge overlap. The export report flags this; adjust the trace or width in 3D.
@@ -170,7 +170,7 @@ Export a fresh client ZIP after changing walls. Online drivers and the server sh
 
 New, selected and automatic barrier paths support concrete, tyres and steel. Appearance (natural or red/white) is independent of type. Older paths load as concrete. Thin legacy widths and low heights are raised to the structural minimums: 0.8 m thickness for concrete/steel, 1.1 m for tyres, and 1 m height above the authored/banked reference level.
 
-The native exporter builds joined rails and outward-facing faces along the path, closes both ends, adds a top and buried bottom, and extends foundations below the exported flat terrain. This addresses gaps between independent blocks and routes beneath floating elevated barriers. Faces are subdivided, with a bounded face budget for extreme path lengths, and split into mesh chunks within the KN5 vertex limit. Tyre stacks and raised steel ribs are visual detail over a continuous physical core. Return openings remain separate empty path gaps. Outer terrain-boundary walls also receive a thicker body and buried footing.
+The native exporter builds joined rails and outward-facing faces along the path, closes both ends, adds a top and buried bottom, and extends foundations below the local terrain. This addresses gaps between independent blocks and routes beneath floating elevated barriers. Faces are subdivided, with a bounded face budget for extreme path lengths, and split into mesh chunks within the KN5 vertex limit. Tyre stacks and raised steel ribs are visual detail over a continuous physical core. Return openings remain separate empty path gaps. Outer terrain-boundary walls also receive a thicker body and buried footing.
 
 **Outside pit barriers** in Pit lane design creates a back wall beyond the parking bays. It trims the first/last 6 meters of the service row and leaves openings at entry/exit connectors, apron connections, conflicting scenery and nearby track pavement. For expanded pits, it follows the outside of the parking row. Type, height and inclusion are saved in pit settings and exported. Inspect custom, elevated or unusually tight pit layouts in 3D. This is separate from the outer-terrain boundary switch.
 
@@ -181,3 +181,10 @@ The exporter preserves active native mesh nodes and physical `1WALL` names. Nami
 Use Move and Shift-click the road handles. Orange handles are selected; the last active point supplies the values shown in Corner workshop. Release Shift before dragging. Movement keeps the spacing of the group and clamps its overall bounds to the drawing limits. Snapping rounds the group?s movement rather than independently relocating each point.
 
 Changing a corner field applies that field to all selected points, preserving their other properties. Presets, style paste and curve/banking reset also apply to the selection. Each completed group drag or property change makes one undo entry. A normal click on an unselected handle selects that point alone; Shift-click toggles selection membership. Escape clears selection. Delete/Backspace removes the selected road points, and Ctrl+A selects all when the editor canvas has focus. Road drawing still uses Shift for snapping.
+
+
+## Terrain follows elevation and banking
+
+Adjust corner elevation or banking and reopen the 3D preview to see the surrounding grass reshape automatically. Both preview and fresh native KN5 exports use the same terrain geometry. The terrain meets the road, enabled kerbs, connected pit ribbons and parking aprons, and eases into the surrounding landscape. Pavement footprints are removed from the grass collision mesh, preserving low banked edges and flush paint/kerbs. Shared edge vertices and smooth terrain normals avoid cracks between clipped cells; large terrain is split within the KN5 vertex limit.
+
+Trees follow local ground height. Buildings receive level pads with a short transition into the grass; gantry supports and barrier foundations follow local ground. Closely spaced sections at different heights share a blended landscape. Elevation is hand-authored: there is no surveyed height data or bridge/overpass construction. Export a new ZIP and replace the old installed track to update in-game geometry.

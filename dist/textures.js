@@ -1,5 +1,5 @@
-import {BinaryWriter,crc32} from './binary.js?v=20261007-safety';
-import {grassPixels} from './scenery.js?v=20261007-safety';
+import {BinaryWriter,crc32} from './binary.js?v=20261008-terrain';
+import {grassPixels} from './scenery.js?v=20261008-terrain';
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
 export function surfacePixels(material,size){
   if(material.name==='Grass')return grassPixels(material.grass||'mown',size);

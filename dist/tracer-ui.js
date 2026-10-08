@@ -1,21 +1,21 @@
-import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261007-safety';
-import {barrierSettings} from './auto-barriers.js?v=20261007-safety';
-import {pitRibbons} from './pit-ribbon.js?v=20261007-safety';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261007-safety';
-import {trackFolder} from './mod-identity.js?v=20261007-safety';
-import {buildGeometry} from './engine.js?v=20261007-safety';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261007-safety';
-import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261007-safety';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261007-safety';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261007-safety';
-import {WEATHER} from './environment.js?v=20261007-safety';
-import {drawTree} from './trees.js?v=20261007-safety';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261007-safety';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261007-safety';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261007-safety';
-import {toGamePoint} from './coordinates.js?v=20261007-safety';
-import {buildTimingPlan} from './timing.js?v=20261007-safety';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261007-safety';
+import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-terrain';
+import {barrierSettings} from './auto-barriers.js?v=20261008-terrain';
+import {pitRibbons} from './pit-ribbon.js?v=20261008-terrain';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-terrain';
+import {trackFolder} from './mod-identity.js?v=20261008-terrain';
+import {buildGeometry} from './engine.js?v=20261008-terrain';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261008-terrain';
+import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261008-terrain';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-terrain';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261008-terrain';
+import {WEATHER} from './environment.js?v=20261008-terrain';
+import {drawTree} from './trees.js?v=20261008-terrain';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261008-terrain';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-terrain';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261008-terrain';
+import {toGamePoint} from './coordinates.js?v=20261008-terrain';
+import {buildTimingPlan} from './timing.js?v=20261008-terrain';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261008-terrain';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
@@ -56,7 +56,7 @@ export async function exportImages(track){
 
 export function mountTracer(api){
   document.body.classList.add('tracer-app');
-  $('.intro .eyebrow').innerHTML='<span class="orange-dash"></span> REAL PLACES. YOUR RACING LINE.';
+
   $('h1').innerHTML='Trace it. Refine it. Export it<span>.</span>';
   $('.intro-copy').textContent='Draw or trace your circuit. Shape its corners, build its surroundings, share a code, and export to Assetto Corsa.';
   $('.version').textContent='V 1.3.2';$('.intro-aside').innerHTML='<button class="locate-button" id="locate-circuit">↗ Locate your circuit</button><span class="version">V 1.3.2</span>';

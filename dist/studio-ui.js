@@ -1,7 +1,7 @@
-import {BARRIER_TYPES} from './barriers.js?v=20261007-safety';
-import {WEATHER,TREE_TYPES} from './environment.js?v=20261007-safety';
-import {TREE_SPECIES} from './trees.js?v=20261007-safety';
-import {PIT_STYLES,pitSettings} from './pit-plan.js?v=20261007-safety';
+import {BARRIER_TYPES} from './barriers.js?v=20261008-terrain';
+import {WEATHER,TREE_TYPES} from './environment.js?v=20261008-terrain';
+import {TREE_SPECIES} from './trees.js?v=20261008-terrain';
+import {PIT_STYLES,pitSettings} from './pit-plan.js?v=20261008-terrain';
 const $=s=>document.querySelector(s);
 export function mountDrawStudio(api){
   const tools=$('#editor-tools'),labels={move:'Move',draw:'Points',erase:'Erase',start:'Start line',pan:'Pan',measure:'Calibrate',pit:'Pit route',barrier:'Barrier',sketch:'Freehand',tree:'Trees',building:'Buildings'};

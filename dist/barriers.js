@@ -1,6 +1,6 @@
-import {clamp,closestOnTrack,pointOnTrack} from './engine.js?v=20261007-safety';
-import {buildingContains} from './scenery.js?v=20261007-safety';
-import {treeRadius} from './trees.js?v=20261007-safety';
+import {clamp,closestOnTrack,pointOnTrack} from './engine.js?v=20261008-terrain';
+import {buildingContains} from './scenery.js?v=20261008-terrain';
+import {treeRadius} from './trees.js?v=20261008-terrain';
 export const BARRIER_TYPES={concrete:{label:'Concrete safety wall',width:.8,color:'#a9adb0'},tyres:{label:'Tyre wall',width:1.1,color:'#303734'},steel:{label:'Steel crash barrier',width:.8,color:'#a1b4bc'}};
 export function barrierProperties(raw={}){const type=BARRIER_TYPES[raw.type]?raw.type:'concrete';return {type,width:clamp(Number(raw.width)||BARRIER_TYPES[type].width,BARRIER_TYPES[type].width,2),height:clamp(Number(raw.height)||1.2,1,4),style:raw.style==='striped'?'striped':'concrete'};}
 export function pitOuterBarriers(track,plan,geometry,gantry=null){
@@ -27,13 +27,15 @@ export function drawBarrier(ctx,raw,scale,zoom=1){
 // Closed, joined prisms: outward-facing sides, end caps, top and buried bottom.
 // Small faces and a minimum thickness replace the old independent thin blocks.
 export function addBarrierMeshes(raw,track,geometry,ground,add,quad,world,materials,prefix){
- const b={...raw,...barrierProperties(raw)},s=track.scale||.2,path=b.points.filter((p,i,a)=>!i||Math.hypot(p.x-a[i-1].x,p.y-a[i-1].y)*s>.001);if(path.length<2)return;
+ const b={...raw,...barrierProperties(raw)},s=track.scale||.2,source=b.points.filter((p,i,a)=>!i||Math.hypot(p.x-a[i-1].x,p.y-a[i-1].y)*s>.001);if(source.length<2)return;
+ const length=source.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p.x-source[i].x,p.y-source[i].y)*s,0),spacing=Math.max(2,length/1800),path=[source[0]];
+ for(let i=1;i<source.length;i++){const a=source[i-1],b=source[i],steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y)*s/spacing));for(let j=1;j<=steps;j++){const t=j/steps;path.push({...b,x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,elevation:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t});}}
  const colors={concrete:[166,171,172],tyres:[35,40,37],steel:[137,158,167]},mat=materials.length;materials.push({name:`${prefix} ${b.type}`,color:colors[b.type],noise:b.type==='tyres'?3:5});
  const meshes=new Map(),emit=(material,name,...corners)=>{let m=meshes.get(material);if(!m||m.vertices.length>47000){m=add(name+(meshes.has(material)?'_'+meshes.get(material).part:''),material);m.part=(meshes.get(material)?.part||0)+1;meshes.set(material,m);}quad(m,...corners,2);};
- const centers=path.map(p=>{const near=closestOnTrack(geometry,p),road=pointOnTrack(geometry,near.progress),signed=((p.x-road.x)*Math.sin(road.angle)-(p.y-road.y)*Math.cos(road.angle))*s;return {pos:world(p,track),top:Math.max(p.elevation||0,(road.elevation||0)+signed*Math.tan((road.bank||0)*Math.PI/180))+b.height};});
+ const centers=path.map(p=>{const near=closestOnTrack(geometry,p),road=pointOnTrack(geometry,near.progress),signed=((p.x-road.x)*Math.sin(road.angle)-(p.y-road.y)*Math.cos(road.angle))*s,pos=world(p,track),floor=typeof ground==='function'?ground(pos[0],pos[2]):(road.elevation||0)+signed*Math.tan((road.bank||0)*Math.PI/180);return {pos,top:Math.max(p.elevation||0,floor)+b.height};});
  const rails=centers.map((p,i)=>{
   const prev=centers[Math.max(0,i-1)].pos,next=centers[Math.min(centers.length-1,i+1)].pos,v=p.pos,dir=(a,c)=>{const d=Math.hypot(c[0]-a[0],c[2]-a[2])||1;return [(c[2]-a[2])/d,-(c[0]-a[0])/d];},u=i?dir(prev,v):dir(v,next),w=i===centers.length-1?u:dir(v,next),len=Math.hypot(u[0]+w[0],u[1]+w[1]);let nx=w[0],nz=w[1],factor=1;if(len>.001){nx=(u[0]+w[0])/len;nz=(u[1]+w[1])/len;factor=Math.min(2,1/Math.max(.5,nx*w[0]+nz*w[1]));}
-  const half=b.width/2*factor,foot=Math.min(ground,v[1])-.25;return {l:[v[0]+nx*half,foot,v[2]+nz*half],r:[v[0]-nx*half,foot,v[2]-nz*half],tl:[v[0]+nx*half,p.top,v[2]+nz*half],tr:[v[0]-nx*half,p.top,v[2]-nz*half]};
+  const half=b.width/2*factor,foot=Math.min(typeof ground==='function'?Math.min(ground(v[0]+nx*half,v[2]+nz*half),ground(v[0]-nx*half,v[2]-nz*half)):ground,v[1])-.25;return {l:[v[0]+nx*half,foot,v[2]+nz*half],r:[v[0]-nx*half,foot,v[2]-nz*half],tl:[v[0]+nx*half,p.top,v[2]+nz*half],tr:[v[0]-nx*half,p.top,v[2]-nz*half]};
  });
  const mix=(a,c,t)=>a.map((v,i)=>v+(c[i]-v)*t),total=centers.slice(1).reduce((sum,p,i)=>sum+Math.hypot(...p.pos.map((v,k)=>v-centers[i].pos[k])),0),faceLength=Math.max(2,total/1800);let station=0;
  for(let i=1;i<rails.length;i++){
