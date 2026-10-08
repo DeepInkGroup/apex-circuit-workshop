@@ -1,5 +1,5 @@
-import {buildGeometry} from './engine.js?v=20261008-corners';
-import {readImage,saveImage} from './tracing.js?v=20261008-corners';
+import {buildGeometry} from './engine.js?v=20261008-structures';
+import {readImage,saveImage} from './tracing.js?v=20261008-structures';
 const SERVICE='https://apex-circuit-sharing.art-zomorodian.chatgpt.site';
 const $=s=>document.querySelector(s);
 const format=code=>code.slice(0,4)+' '+code.slice(4,9)+' '+code.slice(9);
@@ -49,7 +49,7 @@ export function mountSharing(api){
       const data=await request('/api/circuits/'+code),track=api.validateTrack(data.track);
       if(data.schema!==1||data.code!==code||!track||track.points.length<2)throw new Error('This code contains an unsupported circuit.');
       if(data.image!=null&&(typeof data.image!=='string'||data.image.length>2800000||!/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(data.image)))throw new Error('This circuit contains an invalid reference image.');
-      shared={track,image:data.image};const g=buildGeometry(track.points,track.smooth,track.complete!==false);
+      shared={track,image:data.image};const g=buildGeometry(track.points,track.smooth,track.complete!==false,track);
       const shape=$('#shared-track-shape');shape.replaceChildren();const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),path=document.createElementNS(ns,'path');svg.setAttribute('viewBox','0 0 1000 740');svg.setAttribute('aria-label','Shared circuit preview');svg.setAttribute('role','img');path.setAttribute('d','M'+g.samples.map(p=>`${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join('L')+(track.complete?'Z':''));path.setAttribute('fill','none');path.setAttribute('stroke','#364d44');path.setAttribute('stroke-width','18');path.setAttribute('stroke-linejoin','round');svg.append(path);shape.append(svg);
       $('#shared-track-name').textContent=track.name;$('#shared-track-info').textContent=`${Math.round(g.length*track.scale).toLocaleString()} m · ${track.points.length} points · ${track.complete?'Closed circuit':'Open road'} · ${(track.buildings||[]).length} buildings`;
       const date=new Date(data.createdAt);$('#shared-track-date').textContent=Number.isFinite(date.getTime())?'Shared '+date.toLocaleDateString():'';$('#shared-preview').hidden=false;status('Circuit found. Open it to start editing your own copy.');

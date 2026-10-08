@@ -8,6 +8,9 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- **Bridges & tunnels**: select a road handle in **Corners**, choose **Bridge / tunnel at this handle**, then set the span, clearance and target grade. Elevation, level deck/floor and smooth approach ramps are generated automatically. The 3D preview and native mod include bridge rails/supports or tunnel walls/roof/portals, with terrain below bridges and above tunnels. Removing a span restores authored heights. Export reports flag overlapping spans and overly steep approaches.
+- Pit fitting compares both sides of the circuit, avoids scenery and covered spans at merge mouths, and checks road crossings and approach grades. Custom routes have adjustable bend smoothing and automatic landscape elevation. Direction arrows follow the connected route, and fit notes identify merges that need review.
+
 - Improved distance boards with large condensed numerals, METRES labels, turn arrows, 10 m/5 m countdown bars, galvanized supports and solid frames. Choose Classic or High contrast, Standard or Large, and a trackside gap. Pairs prefer the same side, faces aim toward approaching drivers, and native panel height clears crossed safety walls. Editor cards use the same poster design with anchors and leaders.
 
 - Continuous elevation and banking curves replace abrupt straight ramps, preserving authored heights without crest/valley overshoot and smoothing the closed seam.

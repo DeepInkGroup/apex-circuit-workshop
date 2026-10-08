@@ -1,4 +1,4 @@
-import {buildGeometry,clamp,pointOnTrack} from './engine.js?v=20261008-corners';
+import {buildGeometry,clamp,pointOnTrack} from './engine.js?v=20261008-structures';
 export const GENERATOR_STYLES={flowing:'Flowing',technical:'Technical',fast:'Fast sweepers'};
 export function randomSeed(){const bytes=new Uint32Array(1);crypto.getRandomValues(bytes);return bytes[0].toString(36).toUpperCase();}
 function seeded(seed){let state=2166136261;for(const c of String(seed))state=Math.imul(state^c.charCodeAt(0),16777619)>>>0;return ()=>{state=(state+0x6D2B79F5)>>>0;let n=state;n=Math.imul(n^(n>>>15),n|1);n^=n+Math.imul(n^(n>>>7),n|61);return ((n^(n>>>14))>>>0)/4294967296;};}

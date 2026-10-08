@@ -1,4 +1,5 @@
-import {heightProfile,profileAt} from './height-profile.js?v=20261008-corners';
+import {heightProfile,profileAt} from './height-profile.js?v=20261008-structures';
+import {createStructureProfile} from './structure-profile.js?v=20261008-structures';
 export const METERS_PER_UNIT = 0.2;
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -11,7 +12,7 @@ function spline(a, b, c, d, t) {
   return Object.fromEntries(['x','y'].map(k=>[k,(2*t3-3*t2+1)*b[k]+(t3-2*t2+t)*departure[k]*.5*start+(-2*t3+3*t2)*c[k]+(t3-t2)*approach[k]*.5*end]));
 }
 
-export function buildGeometry(points, smooth = true, closed = true) {
+export function buildGeometry(points, smooth = true, closed = true, options = {}) {
   const samples = [], segments = [], cumulative = [];
   let length = 0;
   if (points.length < (closed ? 3 : 2)) return { samples: points.map(p => ({...p})), segments, cumulative, length, closed };
@@ -31,10 +32,12 @@ export function buildGeometry(points, smooth = true, closed = true) {
   });
   if(!closed){samples.push({...points[points.length-1]});segments.push(points.length-2);}
   samples.forEach((p,i) => { cumulative.push(length); if(closed||i<samples.length-1)length += distance(p, samples[(i+1)%samples.length]); });
-  const controls=[];segments.forEach((segment,i)=>{if(!i||segment!==segments[i-1])controls.push({station:cumulative[i],point:points[segment]});});if(!closed)controls.push({station:length,point:points.at(-1)});
+  const controls=[];segments.forEach((segment,i)=>{if(!i||segment!==segments[i-1])controls.push({station:cumulative[i],index:segment,point:points[segment]});});if(!closed)controls.push({station:length,index:points.length-1,point:points.at(-1)});
   const elevationProfile=heightProfile(controls.map(c=>c.station),controls.map(c=>c.point.elevation),length,closed),bankProfile=heightProfile(controls.map(c=>c.station),controls.map(c=>c.point.bank),length,closed);
   samples.forEach((p,i)=>{p.elevation=profileAt(elevationProfile,cumulative[i]).value;p.bank=profileAt(bankProfile,cumulative[i]).value;});
-  return {samples, segments, cumulative, length, closed,elevationProfile,bankProfile};
+  const geometry={samples, segments, cumulative, length, closed,elevationProfile,bankProfile,metersPerUnit:Math.max(.02,Math.min(10,Number(options.scale)||METERS_PER_UNIT))};
+  if(points.some(p=>['bridge','tunnel'].includes(p.structure?.type))){geometry.structureProfile=createStructureProfile(geometry,controls,points,options);geometry.elevationAt=geometry.structureProfile.elevationAt;geometry.bankAt=geometry.structureProfile.bankAt;samples.forEach((p,i)=>{p.elevation=geometry.elevationAt(cumulative[i]).value;p.bank=geometry.bankAt(cumulative[i]).value;});}
+  return geometry;
 }
 
 export function pointOnTrack(g, fraction) {
@@ -45,20 +48,20 @@ export function pointOnTrack(g, fraction) {
   if(g.closed===false&&lo===g.samples.length-1)lo--;
   const a = g.samples[lo], b = g.samples[(lo+1)%g.samples.length], segmentLength = distance(a,b);
   const t = segmentLength ? (l-g.cumulative[lo])/segmentLength : 0;
-  const height=g.elevationProfile?profileAt(g.elevationProfile,l):{value:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t,grade:segmentLength?((b.elevation||0)-(a.elevation||0))/segmentLength:0};
-  const banking=g.bankProfile?profileAt(g.bankProfile,l):{value:(a.bank||0)+((b.bank||0)-(a.bank||0))*t,grade:0};
+  const height=g.elevationAt?g.elevationAt(l):g.elevationProfile?profileAt(g.elevationProfile,l):{value:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t,grade:segmentLength?((b.elevation||0)-(a.elevation||0))/segmentLength:0};
+  const banking=g.bankAt?g.bankAt(l):g.bankProfile?profileAt(g.bankProfile,l):{value:(a.bank||0)+((b.bank||0)-(a.bank||0))*t,grade:0};
   return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, elevation:height.value,grade:height.grade,bank:banking.value,bankGrade:banking.grade,kerbs:a.kerbs||'inherit',kerbWidth:a.kerbWidth||.7,cornerName:a.cornerName||'', angle:Math.atan2(b.y-a.y,b.x-a.x), index:lo};
 }
 
-export function closestOnTrack(g, p) {
+export function closestOnTrack(g, p,matchElevation=false) {
   let best = Infinity, result = {distance:Infinity, progress:0, index:0};
   if (!g.length) return result;
   g.samples.forEach((a,i) => {
     if(g.closed===false&&i===g.samples.length-1)return;
     const b = g.samples[(i+1)%g.samples.length], dx = b.x-a.x, dy = b.y-a.y, l2 = dx*dx+dy*dy;
     const t = l2 ? clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l2,0,1) : 0;
-    const x = a.x+t*dx, y = a.y+t*dy, d2 = (p.x-x)**2+(p.y-y)**2;
-    if(d2 < best) { best=d2; result={distance:Math.sqrt(d2), progress:(g.cumulative[i]+Math.sqrt(l2)*t)/g.length, index:i, x,y}; }
+    const x = a.x+t*dx, y = a.y+t*dy, d2 = (p.x-x)**2+(p.y-y)**2,elevation=(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t,score=d2+(matchElevation?((Number(p.elevation)||0)-elevation)**2/(g.metersPerUnit||METERS_PER_UNIT)**2:0);
+    if(score < best) { best=score; result={distance:Math.sqrt(d2), progress:(g.cumulative[i]+Math.sqrt(l2)*t)/g.length, index:i, x,y,...(matchElevation?{elevation}:{})}; }
   });
   return result;
 }

@@ -1,34 +1,36 @@
-import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-corners';
-import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261008-corners';
-import {pitRibbons} from './pit-ribbon.js?v=20261008-corners';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-corners';
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261008-corners';
-import {ReferenceLayer} from './tracing.js?v=20261008-corners';
-import {mountTracer} from './tracer-ui.js?v=20261008-corners';
-import {TrackPreview} from './preview3d.js?v=20261008-corners';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261008-corners';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-corners';
-import {mountAnalysis} from './analysis-ui.js?v=20261008-corners';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261008-corners';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261008-corners';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261008-corners';
-import {toGamePoint} from './coordinates.js?v=20261008-corners';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-corners';
-import {mountDrawStudio} from './studio-ui.js?v=20261008-corners';
-import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261008-corners';
-import {mountCorners} from './corner-ui.js?v=20261008-corners';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261008-corners';
-import {mountScenery} from './scenery-ui.js?v=20261008-corners';
-import {mountACSetup} from './ac-setup-ui.js?v=20261008-corners';
-import {mountSharing} from './sharing.js?v=20261008-corners';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261008-corners';
-import {timingSettings,buildTimingPlan} from './timing.js?v=20261008-corners';
-import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261008-corners';
-import {mountTiming} from './timing-ui.js?v=20261008-corners';
-import {mountSurfaces} from './surface-ui.js?v=20261008-corners';
-import {surfaceSettings} from './surface-settings.js?v=20261008-corners';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261008-corners';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-corners';
+import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-structures';
+import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261008-structures';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261008-structures';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-structures';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261008-structures';
+import {ReferenceLayer} from './tracing.js?v=20261008-structures';
+import {mountTracer} from './tracer-ui.js?v=20261008-structures';
+import {TrackPreview} from './preview3d.js?v=20261008-structures';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261008-structures';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-structures';
+import {mountAnalysis} from './analysis-ui.js?v=20261008-structures';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261008-structures';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261008-structures';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261008-structures';
+import {toGamePoint} from './coordinates.js?v=20261008-structures';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-structures';
+import {mountDrawStudio} from './studio-ui.js?v=20261008-structures';
+import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261008-structures';
+import {drawStructures} from './structures.js?v=20261008-structures';
+import {mountStructures} from './structure-ui.js?v=20261008-structures';
+import {mountCorners} from './corner-ui.js?v=20261008-structures';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261008-structures';
+import {mountScenery} from './scenery-ui.js?v=20261008-structures';
+import {mountACSetup} from './ac-setup-ui.js?v=20261008-structures';
+import {mountSharing} from './sharing.js?v=20261008-structures';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261008-structures';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261008-structures';
+import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261008-structures';
+import {mountTiming} from './timing-ui.js?v=20261008-structures';
+import {mountSurfaces} from './surface-ui.js?v=20261008-structures';
+import {surfaceSettings} from './surface-settings.js?v=20261008-structures';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261008-structures';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-structures';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -103,11 +105,11 @@ const selectedPoints=new Set();
 const selectedPointIndices=()=>track.points.map((p,i)=>selectedPoints.has(p)?i:-1).filter(i=>i>=0);
 function settleSelection(){for(const p of selectedPoints)if(!track.points.includes(p))selectedPoints.delete(p);if(selectedPoint<0||!track.points[selectedPoint]){selectedPoints.clear();selectedPoint=-1;}else if(!selectedPoints.has(track.points[selectedPoint])){selectedPoints.clear();selectedPoints.add(track.points[selectedPoint]);}}
 let selectedPoint=-1,tracerUI=null,analysisUI=null,studioUI=null,cornerUI=null,referenceLayer=null,preview3D=null,referenceOpacity=.75,traceOverlay=true,measurement=[];
-let sceneryUI=null,acSetupUI=null,surfaceUI=null,timingUI=null,shareUI=null,workspaceUI=null,selectedBuilding=-1,buildingBrush=buildingSettings();
+let sceneryUI=null,acSetupUI=null,surfaceUI=null,timingUI=null,shareUI=null,workspaceUI=null,structureUI=null,selectedBuilding=-1,buildingBrush=buildingSettings();
 let selectedTree=-1,treeBrush={height:8,type:'broadleaf'},cursorPoint=null,snapEnabled=false,snapMeters=5;
 let selectedBarrier=-1,activeBarrier=-1;const asphaltTextures=new Map();
 const canvas=$('#track-canvas'),ctx=canvas.getContext('2d');
-let geometry=buildGeometry(track.points,track.smooth);
+let geometry=buildGeometry(track.points,track.smooth,track.complete!==false,track);
 let pitLayout=buildPitPlan(track);
 let roadLayout=buildRoadLayout(track,geometry,pitLayout);
 let idealGuide=track.export?.idealLine?idealLine(track,roadLayout):[];
@@ -135,7 +137,7 @@ function commit(previousName) { syncCircuitIdentity(previousName);settleSelectio
 function undo() {if(!undoStack.length)return;redoStack.push(snapshot());track=undoStack.pop();dirty=true;commit();}
 function redo() {if(!redoStack.length)return;undoStack.push(snapshot());track=redoStack.pop();dirty=true;commit();}
 function rebuild() {
-  geometry=buildGeometry(track.points,track.smooth,track.complete!==false);
+  geometry=buildGeometry(track.points,track.smooth,track.complete!==false,track);
   samples=geometry.samples;sampleSegments=geometry.segments;cumulative=geometry.cumulative;length=geometry.length;
   roadWidth=track.width/(track.scale||.2);
   pitLayout=buildPitPlan(track);
@@ -160,7 +162,7 @@ function syncUI() {
   $$('.preset').forEach(b=>b.classList.toggle('active',b.dataset.preset===track.preset));
   $('#editor-status').textContent=(track.complete!==false?'Closed circuit · Editable':'Open road · Editable')+(selectedPoints.size>1?` · ${selectedPoints.size} road points selected`:'');
   $('#layout-label').textContent=track.preset?'LAYOUT '+({club:'01',technical:'02',speedway:'03'}[track.preset]):'CUSTOM LAYOUT';
-  updateUndo();tracerUI?.refresh();analysisUI?.refresh();studioUI?.refresh();cornerUI?.refresh();sceneryUI?.refresh();acSetupUI?.refresh();surfaceUI?.refresh();timingUI?.refresh();shareUI?.refresh();workspaceUI?.refresh();
+  updateUndo();tracerUI?.refresh();analysisUI?.refresh();studioUI?.refresh();cornerUI?.refresh();structureUI?.refresh();sceneryUI?.refresh();acSetupUI?.refresh();surfaceUI?.refresh();timingUI?.refresh();shareUI?.refresh();workspaceUI?.refresh();
   if(referenceLayer && referenceLayer.currentKey!==referenceLayer.key(track.background))referenceLayer.ensure(track.background);
 }
 function setTool(value) {if(mode==='preview')stopPreview();if(value==='measure')measurement=[];if(value!=='barrier')activeBarrier=-1;tool=value;$$('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===value));canvas.style.cursor=value==='pan'?'grab':value==='move'?'default':'crosshair';$('#canvas-hint span').textContent=({move:'Shift-click road points to select several; release Shift and drag to move them together.',draw:track.complete!==false?'Click to insert a point. Shift snaps to the grid.':'Click road points. Click START to close the circuit.',sketch:'Drag to sketch a road section. Release to create editable points.',erase:'Click a road, pit, barrier, or tree to remove it.',start:'Click the road to place your start line.',pan:'Drag to move your canvas.',measure:'Click two reference points to calibrate the scale.',pit:'Click a pit route. Parking bays are fitted automatically.',barrier:'Click to draw a barrier path. Finish barrier ends this path.',building:'Click clear ground to place a building. Use Move to edit it.',tree:'Click beside the circuit to plant a tree.'})[value];studioUI?.refresh();cornerUI?.refresh();}
@@ -205,6 +207,7 @@ function drawTrack() {
   ctx.restore();
 }
 function drawHandles() {
+  drawStructures(ctx,track,geometry,scale);
   drawGantry(ctx,gantryLayout,scale);
   drawTurnMarkers(ctx,turnMarkers,track.scale,scale);
   if(track.complete!==false)for(const gate of timingLayout.gates.filter(g=>g.id)){
@@ -234,6 +237,7 @@ function drawTrees(){
 function drawPitLane(){
   if(track.points.length<2&&track.pit.length<2)return;const plan=pitLayout,meter=1/(track.scale||.2),style=PIT_STYLES[plan.settings.style],color=`rgb(${style.color.join(',')})`;
   const ribbons=pitRibbonLayout;fillRoadPolygons(ctx,ribbons.map(r=>r.corners),color);fillRoadPolygons(ctx,ribbons.flatMap(r=>r.paint),'#fff7da');
+  fillRoadPolygons(ctx,pitArrows(plan),style.line);
   ctx.setLineDash([3*meter,2*meter]);strokePath(style.line,.12*meter,plan.path,false);ctx.setLineDash([]);
   plan.bays.forEach(b=>{ctx.beginPath();b.corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='#aeb6ac';ctx.fill();ctx.strokeStyle='#ead183';ctx.lineWidth=.12*meter;ctx.stroke();ctx.save();ctx.translate(b.center.x,b.center.y);ctx.rotate(b.center.angle);ctx.fillStyle='#334d52';ctx.font=`bold ${Math.min(2*meter,16/scale)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(b.center.number),0,0);ctx.restore();});
   for(const [text,p] of [['PIT ENTRY',plan.entry],['PIT EXIT',plan.exit]]){if(!p)continue;ctx.fillStyle='#315868';ctx.font=`bold ${9/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(text,p.x,p.y-9/scale);}
@@ -446,7 +450,7 @@ const editorApi={
   updateSelectedPoints(change){const indices=selectedPointIndices();if(!indices.length)return;editorApi.updateTrack(t=>indices.forEach(i=>change(t.points[i],i,t)));},
   deleteSelectedPoints(){const indices=selectedPointIndices();if(!indices.length)return;finishDrag();remember();for(const i of indices.sort((a,b)=>b-a))track.points.splice(i,1);selectedPoint=-1;selectedPoints.clear();track.start=0;commit();toast(`${indices.length} road points removed. Undo restores them.`);},
   clearPointSelection(){selectedPoints.clear();selectedPoint=-1;syncUI();},
-  getTool:()=>tool,getTree:()=>selectedTree,getTreeBrush:()=>({...treeBrush}),getPitPlan:()=>pitLayout,getTurnMarkers:()=>turnMarkers,fitView,
+  getTool:()=>tool,getTree:()=>selectedTree,getTreeBrush:()=>({...treeBrush}),getPitPlan:()=>pitLayout,getTurnMarkers:()=>turnMarkers,getGeometry:()=>geometry,fitView,
   getTimingPlan:()=>timingLayout,
   generateBarriers(options){if(!geometry.length){toast('Draw the circuit before adding automatic barriers.');return;}const generated=automaticBarriers(track,geometry,roadLayout,pitLayout,{...options,gantry:gantryLayout});if(!generated.length){toast('No clear barrier route found. Try a smaller gap or remove nearby scenery.');return;}remember();track.barriers=[...(track.barriers||[]).filter(b=>!b.automatic),...generated];selectedBarrier=-1;activeBarrier=-1;commit();setTool('move');toast(`${generated.length} editable barrier paths added. ${barrierSettings(track).reentry?"Return openings and pit access stay open.":"Pit access stays open."} Undo restores the previous barriers.`);},
   cutBarrier(index,width,position){
@@ -478,7 +482,7 @@ const editorApi={
   setOpacity(value){referenceOpacity=value;},setTraceOverlay(value){traceOverlay=value;},
   setReference(desc,meters,fresh){const apply=()=>{remember();if(fresh){track={...presetTrack('club'),name:'Traced Circuit',points:[],complete:false,preset:null,background:desc,scale:meters};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;}else{track.background=desc;track.scale=meters;}track.scaleSource=desc.type==='map'?'map':'manual';track.scaleVerification=null;analysisFocus=null;view={zoom:1,panX:0,panY:0};updateTransform();commit();referenceLayer.ensure(track.background);setTool(fresh?'draw':'move');};fresh?changeLayout(apply):apply();}
 };
-tracerUI=mountTracer(editorApi);studioUI=mountDrawStudio(editorApi);cornerUI=mountCorners(editorApi);sceneryUI=mountScenery(editorApi);acSetupUI=mountACSetup(editorApi);surfaceUI=mountSurfaces(editorApi);timingUI=mountTiming(editorApi);analysisUI=mountAnalysis(editorApi);shareUI=mountSharing(editorApi);workspaceUI=mountWorkspaceNavigation(editorApi);
+tracerUI=mountTracer(editorApi);studioUI=mountDrawStudio(editorApi);cornerUI=mountCorners(editorApi);structureUI=mountStructures(editorApi);sceneryUI=mountScenery(editorApi);acSetupUI=mountACSetup(editorApi);surfaceUI=mountSurfaces(editorApi);timingUI=mountTiming(editorApi);analysisUI=mountAnalysis(editorApi);shareUI=mountSharing(editorApi);workspaceUI=mountWorkspaceNavigation(editorApi);
 $('#build-mode').onclick=stopPreview;
 $('#width-range').setAttribute('min','4');$('#width-range').setAttribute('max','30');
 syncCircuitIdentity();draftSave();if(storageAvailable)writeStorage(STORAGE,library);

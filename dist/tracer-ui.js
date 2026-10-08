@@ -1,29 +1,30 @@
-import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-corners';
-import {barrierSettings} from './auto-barriers.js?v=20261008-corners';
-import {pitRibbons} from './pit-ribbon.js?v=20261008-corners';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-corners';
-import {trackFolder} from './mod-identity.js?v=20261008-corners';
-import {buildGeometry} from './engine.js?v=20261008-corners';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261008-corners';
-import {DEFAULT_EXPORT,exportZip,exportTrackFolderZip,validateExport} from './ac-export.js?v=20261008-corners';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-corners';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261008-corners';
-import {WEATHER} from './environment.js?v=20261008-corners';
-import {drawTree} from './trees.js?v=20261008-corners';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261008-corners';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-corners';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261008-corners';
-import {toGamePoint} from './coordinates.js?v=20261008-corners';
-import {buildTimingPlan} from './timing.js?v=20261008-corners';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261008-corners';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-corners';
+import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-structures';
+import {barrierSettings} from './auto-barriers.js?v=20261008-structures';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261008-structures';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-structures';
+import {drawStructures} from './structures.js?v=20261008-structures';
+import {trackFolder} from './mod-identity.js?v=20261008-structures';
+import {buildGeometry} from './engine.js?v=20261008-structures';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261008-structures';
+import {DEFAULT_EXPORT,exportZip,exportTrackFolderZip,validateExport} from './ac-export.js?v=20261008-structures';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-structures';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261008-structures';
+import {WEATHER} from './environment.js?v=20261008-structures';
+import {drawTree} from './trees.js?v=20261008-structures';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261008-structures';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-structures';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261008-structures';
+import {toGamePoint} from './coordinates.js?v=20261008-structures';
+import {buildTimingPlan} from './timing.js?v=20261008-structures';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261008-structures';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-structures';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
 function header(eyebrow,title){return `<div class="dialog-top"><p class="eyebrow">${eyebrow}</p><button class="icon-button" data-close aria-label="Close">×</button></div><h2>${title}</h2>`;}
 function png(canvas){return new Promise((resolve,reject)=>canvas.toBlob(async b=>b?resolve(new Uint8Array(await b.arrayBuffer())):reject(new Error('Preview image creation failed.')),'image/png'));}
 export async function exportImages(track){
-  const geometry=buildGeometry(track.points,track.smooth,track.complete!==false),s=track.scale||.2,plan=buildPitPlan(track),road=buildRoadLayout(track,geometry,plan),mapLayout=createTrackMap(track,geometry,plan,road);
+  const geometry=buildGeometry(track.points,track.smooth,track.complete!==false,track),s=track.scale||.2,plan=buildPitPlan(track),road=buildRoadLayout(track,geometry,plan),mapLayout=createTrackMap(track,geometry,plan,road);
   const gantry=gantryPlan(track,buildTimingPlan(track,geometry,road),plan),pitWalls=pitOuterBarriers(track,plan,geometry,gantry);
   const turnMarkers=turnMarkerPlan(track,geometry,plan,pitWalls);
   const footprint=[...turnMarkers.markers,...(gantry?.supports||[]),...(track.export?.buildings!==false?(track.buildings||[]):[]).flatMap(b=>buildingCorners(b,s))],margin=track.width/s+20,minX=Math.min(0,...footprint.map(p=>p.x-margin),plan.bounds.minX-margin),maxX=Math.max(1000,...footprint.map(p=>p.x+margin),plan.bounds.maxX+margin),minY=Math.min(0,...footprint.map(p=>p.y-margin),plan.bounds.minY-margin),maxY=Math.max(740,...footprint.map(p=>p.y+margin),plan.bounds.maxY+margin),factor=Math.min(960/(maxX-minX),580/(maxY-minY)),tx=500-(minX+maxX)/2*factor,ty=310-(minY+maxY)/2*factor;
@@ -34,12 +35,13 @@ export async function exportImages(track){
     const path=(points,width,color)=>{if(points.length<2)return;ctx.beginPath();points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.lineWidth=width;ctx.strokeStyle=color;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();};
     if(background)drawRoadLayout(ctx,road,asphaltPattern(ctx,track.asphalt),track.export?.kerbs!==false);else fillRoadPolygons(ctx,road.quads,'#fff');
     fillRoadPolygons(ctx,ribbons.map(r=>r.corners),background?`rgb(${PIT_STYLES[plan.settings.style].color.join(',')})`:'#fff');
-    if(background){fillRoadPolygons(ctx,ribbons.flatMap(r=>r.paint),'#eee9d7');if(track.export?.idealLine)drawIdealLine(ctx,idealLine(track,road),s,factor,track.complete!==false);}
+    if(background){fillRoadPolygons(ctx,ribbons.flatMap(r=>r.paint),'#eee9d7');fillRoadPolygons(ctx,pitArrows(plan),'#d6e9e7');if(track.export?.idealLine)drawIdealLine(ctx,idealLine(track,road),s,factor,track.complete!==false);}
     if(background){
       plan.bays.forEach(b=>{fillRoadPolygons(ctx,[b.corners],'#acb4ab');ctx.strokeStyle='#e8cf88';ctx.lineWidth=.14/s;ctx.stroke();});
       [...(track.barriers||[]),...pitWalls].forEach(b=>drawBarrier(ctx,b,s,factor));
       (track.export?.buildings!==false?(track.buildings||[]):[]).forEach(b=>drawBuilding(ctx,b,s,false,factor));
       (track.export?.trees!==false?(track.trees||[]):[]).forEach(t=>drawTree(ctx,t,s,false,factor));
+      drawStructures(ctx,track,geometry,factor);
       drawGantry(ctx,gantry,factor);
       drawTurnMarkers(ctx,turnMarkers,s,factor);
     }

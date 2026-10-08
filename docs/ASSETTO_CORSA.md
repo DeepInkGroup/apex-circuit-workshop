@@ -137,11 +137,11 @@ Under the selected road handle, **Tangent angle** rotates the direction through 
 
 - Analysis uses the scaled, traced geometry. Bend counts and straight lengths use curvature thresholds; paved area is length × width. Pit bay counts follow the generated layout. Methods are included in `apex_analysis.json`.
 
-- Manual elevation and banking also reshape the surrounding grass. The terrain meets the actual exported pavement edges and blends out into the landscape; grass triangles are cut out under road, kerb and pit collision surfaces. This is procedural terrain, not surveyed terrain/LIDAR reconstruction; bridges and stacked road crossings are not supported.
+- Manual elevation and banking also reshape the surrounding grass. The terrain meets the actual exported pavement edges and blends out into the landscape. Bridge cores keep terrain below their suspended decks; tunnels retain overhead cover and open approaches. This is procedural terrain, not surveyed terrain/LIDAR reconstruction.
 - The automatically generated AI follows the centerline, or the visible racing guide when enabled, with curvature-based speed hints. Record or refine AI in-game for competitive racing.
 - Automatic pit-lane geometry needs inspection. For unusual tracks, draw a dedicated lane and choose a suitable pit-box count.
 - Tight corners can cause inner-edge overlap. The export report flags this; adjust the trace or width in 3D.
-- Self-crossing centerlines are rejected. Overpasses and separate layouts are not generated.
+- Crossings require a bridge or tunnel core and at least 4.5 m of vertical clearance after allowance for banking and deck thickness. Intersections without sufficient clearance are rejected. Separate selectable track layouts are not generated.
 - Placed broadleaf and pine trees are exported as simple meshes with collidable trunks. Garages, towers, and pavilions include collision bodies, detailed roofs, windows, and doors. Replay cameras are not included.
 - Weather presets affect the studio preview and exported sun settings. They do not enable rain physics; select game weather in Content Manager.
 - Uploaded references are stored locally in IndexedDB. Exported JSON retains the reference ID, so another device needs the image uploaded again.
@@ -206,7 +206,21 @@ Changing a corner field applies that field to all selected points, preserving th
 
 Adjust corner elevation or banking and reopen the 3D preview to see the surrounding grass reshape automatically. Both preview and fresh native KN5 exports use the same terrain geometry. The terrain meets the road, enabled kerbs, connected pit ribbons and parking aprons, and eases into the surrounding landscape. Pavement footprints are removed from the grass collision mesh, preserving low banked edges and flush paint/kerbs. Shared edge vertices and smooth terrain normals avoid cracks between clipped cells; large terrain is split within the KN5 vertex limit.
 
-Trees follow local ground height. Buildings receive level pads with a short transition into the grass; gantry supports and barrier foundations follow local ground. Closely spaced sections at different heights share a blended landscape. Elevation is hand-authored: there is no surveyed height data or bridge/overpass construction. Export a new ZIP and replace the old installed track to update in-game geometry.
+Trees follow local ground height. Buildings receive level pads with a short transition into the grass; gantry supports and barrier foundations follow local ground. Closely spaced normal road sections at different heights share a blended landscape. Elevation combines authored point heights with optional automatically generated bridge/tunnel profiles; there is no surveyed height data. Export a new ZIP and replace the old installed track to update in-game geometry.
+
+## Bridges, tunnels and automatic elevations
+
+Select a road handle at the center of the intended span in **Corners**, then click **Bridge / tunnel at this handle**. In **Bridges & tunnels**, choose a raised bridge or below-ground tunnel. Set the covered span, vertical clearance and target ramp grade. The covered road becomes level and unbanked; quintic approach profiles blend into authored heights with continuous grades. Bridge heights account for nearby road elevations and slab thickness; tunnel depths account for the ceiling and ground cover. Choosing **Normal road** removes the span and restores authored elevation and banking. Placement applies to the active handle; up to 16 spans are supported.
+
+Short circuits can require steeper ramps than the target. The panel shows estimated peak grade and available approach length. Export is blocked for overlapping covered spans or estimated approaches above 18%; extend the layout or lower clearance/span. Adjacent ramp influences blend automatically. Inspect the complete route in 3D, especially tight bends, crossings, spawns and placed scenery.
+
+Bridge exports contain a native deck underside, shoulders, safety rails and supports. Supports skip paved footprints beneath the deck. Tunnels contain solid walls, a ceiling and portal frames; ground cover stays above the interior and the approaching road remains open. Ceiling panels are visual elements, not dynamic lights. The structures appear in the drawing, 3D preview and fresh KN5 exports; settings persist in drafts, circuit files and shared codes. `apex_structures.json` records effective spans, levels and grades.
+
+## Pit fitting and route controls
+
+**Fit automatic connected lane** searches both sides when Pit side is Automatic, checking lane/bay clearance, scenery, racing-road crossings and merge grades. Covered bridge/tunnel cores are avoided as connection mouths. If no unobstructed fit exists, the lane remains editable and the fit notes explain what to move; inspect those notes before installation.
+
+For a drawn service lane, **Bend smoothing reach** controls the tangent fillets without moving the editable handles. **Automatic pit elevation** derives route heights from the authored landscape; turn it off to keep manual pit elevations. Merge candidates are compared for clearance and grade, with tapered shoulder mouths and matching road elevation/banking. Direction arrows show the route in the drawing, color preview and native mod. Analysis and Assetto Corsa setup report peak pit grade and whether the connections need review.
 
 
 ## Smooth grades, pit bends and turn distance boards

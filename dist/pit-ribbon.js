@@ -15,3 +15,8 @@ export function pitRibbons(plan){
   });
   return result;
 }
+export function pitArrows(plan){
+ const path=plan.aiPath||[],s=plan.scale,result=[];let station=0,next=8;
+ for(let i=1;i<path.length-1;i++){const p=path[i],a=path[i-1],b=path[i+1];station+=Math.hypot(p.x-a.x,p.y-a.y)*s;if(station<next)continue;next+=15;const angle=Math.atan2(b.y-a.y,b.x-a.x),grade=((b.elevation||0)-(a.elevation||0))/(Math.hypot(b.x-a.x,b.y-a.y)*s||1),at=(forward,left)=>({x:p.x+(Math.cos(angle)*forward+Math.sin(angle)*left)/s,y:p.y+(Math.sin(angle)*forward-Math.cos(angle)*left)/s,elevation:(p.elevation||0)+forward*grade+left*Math.tan((p.bank||0)*Math.PI/180)});result.push([at(-1.2,.14),at(.2,.14),at(.2,-.14),at(-1.2,-.14)],[at(0,.55),at(1.25,0),at(0,-.55),at(.18,0)]);}
+ return result;
+}

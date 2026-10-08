@@ -2,7 +2,7 @@ const $=s=>document.querySelector(s);
 export function mountWorkspaceNavigation(api){
   const aside=$('.settings-panel'),nav=document.createElement('nav');nav.className='workspace-tabs';nav.setAttribute('role','tablist');nav.setAttribute('aria-label','Circuit settings');
   $('.circuit-settings').append($('#new-btn'));
-  const groups=[['design','Design',['.circuit-settings','.reference-section']],['corners','Corners',['.corner-panel']],['scenery','Scenery',['.pit-design-panel','.environment-panel','.scenery-panel','.scenery-section']],['export','Export',['.export-settings','.analysis-summary']],['share','Share',['.sharing-panel']]];
+  const groups=[['design','Design',['.circuit-settings','.reference-section']],['corners','Corners',['.corner-panel','.structure-panel']],['scenery','Scenery',['.pit-design-panel','.environment-panel','.scenery-panel','.scenery-section']],['export','Export',['.export-settings','.analysis-summary']],['share','Share',['.sharing-panel']]];
   const pages=new Map();
   for(const [key,label,selectors] of groups){
     const page=document.createElement('div');page.className='settings-page';page.id='settings-'+key;page.setAttribute('role','tabpanel');page.setAttribute('aria-labelledby','tab-'+key);pages.set(key,page);

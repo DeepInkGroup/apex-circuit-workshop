@@ -25,7 +25,7 @@ function pavementHeight(t,x,z){
  const [a,b,c]=t.p,den=cross(a,b,c),u=cross(b,c,[x,0,z])/den,v=cross(c,a,[x,0,z])/den,w=1-u-v;
  return Math.min(u,v,w)>=-EPS?u*a[1]+v*b[1]+w*c[1]:null;
 }
-export function createTerrain(pavement,base){
+export function createTerrain(pavement,base,groundRule=null){
  const triangles=indexGrid(8),edges=new Map(),pads=[];let low=Infinity,high=-Infinity,surface=null;
  for(const mesh of pavement)for(let i=0;i<mesh.indices.length;i+=3){
   let p=mesh.indices.slice(i,i+3).map(j=>mesh.vertices[j].pos);if(Math.abs(cross(...p))<EPS)continue;if(cross(...p)<0)p=[p[0],p[2],p[1]];
@@ -37,10 +37,10 @@ export function createTerrain(pavement,base){
  for(const e of edges.values())if(e.count===1)segments.add(e);
  const pavementAt=(x,z)=>{let h=Infinity;for(const t of triangles.query(x-EPS,z-EPS,x+EPS,z+EPS)){const y=pavementHeight(t,x,z);if(y!==null)h=Math.min(h,y);}return h;};
  function field(x,z){
-  const paved=pavementAt(x,z);if(Number.isFinite(paved))return paved-.015;
+  const paved=pavementAt(x,z);if(Number.isFinite(paved))return groundRule?groundRule(x,z,paved-.015,0,true):paved-.015;
   let nearest=Infinity,sum=0,weight=0;
   for(const e of segments.query(x-radius,z-radius,x+radius,z+radius)){const {a,b}=e,dx=b[0]-a[0],dz=b[2]-a[2],t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[2])*dz)/(dx*dx+dz*dz||1))),d=Math.hypot(x-a[0]-t*dx,z-a[2]-t*dz);if(d>=radius)continue;const w=(1-smooth(d/radius))/(d+.02)**4;nearest=Math.min(nearest,d);sum+=(a[1]+t*(b[1]-a[1])-.015)*w;weight+=w;}
-  return weight?base+(sum/weight-base)*(1-smooth(nearest/radius)):base;
+  const height=weight?base+(sum/weight-base)*(1-smooth(nearest/radius)):base;return groundRule?groundRule(x,z,height,nearest):height;
  }
  function heightAt(x,z){
   if(surface){let height=Infinity;for(const t of surface.query(x-EPS,z-EPS,x+EPS,z+EPS)){const y=pavementHeight(t,x,z);if(y!==null)height=Math.min(height,y);}if(Number.isFinite(height))return height;}
@@ -72,5 +72,5 @@ export function createTerrain(pavement,base){
   surface=indexGrid(Math.max(8,step*2));
   for(const face of faces){if(!mesh||mesh.vertices.length>60000){mesh=add('1GRASS_TERRAIN'+(part?`_${part}`:''),1);part++;indices=new Map();}for(const v of face){if(!indices.has(v)){indices.set(v,mesh.vertices.length);mesh.vertices.push({pos:v.pos,normal:v.normal,uv:[v.pos[0]/18,v.pos[2]/18],tangent:[1,0,0]});}mesh.indices.push(indices.get(v));}let p=face.map(v=>v.pos);if(cross(...p)<0)p=[p[0],p[2],p[1]];surface.add({p,...bounds(p)});}
  }
- return {heightAt,addPad,build};
+ return {heightAt,addPad,build,isPaved:(x,z)=>Number.isFinite(pavementAt(x,z))};
 }

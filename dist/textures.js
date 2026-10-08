@@ -1,6 +1,6 @@
-import {BinaryWriter,crc32} from './binary.js?v=20261008-corners';
-import {grassPixels} from './scenery.js?v=20261008-corners';
-import {boardPixels} from './board-design.js?v=20261008-corners';
+import {BinaryWriter,crc32} from './binary.js?v=20261008-structures';
+import {grassPixels} from './scenery.js?v=20261008-structures';
+import {boardPixels} from './board-design.js?v=20261008-structures';
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
 export function surfacePixels(material,size){
   if(material.distanceBoard)return boardPixels(material.distanceBoard,size);
