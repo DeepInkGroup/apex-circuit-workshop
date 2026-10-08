@@ -1,5 +1,5 @@
-import {buildGeometry} from './engine.js?v=20261008-grades';
-import {readImage,saveImage} from './tracing.js?v=20261008-grades';
+import {buildGeometry} from './engine.js?v=20261008-boards';
+import {readImage,saveImage} from './tracing.js?v=20261008-boards';
 const SERVICE='https://apex-circuit-sharing.art-zomorodian.chatgpt.site';
 const $=s=>document.querySelector(s);
 const format=code=>code.slice(0,4)+' '+code.slice(4,9)+' '+code.slice(9);

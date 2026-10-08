@@ -8,6 +8,8 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Improved distance boards with large condensed numerals, METRES labels, turn arrows, 10 m/5 m countdown bars, galvanized supports and solid frames. Choose Classic or High contrast, Standard or Large, and a trackside gap. Pairs prefer the same side, faces aim toward approaching drivers, and native panel height clears crossed safety walls. Editor cards use the same poster design with anchors and leaders.
+
 - Continuous elevation and banking curves replace abrupt straight ramps, preserving authored heights without crest/valley overshoot and smoothing the closed seam.
 - Rounded pit corners, grade-aware entry/exit curves, matching pit AI routes, and flush lane/apron collision surfaces remove the old 35 mm pit lift.
 - Automatic **10 m / 5 m turn distance boards**, visible in the drawing, 3D preview and native mod. Toggle them in **04 / Include in mod**. Distances are measured along the centerline before detected turn entries; boards seek clear space beside the road.

@@ -1,7 +1,9 @@
-import {BinaryWriter,crc32} from './binary.js?v=20261008-grades';
-import {grassPixels} from './scenery.js?v=20261008-grades';
+import {BinaryWriter,crc32} from './binary.js?v=20261008-boards';
+import {grassPixels} from './scenery.js?v=20261008-boards';
+import {boardPixels} from './board-design.js?v=20261008-boards';
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
 export function surfacePixels(material,size){
+  if(material.distanceBoard)return boardPixels(material.distanceBoard,size);
   if(material.name==='Grass')return grassPixels(material.grass||'mown',size);
   const pixels=new Uint8Array(size*size*3),noise=material.noise??5;let state=0x51a77;
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){state=(Math.imul(state,1664525)+1013904223)>>>0;const grain=((state>>>16)/65535-.5)*noise*2,large=(Math.sin(x*.095)*Math.cos(y*.073)+Math.sin((x+y)*.041))*noise*.15;let detail=grain+large;
@@ -24,5 +26,5 @@ export function createTexture(material,size=256){
 }
 export function materialProperties(material){
   const grass=material.name==='Grass',pavement=['Asphalt','Pit asphalt'].includes(material.name),paint=['White','Kerb red','Pit bay paint'].includes(material.name);
-  return {ksAmbient:grass?.3:.25,ksDiffuse:grass?.32:paint?.3:.35,ksSpecular:grass?0:pavement?.015:.005,ksSpecularEXP:pavement?18:8,ksEmissive:[0,0,0],ksAlphaRef:0};
+  return {ksAmbient:material.distanceBoard?.38:grass?.3:.25,ksDiffuse:material.distanceBoard?.4:grass?.32:paint?.3:.35,ksSpecular:grass?0:pavement?.015:.005,ksSpecularEXP:pavement?18:8,ksEmissive:[0,0,0],ksAlphaRef:0};
 }

@@ -1,6 +1,6 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-grades';
-import {buildRoadLayout} from './road-layout.js?v=20261008-grades';
-import {trackScale} from './coordinates.js?v=20261008-grades';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-boards';
+import {buildRoadLayout} from './road-layout.js?v=20261008-boards';
+import {trackScale} from './coordinates.js?v=20261008-boards';
 
 const wrap=p=>((p%1)+1)%1;
 export function timingSettings(track){const split1=clamp(Number(track.timing?.split1)||1/3,.1,.8),split2=clamp(Number(track.timing?.split2)||2/3,split1+.1,.9);return {mode:track.timing?.mode==='manual'?'manual':'auto',split1,split2};}

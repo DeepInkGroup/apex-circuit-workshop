@@ -1,4 +1,4 @@
-import {heightProfile,profileAt} from './height-profile.js?v=20261008-grades';
+import {heightProfile,profileAt} from './height-profile.js?v=20261008-boards';
 export const METERS_PER_UNIT = 0.2;
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
