@@ -1,31 +1,21 @@
-import {pointOnTrack,closestOnTrack} from './engine.js?v=20261008-identity';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261008-identity';
-import {buildingContains,buildingSettings,buildingCorners} from './scenery.js?v=20261008-identity';
-import {treeRadius} from './trees.js?v=20261008-identity';
-import {barrierProperties} from './barriers.js?v=20261008-identity';
-import {boardSettings,boardCard,BOARD_COLORS} from './board-design.js?v=20261008-identity';
+import {pointOnTrack,closestOnTrack} from './engine.js?v=20261008-corners';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261008-corners';
+import {buildingContains,buildingSettings,buildingCorners} from './scenery.js?v=20261008-corners';
+import {treeRadius} from './trees.js?v=20261008-corners';
+import {barrierProperties} from './barriers.js?v=20261008-corners';
+import {boardSettings,boardCard,BOARD_COLORS} from './board-design.js?v=20261008-corners';
 
-const wrap=x=>((x%1)+1)%1;
-const delta=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
+import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261008-corners';
+import {kerbSides} from './corner-settings.js?v=20261008-corners';
+export {detectTurns} from './corner-analysis.js?v=20261008-corners';
 const segmentDistance=(p,a,b,s)=>{const x=b.x-a.x,y=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*x+(p.y-a.y)*y)/(x*x+y*y||1)));return Math.hypot(p.x-a.x-x*t,p.y-a.y-y*t)*s;};
 function segmentCross(a,b,c,d){const dx=b.x-a.x,dy=b.y-a.y,ux=d.x-c.x,uy=d.y-c.y,den=dx*uy-dy*ux;if(Math.abs(den)<1e-9)return null;const t=((c.x-a.x)*uy-(c.y-a.y)*ux)/den,u=((c.x-a.x)*dy-(c.y-a.y)*dx)/den;return t>=0&&t<=1&&u>=0&&u<=1?{t,u}:null;}
-export function detectTurns(track,g){
- const s=trackScale(track),total=g.length*s,closed=g.closed!==false;if(!total)return [];
- const count=Math.max(32,Math.min(6000,Math.ceil(total/.75))),step=total/(closed?count:count-1),look=Math.max(.75,step),rows=[];
- for(let i=0;i<count;i++){const station=i*step,p=pointOnTrack(g,station/total),a=pointOnTrack(g,(station-look)/total),b=pointOnTrack(g,(station+look)/total),angle=delta(a.angle,b.angle),curvature=angle/(2*look);rows.push({station,angle:curvature*step,sign:Math.abs(curvature)>=.0035?Math.sign(curvature):0,p});}
- const groups=[];for(const row of rows){if(!row.sign)continue;const last=groups.at(-1);if(last&&last.sign===row.sign&&row.station-last.end<=step*1.5){last.end=row.station;last.angle+=row.angle;}else groups.push({start:row.station,end:row.station,sign:row.sign,angle:row.angle});}
- if(closed&&groups.length>1){const first=groups[0],last=groups.at(-1);if(first.start<=step&&last.end>=total-step*1.5&&first.sign===last.sign){first.start=last.start;first.angle+=last.angle;first.end+=total;groups.pop();}}
- const sharp=[];g.cumulative.forEach((station,i)=>{if(i&&g.segments[i]===g.segments[i-1])return;if(!closed&&(i===0||i===g.samples.length-1))return;const before=g.samples[(i+g.samples.length-1)%g.samples.length],p=g.samples[i],after=g.samples[(i+1)%g.samples.length],turn=delta(Math.atan2(p.y-before.y,p.x-before.x),Math.atan2(after.y-p.y,after.x-p.x));if(Math.abs(turn)>.15)sharp.push({station:station*s,sign:Math.sign(turn)});});
- return groups.filter(group=>Math.abs(group.angle)>=12*Math.PI/180).map(group=>{const exact=sharp.find(p=>p.sign===group.sign&&Math.abs(p.station-group.start)<=look*2+step),entry=exact?.station??group.start,apex=pointOnTrack(g,wrap((group.start+group.end)/2/total));return {entry:entry%total,exit:group.end%total,direction:group.sign>0?'right':'left',sign:group.sign,name:apex.cornerName||'',angle:Math.abs(group.angle)*180/Math.PI};}).sort((a,b)=>a.entry-b.entry).map((turn,i)=>({...turn,number:i+1}));
-}
 export function turnMarkerPlan(track,g,pit,pitWalls=[]){
- const turns=detectTurns(track,g),markers=[],s=trackScale(track),total=g.length*s,closed=g.closed!==false,settings=boardSettings(track),radius=settings.width/2+.25;let skipped=0;
- if(track.export?.distanceMarkers===false||!total)return {turns,markers,skipped,settings};
+ const turns=detectTurns(track,g),markers=[],s=trackScale(track),total=g.length*s,closed=g.closed!==false,settings=boardSettings(track),radius=settings.width/2+.25,issues=[],selectedTurns=turns.filter(turn=>turn.boards.ten||turn.boards.five).length;let skipped=0,requested=0;
+ if(track.export?.distanceMarkers===false||!total)return {turns,markers,skipped,settings,selectedTurns,requested,issues};
  // Distances follow the 3D road centerline, including hills, rather than a
  // straight chord or the shorter overhead projection.
- const arc=[0],stations=[0],samples=Math.min(16000,Math.max(1,Math.ceil(total/.5)));let previous=pointOnTrack(g,0);
- for(let i=1;i<=samples;i++){const station=total*i/samples,p=pointOnTrack(g,station/total);arc.push(arc.at(-1)+Math.hypot((p.x-previous.x)*s,(p.y-previous.y)*s,(p.elevation||0)-(previous.elevation||0)));stations.push(station);previous=p;}
- const interpolate=(values,result,value)=>{let lo=0,hi=values.length-1;while(lo<hi){const mid=Math.ceil((lo+hi)/2);if(values[mid]<=value)lo=mid;else hi=mid-1;}if(lo===values.length-1)return result[lo];const t=(value-values[lo])/(values[lo+1]-values[lo]||1);return result[lo]+(result[lo+1]-result[lo])*t;};
+ const path=roadDistanceProfile(track,g),stationAtArc=path.stationAtSurface;
  const trees=track.export?.trees===false?[]:track.trees||[],buildings=track.export?.buildings===false?[]:(track.buildings||[]).map(b=>({...b,...buildingSettings(b)})),walls=[...(track.barriers||[]),...pitWalls].map(w=>({...w,...barrierProperties(w)}));
  const clear=p=>{
   if(closestOnTrack(g,p).distance*s<track.width/2+radius+.15)return false;
@@ -36,23 +26,22 @@ export function turnMarkerPlan(track,g,pit,pitWalls=[]){
   if(walls.some(w=>w.points.slice(1).some((b,i)=>segmentDistance(p,w.points[i],b,s)<w.width/2+radius)))return false;
   return !markers.some(m=>Math.hypot(p.x-m.x,p.y-m.y)*s<settings.width+.7);
  };
- const stationAtArc=value=>interpolate(arc,stations,closed?((value%arc.at(-1))+arc.at(-1))%arc.at(-1):Math.max(0,Math.min(arc.at(-1),value)));
  const visible=(p,viewer)=>!trees.some(t=>segmentDistance(t,viewer,p,s)<treeRadius(t)+.2)&&!buildings.some(b=>{if(buildingContains(b,viewer,s)||buildingContains(b,p,s))return true;const corners=buildingCorners(b,s);return corners.some((a,i)=>segmentCross(viewer,p,a,corners[(i+1)%corners.length]));});
  // Keep the distance pair on one side with one setback before trying
  // individual fallbacks. A blocked board never moves forward/backward.
  for(const turn of turns){
-  const entryArc=interpolate(stations,arc,turn.entry),desired=[];
-  for(const distance of [10,5]){if(!closed&&entryArc<distance){skipped++;continue;}const target=entryArc-distance,station=stationAtArc(target),p=pointOnTrack(g,station/total),viewer=pointOnTrack(g,stationAtArc(target-15)/total);desired.push({distance,station,p,viewer});}
-  const preferred=turn.sign>0?1:-1,gaps=[...new Set([settings.setback,settings.setback+1,settings.setback+2.5,settings.setback+4.5,settings.setback+7])];
-  const candidate=(item,side,gap)=>{const {p,viewer}=item,offset=side*(track.width/2+(track.export?.kerbs===false?0:p.kerbWidth||.7)+gap),location={...p,x:p.x+Math.sin(p.angle)*offset/s,y:p.y-Math.cos(p.angle)*offset/s};if(!clear(location)||!visible(location,viewer))return null;return {...location,distance:item.distance,station:item.station,turnNumber:turn.number,turnName:turn.name,turnEntry:turn.entry,direction:turn.direction,side,setback:gap,roadPoint:p,roadEdge:{x:p.x+Math.sin(p.angle)*side*track.width/2/s,y:p.y-Math.cos(p.angle)*side*track.width/2/s},viewer,facingAngle:Math.atan2(location.y-viewer.y,location.x-viewer.x)};};
-  let pair=null;for(const side of [preferred,-preferred]){for(const gap of gaps){const choices=desired.map(item=>candidate(item,side,gap));if(choices.length&&choices.every(Boolean)&&(choices.length===1||Math.hypot(choices[0].x-choices[1].x,choices[0].y-choices[1].y)*s>settings.width+.7)){pair=choices;break;}}if(pair)break;}
-  if(pair)markers.push(...pair);else for(const item of desired){let choice=null;for(const side of [preferred,-preferred]){for(const gap of gaps){choice=candidate(item,side,gap);if(choice)break;}if(choice)break;}if(choice)markers.push(choice);else skipped++;}
+  const entryArc=path.atStation(turn.entry),desired=[],distances=[...(turn.boards.ten?[10]:[]),...(turn.boards.five?[5]:[])];requested+=distances.length;
+  for(const distance of distances){if((!closed&&entryArc<distance)||(closed&&path.length<=distance)){skipped++;issues.push({turn:turn.number,distance,reason:'Not enough road before this turn'});continue;}const target=entryArc-distance,station=stationAtArc(target),p=pointOnTrack(g,station/total),viewer=pointOnTrack(g,stationAtArc(target-15)/total);desired.push({distance,station,p,viewer});}
+  const preferred=turn.boards.side==='left'?1:turn.boards.side==='right'?-1:turn.sign>0?1:-1,sides=turn.boards.side==='auto'?[preferred,-preferred]:[preferred],gaps=[...new Set([settings.setback,settings.setback+1,settings.setback+2.5,settings.setback+4.5,settings.setback+7])];
+  const candidate=(item,side,gap)=>{const {p,viewer}=item,offset=side*(track.width/2+(track.export?.kerbs===false||!kerbSides(p.kerbs||'inherit').includes(side)?0:p.kerbWidth||.7)+gap),location={...p,x:p.x+Math.sin(p.angle)*offset/s,y:p.y-Math.cos(p.angle)*offset/s};if(!clear(location)||!visible(location,viewer))return null;return {...location,distance:item.distance,station:item.station,turnNumber:turn.number,turnName:turn.name,turnEntry:turn.entry,direction:turn.direction,side,setback:gap,roadPoint:p,roadEdge:{x:p.x+Math.sin(p.angle)*side*track.width/2/s,y:p.y-Math.cos(p.angle)*side*track.width/2/s},viewer,facingAngle:Math.atan2(location.y-viewer.y,location.x-viewer.x)};};
+  let pair=null;for(const side of sides){for(const gap of gaps){const choices=desired.map(item=>candidate(item,side,gap));if(choices.length&&choices.every(Boolean)&&(choices.length===1||Math.hypot(choices[0].x-choices[1].x,choices[0].y-choices[1].y)*s>settings.width+.7)){pair=choices;break;}}if(pair)break;}
+  if(pair)markers.push(...pair);else for(const item of desired){let choice=null;for(const side of sides){for(const gap of gaps){choice=candidate(item,side,gap);if(choice)break;}if(choice)break;}if(choice)markers.push(choice);else {skipped++;issues.push({turn:turn.number,distance:item.distance,reason:turn.boards.side==='auto'?'No clear, visible trackside position':'Chosen side is obstructed; move scenery or choose Auto side'});}}
  }
  // Retain crossed walls so native panel heights can clear the actual terrain
  // and barrier tops, instead of disappearing behind a safety wall.
  for(const marker of markers){marker.sightWalls=[];for(const wall of walls)for(let i=1;i<wall.points.length;i++){const c=wall.points[i-1],d=wall.points[i],hit=segmentCross(marker.viewer,marker,c,d);if(hit&&hit.t>0&&hit.t<1)marker.sightWalls.push({x:c.x+(d.x-c.x)*hit.u,y:c.y+(d.y-c.y)*hit.u,elevation:(c.elevation||0)+((d.elevation||0)-(c.elevation||0))*hit.u,height:wall.height,rayFraction:hit.t});}
  }
- return {turns,markers,skipped,settings};
+ return {turns,markers,skipped,settings,selectedTurns,requested,issues};
 }
 export function drawTurnMarkers(ctx,plan,scale,zoom){
  ctx.save();const occupied=[],width=30/zoom,height=38/zoom;ctx.lineWidth=1/zoom;

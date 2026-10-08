@@ -141,6 +141,9 @@ Existing checks cover native KN5 decoding, road orientation, AI records, spawn p
 - **05 / Online server** copies matching `TRACK`, empty `CONFIG_TRACK`, and pit-limited `MAX_CLIENTS` settings and downloads a server data ZIP. Every full client ZIP also includes server instructions, a configuration snippet and a revision manifest. Install the same revision on server and clients.
 - **Track folder ZIP** and server ZIP each contain one top-level track folder, with all files and instructions inside. Use WinRAR **Extract Here**, then copy that folder into the game's or server's `content/tracks/`. The separate **Content Manager ZIP** retains its installer layout.
 - **Ctrl+Shift+R** (or **Refresh app data** in Help) saves the current draft, requests fresh app HTML and rebuilds circuit geometry, analysis and previews after loading. Saved circuits and reference images remain available; share lookups bypass the browser request cache.
+- **Corner distance boards** lets you choose 10 m, 5 m, both or neither for each detected turn in the Corners tab. Choose Auto, left or right placement and adjust the turn entry by up to 10 m. Placement issues are listed per turn; disabled boards do not count as failures.
+- **Shared corner analysis** uses filtered spatial curvature and distinguishes opposite bends. Analysis and boards share the same turn inventory and numbering from start/finish; distances follow the 3D road centerline.
+- **Tangent angle** rotates the curve direction through selected road handles by up to 60° in either direction. Swap entry/exit reach, copy the curve style, or apply it to several selected handles. Board selections remain separate from copied curve styles.
 
 Native online hosting still needs an in-game check with your particular server manager. See [the installation guide](docs/ASSETTO_CORSA.md) for naming and replacement instructions.
 

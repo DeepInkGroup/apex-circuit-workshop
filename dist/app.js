@@ -1,34 +1,34 @@
-import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-identity';
-import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261008-identity';
-import {pitRibbons} from './pit-ribbon.js?v=20261008-identity';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-identity';
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261008-identity';
-import {ReferenceLayer} from './tracing.js?v=20261008-identity';
-import {mountTracer} from './tracer-ui.js?v=20261008-identity';
-import {TrackPreview} from './preview3d.js?v=20261008-identity';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261008-identity';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-identity';
-import {mountAnalysis} from './analysis-ui.js?v=20261008-identity';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261008-identity';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261008-identity';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261008-identity';
-import {toGamePoint} from './coordinates.js?v=20261008-identity';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-identity';
-import {mountDrawStudio} from './studio-ui.js?v=20261008-identity';
-import {cornerSettings} from './corner-settings.js?v=20261008-identity';
-import {mountCorners} from './corner-ui.js?v=20261008-identity';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261008-identity';
-import {mountScenery} from './scenery-ui.js?v=20261008-identity';
-import {mountACSetup} from './ac-setup-ui.js?v=20261008-identity';
-import {mountSharing} from './sharing.js?v=20261008-identity';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261008-identity';
-import {timingSettings,buildTimingPlan} from './timing.js?v=20261008-identity';
-import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261008-identity';
-import {mountTiming} from './timing-ui.js?v=20261008-identity';
-import {mountSurfaces} from './surface-ui.js?v=20261008-identity';
-import {surfaceSettings} from './surface-settings.js?v=20261008-identity';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261008-identity';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-identity';
+import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-corners';
+import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261008-corners';
+import {pitRibbons} from './pit-ribbon.js?v=20261008-corners';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-corners';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261008-corners';
+import {ReferenceLayer} from './tracing.js?v=20261008-corners';
+import {mountTracer} from './tracer-ui.js?v=20261008-corners';
+import {TrackPreview} from './preview3d.js?v=20261008-corners';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261008-corners';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-corners';
+import {mountAnalysis} from './analysis-ui.js?v=20261008-corners';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261008-corners';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261008-corners';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261008-corners';
+import {toGamePoint} from './coordinates.js?v=20261008-corners';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-corners';
+import {mountDrawStudio} from './studio-ui.js?v=20261008-corners';
+import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261008-corners';
+import {mountCorners} from './corner-ui.js?v=20261008-corners';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261008-corners';
+import {mountScenery} from './scenery-ui.js?v=20261008-corners';
+import {mountACSetup} from './ac-setup-ui.js?v=20261008-corners';
+import {mountSharing} from './sharing.js?v=20261008-corners';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261008-corners';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261008-corners';
+import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261008-corners';
+import {mountTiming} from './timing-ui.js?v=20261008-corners';
+import {mountSurfaces} from './surface-ui.js?v=20261008-corners';
+import {surfaceSettings} from './surface-settings.js?v=20261008-corners';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261008-corners';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-corners';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -472,7 +472,7 @@ const editorApi={
   editView(){if(mode==='preview')stopPreview();},
   updateTrack(fn){const previousName=track.name;remember();fn(track);commit(previousName);updateTransform();},
   clear(scope){if(mode==='preview')stopPreview();finishDrag();remember();if(scope==='geometry'||scope==='road'){track.points=[];track.complete=false;track.start=0;}if(scope==='geometry'||scope==='pits')track.pit=[];if(scope==='geometry'||scope==='barriers')track.barriers=[];if(scope==='geometry'||scope==='trees')track.trees=[];if(scope==='geometry'||scope==='buildings')track.buildings=[];selectedBuilding=-1;if(scope==='reference'){track.background=null;}selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;analysisData=null;measurement=[];commit();setTool(track.points.length?'move':'draw');toast('Selected items cleared. Undo restores them.');},
-  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start);remember();const previousCorners=track.points.map(cornerSettings).reverse();track.points.reverse();track.points.forEach((p,i)=>{p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
+  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start);remember();const previousCorners=track.points.map(cornerSettings).reverse(),boardCounts=new Map();for(const turn of turnMarkers.turns){if(!boardCounts.has(turn.controlIndex))boardCounts.set(turn.controlIndex,{});const counts=boardCounts.get(turn.controlIndex);counts[turn.direction]=(counts[turn.direction]||0)+1;}track.points.reverse();track.points.forEach((p,i)=>{p.turnBoards=reverseTurnBoards(p,boardCounts.get(track.points.length-1-i));p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
   onAnalysis(data){analysisData=data;},getOverlay:()=>analysisOverlay,setOverlay(value){analysisOverlay=value;analysisFocus=null;},
   focusProgress(progress){if(mode==='preview')stopPreview();analysisFocus=progress;const p=pointAt(progress);view.zoom=2.4;const base=Math.min(cssW/1000,cssH/740)*view.zoom;view.panX=(500-p.x)*base;view.panY=(370-p.y)*base;updateTransform();},
   setOpacity(value){referenceOpacity=value;},setTraceOverlay(value){traceOverlay=value;},

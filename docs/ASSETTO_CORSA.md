@@ -122,9 +122,21 @@ apex_your_circuit_1234abcd/
 
 AI files are omitted when both Driving AI and Show ideal racing line are disabled. The website generates preview and map PNGs during export. The model contains road, grass, optional kerbs and boundary walls, start-grid and pit spawn dummies, a hotlap spawn, and three left/right timing-gate pairs.
 
+## Choose boards and customize turns
+
+Open **Corners → Corner distance boards**, or use **Choose corners & distance boards** in Assetto Corsa setup. Each detected turn has separate **10 m** and **5 m** switches. Click its title to locate the road handle and inspect its estimated angle, radius and bend length. **Both on all turns** and **Clear all boards** change the inventory in one undoable action. The **Include boards in mod** switch controls the complete board set while keeping individual selections.
+
+For the active turn, choose **Auto**, **Left of the driver** or **Right of the driver**. Auto may use the opposite side to find clear space; an explicitly chosen side is respected. The planner reports insufficient approach distance and obstructed positions per turn. Boards cannot move along the road to avoid an obstruction; they may move farther away from its edge. A disabled board is not reported as a placement failure.
+
+**Turn-entry adjustment** moves the detected entry up to 10 m earlier (negative) or later (positive), measured along the 3D centerline. The boards remain 10 m and 5 m before that authored entry. **Reset this turn’s boards** restores both boards, Auto side and zero adjustment. Overrides attach to their road handle and distinguish multiple detected turns near one handle. Drafts, saved circuits, JSON imports, new shared snapshots and `apex_source.json` preserve these settings. Reverse direction swaps authored board sides and directional slots.
+
+The analysis inventory and board planner use the same detector: spatial sampling at approximately 0.5 m (capped at 8,000 samples), chord-based headings, a median curvature filter and a lower continuation threshold to keep a broad corner together. Opposite bends remain separate. A turn needs at least 12° of accumulated turning and sufficiently strong peak curvature; sharp vertices anchor their entry directly. Numbering begins at start/finish and follows driving direction. These entries and radii remain geometric estimates, not surveyed racing corner definitions. `apex_turn_markers.json` records the detected and authored entries, selections, requested count, placement issues and world positions.
+
+Under the selected road handle, **Tangent angle** rotates the direction through that point from −60° to +60° while keeping the adjoining spline direction continuous. Positive is clockwise in the drawing. It requires **Smooth corners**; rounding and entry/exit reach still determine how strongly that direction shapes the curve. **Swap entry & exit reach** reverses the approach/departure balance. These curve controls apply to multiple Shift-selected handles and appear in previews and native geometry. Copy/paste and curve reset preserve independent board selections. Inspect tight or strongly rotated curves for overlaps before exporting.
 ## Current limits
 
 - Analysis uses the scaled, traced geometry. Bend counts and straight lengths use curvature thresholds; paved area is length × width. Pit bay counts follow the generated layout. Methods are included in `apex_analysis.json`.
+
 - Manual elevation and banking also reshape the surrounding grass. The terrain meets the actual exported pavement edges and blends out into the landscape; grass triangles are cut out under road, kerb and pit collision surfaces. This is procedural terrain, not surveyed terrain/LIDAR reconstruction; bridges and stacked road crossings are not supported.
 - The automatically generated AI follows the centerline, or the visible racing guide when enabled, with curvature-based speed hints. Record or refine AI in-game for competitive racing.
 - Automatic pit-lane geometry needs inspection. For unusual tracks, draw a dedicated lane and choose a suitable pit-box count.

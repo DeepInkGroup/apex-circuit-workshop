@@ -1,4 +1,4 @@
-import {heightProfile,profileAt} from './height-profile.js?v=20261008-identity';
+import {heightProfile,profileAt} from './height-profile.js?v=20261008-corners';
 export const METERS_PER_UNIT = 0.2;
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -6,7 +6,9 @@ const wrap = n => ((n % 1) + 1) % 1;
 
 function spline(a, b, c, d, t) {
   const t2=t*t,t3=t2*t,start=clamp(Number.isFinite(b.rounding)?b.rounding:1,0,1)*clamp(Number.isFinite(b.exitStrength)?b.exitStrength:1,0,1.6),end=clamp(Number.isFinite(c.rounding)?c.rounding:1,0,1)*clamp(Number.isFinite(c.entryStrength)?c.entryStrength:1,0,1.6);
-  return Object.fromEntries(['x','y'].map(k=>[k,(2*t3-3*t2+1)*b[k]+(t3-2*t2+t)*(c[k]-a[k])*.5*start+(-2*t3+3*t2)*c[k]+(t3-t2)*(d[k]-b[k])*.5*end]));
+  const rotated=(x,y,degrees)=>{const angle=clamp(Number(degrees)||0,-60,60)*Math.PI/180;return {x:x*Math.cos(angle)-y*Math.sin(angle),y:x*Math.sin(angle)+y*Math.cos(angle)};};
+  const departure=rotated(c.x-a.x,c.y-a.y,b.tangentRotation),approach=rotated(d.x-b.x,d.y-b.y,c.tangentRotation);
+  return Object.fromEntries(['x','y'].map(k=>[k,(2*t3-3*t2+1)*b[k]+(t3-2*t2+t)*departure[k]*.5*start+(-2*t3+3*t2)*c[k]+(t3-t2)*approach[k]*.5*end]));
 }
 
 export function buildGeometry(points, smooth = true, closed = true) {
