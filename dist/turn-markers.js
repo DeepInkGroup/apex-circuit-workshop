@@ -1,9 +1,9 @@
-import {pointOnTrack,closestOnTrack} from './engine.js?v=20261008-boards';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261008-boards';
-import {buildingContains,buildingSettings,buildingCorners} from './scenery.js?v=20261008-boards';
-import {treeRadius} from './trees.js?v=20261008-boards';
-import {barrierProperties} from './barriers.js?v=20261008-boards';
-import {boardSettings,boardCard,BOARD_COLORS} from './board-design.js?v=20261008-boards';
+import {pointOnTrack,closestOnTrack} from './engine.js?v=20261008-identity';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261008-identity';
+import {buildingContains,buildingSettings,buildingCorners} from './scenery.js?v=20261008-identity';
+import {treeRadius} from './trees.js?v=20261008-identity';
+import {barrierProperties} from './barriers.js?v=20261008-identity';
+import {boardSettings,boardCard,BOARD_COLORS} from './board-design.js?v=20261008-identity';
 
 const wrap=x=>((x%1)+1)%1;
 const delta=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));

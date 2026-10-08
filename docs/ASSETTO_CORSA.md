@@ -37,7 +37,7 @@ Select a garage, control tower, pavilion, covered grandstand, workshop/warehouse
 
 **Surface grip** provides independent road friction (0.8–1.2), flat kerb friction (0.6–1.2), pit friction (0.7–1.1), and grass friction (0.3–0.9). New circuit defaults are 1.00 / 0.96 / 0.95 / 0.65. Grass drag controls DAMPING from 0–0.05; dirt pickup controls DIRT_ADDITIVE from 0–1. Existing saved road/grass values are preserved. Club circuit, High grip and Low grip practice presets apply a complete starting setup; every value remains adjustable. Reset restores the new circuit defaults. These are friction configurations, not rain physics. Choose game weather in Content Manager. Inclusion switches control generated kerbs, outer boundary walls, placed trees, placed buildings, and AI files. Boundary height is adjustable from 0.5–4 m. Grass and custom drawn barriers remain part of the track. The 3D preview shows the selected mod contents. **Grass blades in game · CSP** enables a Grass FX definition when Custom Shaders Patch is installed and Grass FX is enabled. Road, pits, kerbs, walls, and buildings occlude blades; the opaque grass base remains visible without CSP.
 
-The package summary displays the generated track folder, pit count, grass finish, and included scenery counts. Review the export notes and inspect spawns and pit routes. Drop the downloaded ZIP into Content Manager, install it, select the track, choose one car, and start Practice. Game weather and cars are selected in Content Manager.
+The package summary displays the generated track folder, pit count, grass finish, and included scenery counts. Review the export notes and inspect spawns and pit routes. Choose the Content Manager ZIP for its installer, or extract the track folder ZIP into `content/tracks/`. Select the track, choose one car, and start Practice. Game weather and cars are selected in Content Manager.
 
 ## Connected pit lane
 
@@ -85,7 +85,9 @@ In **Weather & trees**, choose a preview mood, place trees with T, or scatter ed
 
 ## Download and install
 
-Click **Export to Assetto Corsa**, review the report, and download the ZIP. Drop the ZIP into Content Manager and install the detected track. Alternatively extract its `content/` folder into the Assetto Corsa game directory.
+Click **Export to Assetto Corsa**, review the report, and choose **Download track folder ZIP**. In WinRAR choose **Extract Here**: the archive creates one track folder with all files inside. Copy that folder into `assettocorsa/content/tracks/`. WinRAR's **Extract to ZIP-name folder** adds its own extra wrapper; use **Extract Here** to avoid it.
+
+For Content Manager installation, choose the separate **Content Manager ZIP** and drop it into the installer. This alternative package uses `content/tracks/<id>/` so the installer can detect the destination.
 
 The exported KN5 embeds colored opaque BGRA DDS textures with complete mip chains. Matching copies are included in `texture/` for editing. All materials explicitly set diffuse, ambient, specular, and zero emissive properties. Texture names include a content checksum. When updating an installed circuit, replace its old version. The export dialog displays the color overview before downloading; `map.png` and `ui/outline.png` are intentionally white route masks for the game UI.
 
@@ -94,8 +96,8 @@ Start with a single-car Practice session. Check spawn placement, collision surfa
 The folder layout is:
 
 ```text
-content/tracks/apex_your_circuit/
-  apex_your_circuit.kn5
+apex_your_circuit_1234abcd/
+  apex_your_circuit_1234abcd.kn5
   models.ini
   texture/apex_*.dds
   map.png
@@ -112,7 +114,10 @@ content/tracks/apex_your_circuit/
   ui/outline.png
   apex_source.json
   apex_analysis.json
-INSTALL.txt
+  INSTALL.txt
+  SERVER_CONFIG.txt
+  SERVER_INSTALL.txt
+  APEX_MANIFEST.json
 ```
 
 AI files are omitted when both Driving AI and Show ideal racing line are disabled. The website generates preview and map PNGs during export. The model contains road, grass, optional kerbs and boundary walls, start-grid and pit spawn dummies, a hotlap spawn, and three left/right timing-gate pairs.
@@ -146,12 +151,14 @@ Enable **Show ideal racing line** under **04 / Include in mod** for a dashed gui
 
 ## Online server installation and track names
 
-The circuit name shown to drivers is separate from its **Mod folder / server track ID**. Renaming the display name keeps the exported folder, KN5 name and server ID unchanged. New circuits receive a unique random suffix; older saved circuits retain the previous name-derived folder. The ID accepts a lowercase initial letter followed by lowercase letters, numbers or underscores, up to 32 characters. It is saved in JSON drafts, mod sources and shared snapshots.
+The circuit name shown locally and online is the same. The **Mod folder / server track ID** is the filesystem-safe form of that name. Renaming updates the saved listing, folder ID, KN5 filename, `models.ini`, track metadata, manifests, server settings and download filenames together. An existing random suffix is preserved; a renamed legacy custom ID receives a deterministic suffix. The ID accepts a lowercase initial letter followed by lowercase letters, numbers or underscores, up to 32 characters. It is saved in JSON drafts, mod sources and shared snapshots. A manually entered ID applies until the next circuit rename.
+
+After renaming, export and install the newly named track on every client and server, then update the server's `TRACK` value. Previously downloaded files and installed mods cannot rename themselves. Existing shared codes are snapshots; create a new code to share the renamed revision.
 
 If an unrelated mod already has the same ID, use **New unique ID** and install the newly exported mod on every driver’s client and the server. For a revision of the same mod, keep the ID and replace matching content together. A server may reject duplicate uploads until its existing track is replaced through that manager’s update workflow.
 
-1. Download the full **track ZIP** for clients. Everyone installs this identical revision in Content Manager.
-2. Download the **server ZIP** under **05 / Online server**. Extract its `content/tracks/<id>/` folder into the dedicated server. It contains `models.ini`, native data (including `surfaces.ini` and `drs_zones.ini`) and display metadata. Managers requiring a KN5 or preview should import the full client ZIP instead. Avoid an extra ZIP-name folder around `content/`.
+1. Download the full **track folder ZIP** for clients and copy its single `<id>/` folder into `assettocorsa/content/tracks/`, or install the separate **Content Manager ZIP**. Everyone needs the identical revision and folder ID.
+2. Download the **server ZIP** under **05 / Online server**. Choose **Extract Here**, then copy its single `<id>/` folder into the dedicated server's `content/tracks/`. All files and instructions are inside this folder. It contains `models.ini`, native data (including `surfaces.ini` and `drs_zones.ini`) and display metadata. Managers requiring a KN5 or preview should use the full client package; use the Content Manager alternative when an importer requires a game-root layout.
 3. Merge the three keys in `SERVER_CONFIG.txt` into the server’s existing `[SERVER]` section. `TRACK` is the exact folder ID; `CONFIG_TRACK` is empty for this single-layout export. `MAX_CLIENTS` must not exceed the generated pit count. Keep existing cars, ports, session settings and credentials.
 4. Rescan/restart the server manager. For an update, stop the server and replace the old revision on clients and server; avoid leaving an old `data.acd`, AI cache or minimap beside new exported files.
 5. If a content checksum fails, compare matching exports. `APEX_MANIFEST.json` lists CRC32 values for the model and native data as revision identifiers; it does not alter the game’s checksum protection.

@@ -1,7 +1,7 @@
-import {BARRIER_TYPES} from './barriers.js?v=20261008-boards';
-import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261008-boards';
-import {buildRoadLayout} from './road-layout.js?v=20261008-boards';
-import {heightProfile,profileAt} from './height-profile.js?v=20261008-boards';
+import {BARRIER_TYPES} from './barriers.js?v=20261008-identity';
+import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261008-identity';
+import {buildRoadLayout} from './road-layout.js?v=20261008-identity';
+import {heightProfile,profileAt} from './height-profile.js?v=20261008-identity';
 const lerp=(a,b,t)=>a+(b-a)*t;
 export const PIT_STYLES={blue:{label:'Blue pit lane',color:[60,89,108],line:'#81c1d4'},classic:{label:'Classic asphalt',color:[61,65,69],line:'#e3d79c'}};
 export function pitSettings(track){return {width:clamp(Number(track.pitSettings?.width)||6,4,10),setback:clamp(Number(track.pitSettings?.setback)||5,3,30),mergeLength:clamp(Number(track.pitSettings?.mergeLength)||28,12,60),style:PIT_STYLES[track.pitSettings?.style]?track.pitSettings.style:'blue',side:['left','right'].includes(track.pitSettings?.side)?track.pitSettings.side:'auto',outerBarriers:track.pitSettings?.outerBarriers!==false,barrierType:BARRIER_TYPES[track.pitSettings?.barrierType]?track.pitSettings.barrierType:'concrete',barrierHeight:clamp(Number(track.pitSettings?.barrierHeight)||1.2,1,4),autoConnect:track.pitSettings?.autoConnect!==false};}

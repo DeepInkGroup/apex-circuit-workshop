@@ -1,5 +1,6 @@
-import {analyzeTrack} from './analysis.js?v=20261008-boards';
-import {validateExport,trackSlug} from './ac-export.js?v=20261008-boards';
+import {analyzeTrack} from './analysis.js?v=20261008-identity';
+import {validateExport} from './ac-export.js?v=20261008-identity';
+import {trackFolder} from './mod-identity.js?v=20261008-identity';
 
 const $=s=>document.querySelector(s),num=(n,d=0)=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:d}):'—';
 function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -40,7 +41,7 @@ export function mountAnalysis(api){
   $('#analysis-overlay').onchange=()=>api.setOverlay($('#analysis-overlay').checked);$('#reverse-circuit').onclick=()=>api.reverseCircuit();
   $('#analysis-inspect').onclick=()=>{dialog.close();api.preview();};$('#edit-analysis-details').onclick=()=>{dialog.close();$('#circuit-details-btn').click();};
   $('#use-pit-capacity').onclick=()=>{const capacity=analyzeTrack(api.getTrack()).metrics.pitCapacity;if(capacity>0){api.updateTrack(t=>t.export={...t.export,pitboxes:capacity});clearTimeout(timer);render();}};
-  $('#analysis-json').onclick=()=>{const data=report();download(`${trackSlug(api.getTrack().name)}_analysis.json`,JSON.stringify(data,null,2),'application/json');};
-  $('#analysis-csv').onclick=()=>{const data=report(),s=data.scale.metersPerPixel,header='distance_m,progress,x_m,z_m,elevation_m,grade_percent,bank_degrees,radius_m,section';const rows=data.samples.map(r=>[r.distance,r.progress,(r.x-500)*s,(r.y-370)*s,r.elevation,r.grade,r.bank,r.radius??'',r.kind].map(v=>typeof v==='number'?v.toFixed(5):v).join(','));download(`${trackSlug(api.getTrack().name)}_samples.csv`,[header,...rows].join('\n'),'text/csv');};
+  $('#analysis-json').onclick=()=>{const data=report();download(`${trackFolder(api.getTrack())}_analysis.json`,JSON.stringify(data,null,2),'application/json');};
+  $('#analysis-csv').onclick=()=>{const data=report(),s=data.scale.metersPerPixel,header='distance_m,progress,x_m,z_m,elevation_m,grade_percent,bank_degrees,radius_m,section';const rows=data.samples.map(r=>[r.distance,r.progress,(r.x-500)*s,(r.y-370)*s,r.elevation,r.grade,r.bank,r.radius??'',r.kind].map(v=>typeof v==='number'?v.toFixed(5):v).join(','));download(`${trackFolder(api.getTrack())}_samples.csv`,[header,...rows].join('\n'),'text/csv');};
   render();return {refresh};
 }

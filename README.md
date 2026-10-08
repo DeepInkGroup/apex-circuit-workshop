@@ -137,8 +137,10 @@ Existing checks cover native KN5 decoding, road orientation, AI records, spawn p
 
 - Tapered pit entry and exit merge into the outer driving lane. Adjust approach length in **Pit lane design**. Editor, native pavement and minimap use the same variable-width geometry; kerbs and road edge paint leave openings. Merge collision follows the road height.
 - **04 / Include in mod → Show ideal racing line** adds a dashed green/yellow/orange guide in the drawing, 3D and native model, plus `data/ideal_line.ai`. The paint has no collision. It is a generated learning guide, not a calibrated braking or optimal lap-time solution. Driving AI follows the guide when enabled.
-- **Track identity** separates the display name from a stable lowercase mod folder ID. New circuits receive a random suffix; saved circuits keep their previous folder ID. **New unique ID** creates a separate mod when another track already uses the name.
+- **Track identity** follows the circuit name. Renaming updates the saved listing, lowercase folder/server ID, KN5 filename, metadata and download names together, preserving the unique suffix. Local and server exports use the same identity. **New unique ID** creates a separate mod when another track already uses the ID.
 - **05 / Online server** copies matching `TRACK`, empty `CONFIG_TRACK`, and pit-limited `MAX_CLIENTS` settings and downloads a server data ZIP. Every full client ZIP also includes server instructions, a configuration snippet and a revision manifest. Install the same revision on server and clients.
+- **Track folder ZIP** and server ZIP each contain one top-level track folder, with all files and instructions inside. Use WinRAR **Extract Here**, then copy that folder into the game's or server's `content/tracks/`. The separate **Content Manager ZIP** retains its installer layout.
+- **Ctrl+Shift+R** (or **Refresh app data** in Help) saves the current draft, requests fresh app HTML and rebuilds circuit geometry, analysis and previews after loading. Saved circuits and reference images remain available; share lookups bypass the browser request cache.
 
 Native online hosting still needs an in-game check with your particular server manager. See [the installation guide](docs/ASSETTO_CORSA.md) for naming and replacement instructions.
 

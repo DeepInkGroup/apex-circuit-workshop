@@ -1,5 +1,5 @@
-import {buildGeometry} from './engine.js?v=20261008-boards';
-import {readImage,saveImage} from './tracing.js?v=20261008-boards';
+import {buildGeometry} from './engine.js?v=20261008-identity';
+import {readImage,saveImage} from './tracing.js?v=20261008-identity';
 const SERVICE='https://apex-circuit-sharing.art-zomorodian.chatgpt.site';
 const $=s=>document.querySelector(s);
 const format=code=>code.slice(0,4)+' '+code.slice(4,9)+' '+code.slice(9);
@@ -7,7 +7,7 @@ const fingerprint=t=>JSON.stringify({...t,id:null,updatedAt:null});
 async function request(path,options={}){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),25000);
   try{
-    const response=await fetch(SERVICE+path,{...options,signal:controller.signal,credentials:'omit'});
+    const response=await fetch(SERVICE+path,{...options,signal:controller.signal,credentials:'omit',cache:'no-store'});
     const data=await response.json().catch(()=>{throw new Error('Sharing service is unavailable. Please try again shortly.');});
     if(!response.ok)throw new Error(data.error||'Sharing could not finish.');return data;
   }catch(error){throw new Error(error.name==='AbortError'?'Sharing timed out. Check your connection and try again.':error instanceof TypeError?'Cannot reach sharing. Check your internet connection.':error.message);}
