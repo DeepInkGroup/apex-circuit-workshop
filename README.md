@@ -8,6 +8,10 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Continuous elevation and banking curves replace abrupt straight ramps, preserving authored heights without crest/valley overshoot and smoothing the closed seam.
+- Rounded pit corners, grade-aware entry/exit curves, matching pit AI routes, and flush lane/apron collision surfaces remove the old 35 mm pit lift.
+- Automatic **10 m / 5 m turn distance boards**, visible in the drawing, 3D preview and native mod. Toggle them in **04 / Include in mod**. Distances are measured along the centerline before detected turn entries; boards seek clear space beside the road.
+
 - Road elevation and banking now reshape the surrounding grass in 3D and native exports, with smooth transitions, pavement cutouts and shared terrain edges. Trees, building pads, gantry posts and barrier foundations follow local terrain.
 - Transparent footer with a new serif APEX Design. wordmark and GitHub/Telegram links. Removed the “REAL PLACES. YOUR RACING LINE.” label.
 

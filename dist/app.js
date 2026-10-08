@@ -1,33 +1,34 @@
-import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-terrain';
-import {trackFolder,newTrackId} from './mod-identity.js?v=20261008-terrain';
-import {pitRibbons} from './pit-ribbon.js?v=20261008-terrain';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-terrain';
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261008-terrain';
-import {ReferenceLayer} from './tracing.js?v=20261008-terrain';
-import {mountTracer} from './tracer-ui.js?v=20261008-terrain';
-import {TrackPreview} from './preview3d.js?v=20261008-terrain';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261008-terrain';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-terrain';
-import {mountAnalysis} from './analysis-ui.js?v=20261008-terrain';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261008-terrain';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261008-terrain';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261008-terrain';
-import {toGamePoint} from './coordinates.js?v=20261008-terrain';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-terrain';
-import {mountDrawStudio} from './studio-ui.js?v=20261008-terrain';
-import {cornerSettings} from './corner-settings.js?v=20261008-terrain';
-import {mountCorners} from './corner-ui.js?v=20261008-terrain';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261008-terrain';
-import {mountScenery} from './scenery-ui.js?v=20261008-terrain';
-import {mountACSetup} from './ac-setup-ui.js?v=20261008-terrain';
-import {mountSharing} from './sharing.js?v=20261008-terrain';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261008-terrain';
-import {timingSettings,buildTimingPlan} from './timing.js?v=20261008-terrain';
-import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261008-terrain';
-import {mountTiming} from './timing-ui.js?v=20261008-terrain';
-import {mountSurfaces} from './surface-ui.js?v=20261008-terrain';
-import {surfaceSettings} from './surface-settings.js?v=20261008-terrain';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261008-terrain';
+import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-grades';
+import {trackFolder,newTrackId} from './mod-identity.js?v=20261008-grades';
+import {pitRibbons} from './pit-ribbon.js?v=20261008-grades';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-grades';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261008-grades';
+import {ReferenceLayer} from './tracing.js?v=20261008-grades';
+import {mountTracer} from './tracer-ui.js?v=20261008-grades';
+import {TrackPreview} from './preview3d.js?v=20261008-grades';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261008-grades';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-grades';
+import {mountAnalysis} from './analysis-ui.js?v=20261008-grades';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261008-grades';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261008-grades';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261008-grades';
+import {toGamePoint} from './coordinates.js?v=20261008-grades';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-grades';
+import {mountDrawStudio} from './studio-ui.js?v=20261008-grades';
+import {cornerSettings} from './corner-settings.js?v=20261008-grades';
+import {mountCorners} from './corner-ui.js?v=20261008-grades';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261008-grades';
+import {mountScenery} from './scenery-ui.js?v=20261008-grades';
+import {mountACSetup} from './ac-setup-ui.js?v=20261008-grades';
+import {mountSharing} from './sharing.js?v=20261008-grades';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261008-grades';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261008-grades';
+import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261008-grades';
+import {mountTiming} from './timing-ui.js?v=20261008-grades';
+import {mountSurfaces} from './surface-ui.js?v=20261008-grades';
+import {surfaceSettings} from './surface-settings.js?v=20261008-grades';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261008-grades';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-grades';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -76,7 +77,7 @@ function validateTrack(data) {
   const exportOptions={...DEFAULT_EXPORT};
   ['author','country','city'].forEach(k=>{if(typeof data.export?.[k]==='string')exportOptions[k]=data.export[k].slice(0,60);});
   exportOptions.pitboxes=clamp(Math.round(Number(data.export?.pitboxes)||8),1,16);
-  ['kerbs','barriers','ai','trees','buildings','grassFx','gantry'].forEach(k=>exportOptions[k]=data.export?.[k]!==false);
+  ['kerbs','barriers','ai','trees','buildings','grassFx','gantry','distanceMarkers'].forEach(k=>exportOptions[k]=data.export?.[k]!==false);
   for(const [key,min,max] of [['gridSpacing',4,12],['wallHeight',1,4],['gantryClearance',4.5,8]])exportOptions[key]=clamp(Number(data.export?.[key])||DEFAULT_EXPORT[key],min,max);
   Object.assign(exportOptions,surfaceSettings(data.export));
   exportOptions.trackId=trackFolder(data);exportOptions.idealLine=data.export?.idealLine===true;
@@ -114,6 +115,7 @@ let pitRibbonLayout=pitRibbons(pitLayout);
 let timingLayout=buildTimingPlan(track,geometry,roadLayout);
 let gantryLayout=gantryPlan(track,timingLayout,pitLayout);
 let pitWalls=pitOuterBarriers(track,pitLayout,geometry,gantryLayout);
+let turnMarkers=turnMarkerPlan(track,geometry,pitLayout,pitWalls);
 let analysisOverlay=false,analysisData=null,analysisFocus=null;
 
 function toast(message) {const el=$('#toast');el.textContent=message;el.classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.classList.remove('show'),3200);}
@@ -134,6 +136,7 @@ function rebuild() {
   timingLayout=buildTimingPlan(track,geometry,roadLayout);
   gantryLayout=gantryPlan(track,timingLayout,pitLayout);
   pitWalls=pitOuterBarriers(track,pitLayout,geometry,gantryLayout);
+  turnMarkers=turnMarkerPlan(track,geometry,pitLayout,pitWalls);
 }
 const pointAt = fraction => pointOnTrack(geometry,fraction);
 const nearest = p => closestOnTrack(geometry,p);
@@ -163,7 +166,7 @@ new ResizeObserver(resize).observe($('#canvas-wrap'));
 function screenToWorld(e,snap=true) {const r=canvas.getBoundingClientRect(),p={x:(e.clientX-r.left-offsetX)/scale,y:(e.clientY-r.top-offsetY)/scale};if(snap&&(snapEnabled||(e.shiftKey&&tool!=='move'))&&!['pan','measure'].includes(tool)){const step=snapMeters/(track.scale||.2);p.x=Math.round(p.x/step)*step;p.y=Math.round(p.y/step)*step;}return p;}
 function zoom(amount) {view.zoom=clamp(view.zoom*amount,.18,8);updateTransform();}
 function fitView(){
-  if(mode==='preview')stopPreview();const points=[...track.points,...(track.pit||[]),...(track.barriers||[]).flatMap(b=>b.points),...(track.trees||[]),...(track.buildings||[]).flatMap(b=>buildingCorners(b,track.scale))];if(track.points.length>=2)points.push(...pitLayout.path,...pitLayout.entryConnection,...pitLayout.exitConnection,...pitLayout.bays.flatMap(b=>b.corners),...pitWalls.flatMap(b=>b.points));if(gantryLayout)points.push(...gantryLayout.supports);if(!points.length){view={zoom:1,panX:0,panY:0};updateTransform();return;}
+  if(mode==='preview')stopPreview();const points=[...track.points,...(track.pit||[]),...(track.barriers||[]).flatMap(b=>b.points),...(track.trees||[]),...(track.buildings||[]).flatMap(b=>buildingCorners(b,track.scale))];if(track.points.length>=2)points.push(...pitLayout.path,...pitLayout.entryConnection,...pitLayout.exitConnection,...pitLayout.bays.flatMap(b=>b.corners),...pitWalls.flatMap(b=>b.points),...turnMarkers.markers);if(gantryLayout)points.push(...gantryLayout.supports);if(!points.length){view={zoom:1,panX:0,panY:0};updateTransform();return;}
   const pad=45/(Math.min(cssW/1000,cssH/740)||1),minX=Math.min(...points.map(p=>p.x))-pad,maxX=Math.max(...points.map(p=>p.x))+pad,minY=Math.min(...points.map(p=>p.y))-pad,maxY=Math.max(...points.map(p=>p.y))+pad,base=Math.min(cssW/1000,cssH/740);
   view.zoom=clamp(Math.min(cssW/(maxX-minX),cssH/(maxY-minY))/base,.18,5);view.panX=(500-(minX+maxX)/2)*base*view.zoom;view.panY=(370-(minY+maxY)/2)*base*view.zoom;updateTransform();
 }
@@ -194,6 +197,7 @@ function drawTrack() {
 }
 function drawHandles() {
   drawGantry(ctx,gantryLayout,scale);
+  drawTurnMarkers(ctx,turnMarkers,track.scale,scale);
   if(track.complete!==false)for(const gate of timingLayout.gates.filter(g=>g.id)){
     ctx.strokeStyle='#79d8cd';ctx.lineWidth=1.6/scale;ctx.setLineDash([5/scale,4/scale]);ctx.beginPath();ctx.moveTo(gate.left.x,gate.left.y);ctx.lineTo(gate.right.x,gate.right.y);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle='#244d49';ctx.font=`bold ${10/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(gate.label,gate.left.x,gate.left.y-8/scale);
@@ -422,7 +426,7 @@ const editorApi={
   updateSelectedPoints(change){const indices=selectedPointIndices();if(!indices.length)return;editorApi.updateTrack(t=>indices.forEach(i=>change(t.points[i],i,t)));},
   deleteSelectedPoints(){const indices=selectedPointIndices();if(!indices.length)return;finishDrag();remember();for(const i of indices.sort((a,b)=>b-a))track.points.splice(i,1);selectedPoint=-1;selectedPoints.clear();track.start=0;commit();toast(`${indices.length} road points removed. Undo restores them.`);},
   clearPointSelection(){selectedPoints.clear();selectedPoint=-1;syncUI();},
-  getTool:()=>tool,getTree:()=>selectedTree,getTreeBrush:()=>({...treeBrush}),getPitPlan:()=>pitLayout,fitView,
+  getTool:()=>tool,getTree:()=>selectedTree,getTreeBrush:()=>({...treeBrush}),getPitPlan:()=>pitLayout,getTurnMarkers:()=>turnMarkers,fitView,
   getTimingPlan:()=>timingLayout,
   generateBarriers(options){if(!geometry.length){toast('Draw the circuit before adding automatic barriers.');return;}const generated=automaticBarriers(track,geometry,roadLayout,pitLayout,{...options,gantry:gantryLayout});if(!generated.length){toast('No clear barrier route found. Try a smaller gap or remove nearby scenery.');return;}remember();track.barriers=[...(track.barriers||[]).filter(b=>!b.automatic),...generated];selectedBarrier=-1;activeBarrier=-1;commit();setTool('move');toast(`${generated.length} editable barrier paths added. ${barrierSettings(track).reentry?"Return openings and pit access stay open.":"Pit access stays open."} Undo restores the previous barriers.`);},
   cutBarrier(index,width,position){

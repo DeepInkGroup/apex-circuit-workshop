@@ -1,5 +1,5 @@
-import {analyzeTrack} from './analysis.js?v=20261008-terrain';
-import {validateExport,trackSlug} from './ac-export.js?v=20261008-terrain';
+import {analyzeTrack} from './analysis.js?v=20261008-grades';
+import {validateExport,trackSlug} from './ac-export.js?v=20261008-grades';
 
 const $=s=>document.querySelector(s),num=(n,d=0)=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:d}):'—';
 function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}

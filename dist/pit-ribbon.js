@@ -5,8 +5,7 @@ export function pitRibbons(plan){
     if(path.length<2)return;
     const rails=path.map((p,i)=>{
       const a=path[Math.max(0,i-1)],b=path[Math.min(path.length-1,i+1)],angle=(i===0||i===path.length-1)&&Number.isFinite(p.angle)?p.angle:Math.atan2(b.y-a.y,b.x-a.x),half=(p.width||plan.settings.width)/2;
-      const t=i/(path.length-1),lift=index===4?.035*t*t*(3-2*t):index===5?.035*(1-t*t*(3-2*t)):.035;
-      const at=offset=>({x:p.x+Math.sin(angle)*offset/s,y:p.y-Math.cos(angle)*offset/s,elevation:(p.elevation||0)+offset*Math.tan((p.bank||0)*Math.PI/180)+lift});
+      const at=offset=>({x:p.x+Math.sin(angle)*offset/s,y:p.y-Math.cos(angle)*offset/s,elevation:(p.elevation||0)+offset*Math.tan((p.bank||0)*Math.PI/180)});
       return {left:at(half),right:at(-half),innerLeft:at(half-.12),innerRight:at(-half+.12)};
     });
     for(let i=0;i<rails.length-1;i++){

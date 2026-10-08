@@ -1,5 +1,5 @@
-import {createScene} from './ac-export.js?v=20261008-terrain';
-import {surfacePixels} from './textures.js?v=20261008-terrain';
+import {createScene} from './ac-export.js?v=20261008-grades';
+import {surfacePixels} from './textures.js?v=20261008-grades';
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);
@@ -31,7 +31,7 @@ export class TrackPreview {
     this.buffers.forEach(b=>{gl.deleteBuffer(b.vertices);gl.deleteBuffer(b.indices);});this.buffers=[];this.textures.forEach(t=>gl.deleteTexture(t));this.textures=scene.materials.map(m=>{const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,256,256,0,gl.RGB,gl.UNSIGNED_BYTE,surfacePixels(m,256));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.generateMipmap(gl.TEXTURE_2D);return texture;});
     this.weather=scene.weather;this.rain=track.weather==='rain';
     const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity],include=p=>{for(let i=0;i<3;i++){min[i]=Math.min(min[i],p[i]);max[i]=Math.max(max[i],p[i]);}};
-    scene.frames.forEach(f=>include(f.pos));for(const m of scene.meshes)if(/^(1ROAD|1PIT|1WALL_BUILDING|1WALL_START_FINISH|SCENERY_TREE)/.test(m.name))for(const v of m.vertices)include(v.pos);
+    scene.frames.forEach(f=>include(f.pos));for(const m of scene.meshes)if(/^(1ROAD|1PIT|1WALL_BUILDING|1WALL_START_FINISH|SCENERY_TREE|SCENERY_TURN_DISTANCE)/.test(m.name))for(const v of m.vertices)include(v.pos);
     this.target=min.map((n,i)=>(n+max[i])/2);this.radius=Math.max(20,Math.hypot(...max.map((n,i)=>n-min[i]))*.72);
     scene.meshes.forEach(m=>{const vertices=gl.createBuffer(),indices=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertices);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(m.vertices.flatMap(v=>[...v.pos,...v.normal,...v.uv])),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(m.indices),gl.STATIC_DRAW);this.buffers.push({vertices,indices,count:m.indices.length,texture:this.textures[m.material],wet:[0,5].includes(m.material)});});this.draw();return true;
   }

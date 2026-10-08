@@ -1,9 +1,9 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-terrain';
-import {buildPitPlan} from './pit-plan.js?v=20261008-terrain';
-import {WEATHER} from './environment.js?v=20261008-terrain';
-import {buildTimingPlan} from './timing.js?v=20261008-terrain';
-import {surfaceSettings} from './surface-settings.js?v=20261008-terrain';
-import {GRASS,buildingSettings} from './scenery.js?v=20261008-terrain';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-grades';
+import {buildPitPlan} from './pit-plan.js?v=20261008-grades';
+import {WEATHER} from './environment.js?v=20261008-grades';
+import {buildTimingPlan} from './timing.js?v=20261008-grades';
+import {surfaceSettings} from './surface-settings.js?v=20261008-grades';
+import {GRASS,buildingSettings} from './scenery.js?v=20261008-grades';
 
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const pathLength=(points,s)=>points.slice(1).reduce((n,p,i)=>n+distance(p,points[i])*s,0);

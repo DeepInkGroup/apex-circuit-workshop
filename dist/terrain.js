@@ -38,11 +38,9 @@ export function createTerrain(pavement,base){
  const pavementAt=(x,z)=>{let h=Infinity;for(const t of triangles.query(x-EPS,z-EPS,x+EPS,z+EPS)){const y=pavementHeight(t,x,z);if(y!==null)h=Math.min(h,y);}return h;};
  function field(x,z){
   const paved=pavementAt(x,z);if(Number.isFinite(paved))return paved-.015;
-  const nearest=[];
-  for(const e of segments.query(x-radius,z-radius,x+radius,z+radius)){const {a,b}=e,dx=b[0]-a[0],dz=b[2]-a[2],t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[2])*dz)/(dx*dx+dz*dz||1))),d=Math.hypot(x-a[0]-t*dx,z-a[2]-t*dz);if(d>radius)continue;const sample={d,y:a[1]+t*(b[1]-a[1])-.015};let i=nearest.findIndex(n=>n.d>d);if(i<0)i=nearest.length;nearest.splice(i,0,sample);if(nearest.length>8)nearest.pop();}
-  if(!nearest.length)return base;
-  let sum=0,weight=0;for(const n of nearest){const w=1/(n.d+.02)**4;sum+=n.y*w;weight+=w;}
-  return base+(sum/weight-base)*(1-smooth(nearest[0].d/radius));
+  let nearest=Infinity,sum=0,weight=0;
+  for(const e of segments.query(x-radius,z-radius,x+radius,z+radius)){const {a,b}=e,dx=b[0]-a[0],dz=b[2]-a[2],t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[2])*dz)/(dx*dx+dz*dz||1))),d=Math.hypot(x-a[0]-t*dx,z-a[2]-t*dz);if(d>=radius)continue;const w=(1-smooth(d/radius))/(d+.02)**4;nearest=Math.min(nearest,d);sum+=(a[1]+t*(b[1]-a[1])-.015)*w;weight+=w;}
+  return weight?base+(sum/weight-base)*(1-smooth(nearest/radius)):base;
  }
  function heightAt(x,z){
   if(surface){let height=Infinity;for(const t of surface.query(x-EPS,z-EPS,x+EPS,z+EPS)){const y=pavementHeight(t,x,z);if(y!==null)height=Math.min(height,y);}if(Number.isFinite(height))return height;}

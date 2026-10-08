@@ -1,21 +1,22 @@
-import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-terrain';
-import {barrierSettings} from './auto-barriers.js?v=20261008-terrain';
-import {pitRibbons} from './pit-ribbon.js?v=20261008-terrain';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-terrain';
-import {trackFolder} from './mod-identity.js?v=20261008-terrain';
-import {buildGeometry} from './engine.js?v=20261008-terrain';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261008-terrain';
-import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261008-terrain';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-terrain';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261008-terrain';
-import {WEATHER} from './environment.js?v=20261008-terrain';
-import {drawTree} from './trees.js?v=20261008-terrain';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261008-terrain';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-terrain';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261008-terrain';
-import {toGamePoint} from './coordinates.js?v=20261008-terrain';
-import {buildTimingPlan} from './timing.js?v=20261008-terrain';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261008-terrain';
+import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-grades';
+import {barrierSettings} from './auto-barriers.js?v=20261008-grades';
+import {pitRibbons} from './pit-ribbon.js?v=20261008-grades';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-grades';
+import {trackFolder} from './mod-identity.js?v=20261008-grades';
+import {buildGeometry} from './engine.js?v=20261008-grades';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261008-grades';
+import {DEFAULT_EXPORT,exportZip,validateExport,trackSlug} from './ac-export.js?v=20261008-grades';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-grades';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261008-grades';
+import {WEATHER} from './environment.js?v=20261008-grades';
+import {drawTree} from './trees.js?v=20261008-grades';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261008-grades';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-grades';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261008-grades';
+import {toGamePoint} from './coordinates.js?v=20261008-grades';
+import {buildTimingPlan} from './timing.js?v=20261008-grades';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261008-grades';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-grades';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
@@ -24,7 +25,8 @@ function png(canvas){return new Promise((resolve,reject)=>canvas.toBlob(async b=
 export async function exportImages(track){
   const geometry=buildGeometry(track.points,track.smooth,track.complete!==false),s=track.scale||.2,plan=buildPitPlan(track),road=buildRoadLayout(track,geometry,plan),mapLayout=createTrackMap(track,geometry,plan,road);
   const gantry=gantryPlan(track,buildTimingPlan(track,geometry,road),plan),pitWalls=pitOuterBarriers(track,plan,geometry,gantry);
-  const footprint=[...(gantry?.supports||[]),...(track.export?.buildings!==false?(track.buildings||[]):[]).flatMap(b=>buildingCorners(b,s))],margin=track.width/s+20,minX=Math.min(0,...footprint.map(p=>p.x-margin),plan.bounds.minX-margin),maxX=Math.max(1000,...footprint.map(p=>p.x+margin),plan.bounds.maxX+margin),minY=Math.min(0,...footprint.map(p=>p.y-margin),plan.bounds.minY-margin),maxY=Math.max(740,...footprint.map(p=>p.y+margin),plan.bounds.maxY+margin),factor=Math.min(960/(maxX-minX),580/(maxY-minY)),tx=500-(minX+maxX)/2*factor,ty=310-(minY+maxY)/2*factor;
+  const turnMarkers=turnMarkerPlan(track,geometry,plan,pitWalls);
+  const footprint=[...turnMarkers.markers,...(gantry?.supports||[]),...(track.export?.buildings!==false?(track.buildings||[]):[]).flatMap(b=>buildingCorners(b,s))],margin=track.width/s+20,minX=Math.min(0,...footprint.map(p=>p.x-margin),plan.bounds.minX-margin),maxX=Math.max(1000,...footprint.map(p=>p.x+margin),plan.bounds.maxX+margin),minY=Math.min(0,...footprint.map(p=>p.y-margin),plan.bounds.minY-margin),maxY=Math.max(740,...footprint.map(p=>p.y+margin),plan.bounds.maxY+margin),factor=Math.min(960/(maxX-minX),580/(maxY-minY)),tx=500-(minX+maxX)/2*factor,ty=310-(minY+maxY)/2*factor;
   const ribbons=pitRibbons(plan),routes=[plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection];
   const draw=(canvas,background)=>{
     const ctx=canvas.getContext('2d');if(background){ctx.fillStyle=grassPattern(ctx,track.grass);ctx.fillRect(0,0,canvas.width,canvas.height);}
@@ -39,6 +41,7 @@ export async function exportImages(track){
       (track.export?.buildings!==false?(track.buildings||[]):[]).forEach(b=>drawBuilding(ctx,b,s,false,factor));
       (track.export?.trees!==false?(track.trees||[]):[]).forEach(t=>drawTree(ctx,t,s,false,factor));
       drawGantry(ctx,gantry,factor);
+      drawTurnMarkers(ctx,turnMarkers,s,factor);
     }
     ctx.restore();
   };

@@ -1,6 +1,6 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-terrain';
-import {trackScale} from './coordinates.js?v=20261008-terrain';
-import {kerbSides} from './corner-settings.js?v=20261008-terrain';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-grades';
+import {trackScale} from './coordinates.js?v=20261008-grades';
+import {kerbSides} from './corner-settings.js?v=20261008-grades';
 
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};
@@ -32,7 +32,7 @@ function pitOpening(p,plan,scale){
 export function buildRoadLayout(track,geometry=buildGeometry(track.points||[],track.smooth,track.complete!==false),pit=null){
   const s=trackScale(track),closed=track.complete!==false,total=geometry.length,half=track.width/2;
   if(!total)return {center:[],left:[],right:[],quads:[],kerbs:[],bands:()=>[]};
-  const count=clamp(Math.ceil(total*s/1.5),32,3500),stations=Array.from({length:closed?count:count+1},(_,i)=>total*i/count);
+  const count=clamp(Math.ceil(total*s/.75),32,7000),stations=Array.from({length:closed?count:count+1},(_,i)=>total*i/count);
   // Retain exact control-point stations so sharp corners cannot be cut across
   // by uniform sampling. Include the start seam without altering point order.
   geometry.cumulative.forEach((d,i)=>{if(i===0||geometry.segments[i]!==geometry.segments[i-1])stations.push(d);});

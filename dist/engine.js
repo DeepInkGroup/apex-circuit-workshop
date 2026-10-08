@@ -1,3 +1,4 @@
+import {heightProfile,profileAt} from './height-profile.js?v=20261008-grades';
 export const METERS_PER_UNIT = 0.2;
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -28,7 +29,10 @@ export function buildGeometry(points, smooth = true, closed = true) {
   });
   if(!closed){samples.push({...points[points.length-1]});segments.push(points.length-2);}
   samples.forEach((p,i) => { cumulative.push(length); if(closed||i<samples.length-1)length += distance(p, samples[(i+1)%samples.length]); });
-  return {samples, segments, cumulative, length, closed};
+  const controls=[];segments.forEach((segment,i)=>{if(!i||segment!==segments[i-1])controls.push({station:cumulative[i],point:points[segment]});});if(!closed)controls.push({station:length,point:points.at(-1)});
+  const elevationProfile=heightProfile(controls.map(c=>c.station),controls.map(c=>c.point.elevation),length,closed),bankProfile=heightProfile(controls.map(c=>c.station),controls.map(c=>c.point.bank),length,closed);
+  samples.forEach((p,i)=>{p.elevation=profileAt(elevationProfile,cumulative[i]).value;p.bank=profileAt(bankProfile,cumulative[i]).value;});
+  return {samples, segments, cumulative, length, closed,elevationProfile,bankProfile};
 }
 
 export function pointOnTrack(g, fraction) {
@@ -39,7 +43,9 @@ export function pointOnTrack(g, fraction) {
   if(g.closed===false&&lo===g.samples.length-1)lo--;
   const a = g.samples[lo], b = g.samples[(lo+1)%g.samples.length], segmentLength = distance(a,b);
   const t = segmentLength ? (l-g.cumulative[lo])/segmentLength : 0;
-  return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, elevation:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t, bank:(a.bank||0)+((b.bank||0)-(a.bank||0))*t,kerbs:a.kerbs||'inherit',kerbWidth:a.kerbWidth||.7,cornerName:a.cornerName||'', angle:Math.atan2(b.y-a.y,b.x-a.x), index:lo};
+  const height=g.elevationProfile?profileAt(g.elevationProfile,l):{value:(a.elevation||0)+((b.elevation||0)-(a.elevation||0))*t,grade:segmentLength?((b.elevation||0)-(a.elevation||0))/segmentLength:0};
+  const banking=g.bankProfile?profileAt(g.bankProfile,l):{value:(a.bank||0)+((b.bank||0)-(a.bank||0))*t,grade:0};
+  return {x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t, elevation:height.value,grade:height.grade,bank:banking.value,bankGrade:banking.grade,kerbs:a.kerbs||'inherit',kerbWidth:a.kerbWidth||.7,cornerName:a.cornerName||'', angle:Math.atan2(b.y-a.y,b.x-a.x), index:lo};
 }
 
 export function closestOnTrack(g, p) {
