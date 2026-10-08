@@ -1,5 +1,5 @@
-import {buildGeometry} from './engine.js?v=20261008-structures';
-import {readImage,saveImage} from './tracing.js?v=20261008-structures';
+import {buildGeometry} from './engine.js?v=20261008-structure-design';
+import {readImage,saveImage} from './tracing.js?v=20261008-structure-design';
 const SERVICE='https://apex-circuit-sharing.art-zomorodian.chatgpt.site';
 const $=s=>document.querySelector(s);
 const format=code=>code.slice(0,4)+' '+code.slice(4,9)+' '+code.slice(9);

@@ -8,6 +8,9 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Redesigned bridge/tunnel controls with visual type cards, Gentle/Balanced/Compact ramps, a live elevation profile, actual peak grades, placement offset, approach reserve and saved-span navigation. **Bridges & tunnels** is available beside the drawing tools. **Inspect in 3D** focuses the selected structure; a preview-only **Tunnel cutaway** reveals the interior.
+- Smoother structural ramps ease grade and curvature changes at the ends. Bridges have selectable steel detailing or concrete parapets, underside girders and approach guards. Tunnels have rounded-vault or flat roofs, smooth roof shading, portal collars, entrance wings, reflective guides and luminous ceiling strips. Native exports include the updated geometry.
+
 - **Bridges & tunnels**: select a road handle in **Corners**, choose **Bridge / tunnel at this handle**, then set the span, clearance and target grade. Elevation, level deck/floor and smooth approach ramps are generated automatically. The 3D preview and native mod include bridge rails/supports or tunnel walls/roof/portals, with terrain below bridges and above tunnels. Removing a span restores authored heights. Export reports flag overlapping spans and overly steep approaches.
 - Pit fitting compares both sides of the circuit, avoids scenery and covered spans at merge mouths, and checks road crossings and approach grades. Custom routes have adjustable bend smoothing and automatic landscape elevation. Direction arrows follow the connected route, and fit notes identify merges that need review.
 

@@ -1,6 +1,6 @@
-import {BinaryWriter,crc32} from './binary.js?v=20261008-structures';
-import {grassPixels} from './scenery.js?v=20261008-structures';
-import {boardPixels} from './board-design.js?v=20261008-structures';
+import {BinaryWriter,crc32} from './binary.js?v=20261008-structure-design';
+import {grassPixels} from './scenery.js?v=20261008-structure-design';
+import {boardPixels} from './board-design.js?v=20261008-structure-design';
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
 export function surfacePixels(material,size){
   if(material.distanceBoard)return boardPixels(material.distanceBoard,size);
@@ -10,6 +10,7 @@ export function surfacePixels(material,size){
     if(material.name==='Asphalt'&&noise>=12&&((x+Math.round(5*Math.sin(y*.05)))%91+91)%91<1)detail-=12;
     if(material.finish==='brick'){const row=Math.floor(y/16),seam=y%16<2||(x+(row%2)*32)%64<2;if(seam)detail+=35;}
     if(material.finish==='steel'&&x%32<2)detail-=18;
+    if(material.finish==='concrete'){if(y%128<1)detail-=7;detail+=Math.sin(x*.2)*Math.sin(y*.16)*1.5;}
     for(let k=0;k<3;k++)pixels[(y*size+x)*3+k]=clamp(material.color[k]+detail);
   }return pixels;
 }
@@ -26,5 +27,5 @@ export function createTexture(material,size=256){
 }
 export function materialProperties(material){
   const grass=material.name==='Grass',pavement=['Asphalt','Pit asphalt'].includes(material.name),paint=['White','Kerb red','Pit bay paint'].includes(material.name);
-  return {ksAmbient:material.distanceBoard?.38:grass?.3:.25,ksDiffuse:material.distanceBoard?.4:grass?.32:paint?.3:.35,ksSpecular:grass?0:pavement?.015:.005,ksSpecularEXP:pavement?18:8,ksEmissive:[0,0,0],ksAlphaRef:0};
+  return {ksAmbient:material.distanceBoard?.38:grass?.3:.25,ksDiffuse:material.distanceBoard?.4:grass?.32:paint?.3:.35,ksSpecular:grass?0:pavement?.015:.005,ksSpecularEXP:pavement?18:8,ksEmissive:material.emissive||[0,0,0],ksAlphaRef:0};
 }

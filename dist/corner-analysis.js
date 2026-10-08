@@ -1,6 +1,6 @@
-import {pointOnTrack,clamp} from './engine.js?v=20261008-structures';
-import {trackScale} from './coordinates.js?v=20261008-structures';
-import {cornerSettings,turnBoardSettings} from './corner-settings.js?v=20261008-structures';
+import {pointOnTrack,clamp} from './engine.js?v=20261008-structure-design';
+import {trackScale} from './coordinates.js?v=20261008-structure-design';
+import {cornerSettings,turnBoardSettings} from './corner-settings.js?v=20261008-structure-design';
 
 const delta=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
 const wrap=(value,total)=>((value%total)+total)%total;

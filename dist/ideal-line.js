@@ -1,4 +1,4 @@
-import {clamp} from './engine.js?v=20261008-structures';
+import {clamp} from './engine.js?v=20261008-structure-design';
 // A generated learning guide: smooth the path within joined road cross-sections.
 // This is not a lap-time optimizer or a substitute for recorded race AI.
 export function idealLine(track,road){

@@ -1,10 +1,10 @@
-import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261008-structures';
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-structures';
-import {buildPitPlan} from './pit-plan.js?v=20261008-structures';
-import {WEATHER} from './environment.js?v=20261008-structures';
-import {buildTimingPlan} from './timing.js?v=20261008-structures';
-import {surfaceSettings} from './surface-settings.js?v=20261008-structures';
-import {GRASS,buildingSettings} from './scenery.js?v=20261008-structures';
+import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261008-structure-design';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-structure-design';
+import {buildPitPlan} from './pit-plan.js?v=20261008-structure-design';
+import {WEATHER} from './environment.js?v=20261008-structure-design';
+import {buildTimingPlan} from './timing.js?v=20261008-structure-design';
+import {surfaceSettings} from './surface-settings.js?v=20261008-structure-design';
+import {GRASS,buildingSettings} from './scenery.js?v=20261008-structure-design';
 
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const pathLength=(points,s)=>points.slice(1).reduce((n,p,i)=>n+distance(p,points[i])*s,0);
