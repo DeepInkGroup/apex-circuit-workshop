@@ -1,28 +1,30 @@
-import {addStructures,terrainQuadExcluded,structureGroundRule} from './structures.js?v=20261008-structure-design';
-import {addBarrierMeshes,pitOuterBarriers} from './barriers.js?v=20261008-structure-design';
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-structure-design';
-import {BinaryWriter,zipFiles,crc32} from './binary.js?v=20261008-structure-design';
-import {ASPHALT} from './surfaces.js?v=20261008-structure-design';
-import {analyzeTrack} from './analysis.js?v=20261008-structure-design';
-import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261008-structure-design';
-import {WEATHER} from './environment.js?v=20261008-structure-design';
-import {TREE_SPECIES,treeSettings} from './trees.js?v=20261008-structure-design';
-import {buildRoadLayout} from './road-layout.js?v=20261008-structure-design';
-import {createTrackMap,mapIni} from './track-map.js?v=20261008-structure-design';
-import {createTexture,materialProperties} from './textures.js?v=20261008-structure-design';
-import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261008-structure-design';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261008-structure-design';
-import {buildTimingPlan,sectionsIni} from './timing.js?v=20261008-structure-design';
-import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261008-structure-design';
-import {gantryPlan,addGantry} from './gantry.js?v=20261008-structure-design';
+import {pavementSampler} from './pavement-sampler.js?v=20261009-flush-joins';
+import {pitStopPaint} from './pit-stop.js?v=20261009-flush-joins';
+import {addStructures,terrainQuadExcluded,structureGroundRule} from './structures.js?v=20261009-flush-joins';
+import {addBarrierMeshes,pitOuterBarriers} from './barriers.js?v=20261009-flush-joins';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-flush-joins';
+import {BinaryWriter,zipFiles,crc32} from './binary.js?v=20261009-flush-joins';
+import {ASPHALT} from './surfaces.js?v=20261009-flush-joins';
+import {analyzeTrack} from './analysis.js?v=20261009-flush-joins';
+import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261009-flush-joins';
+import {WEATHER} from './environment.js?v=20261009-flush-joins';
+import {TREE_SPECIES,treeSettings} from './trees.js?v=20261009-flush-joins';
+import {buildRoadLayout} from './road-layout.js?v=20261009-flush-joins';
+import {createTrackMap,mapIni} from './track-map.js?v=20261009-flush-joins';
+import {createTexture,materialProperties} from './textures.js?v=20261009-flush-joins';
+import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261009-flush-joins';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261009-flush-joins';
+import {buildTimingPlan,sectionsIni} from './timing.js?v=20261009-flush-joins';
+import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261009-flush-joins';
+import {gantryPlan,addGantry} from './gantry.js?v=20261009-flush-joins';
 
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true,trees:true,buildings:true,...surfaceSettings(),grassFx:true,gridSpacing:6,wallHeight:2,gantry:true,gantryClearance:6,idealLine:false,distanceMarkers:true,distanceBoardStyle:'classic',distanceBoardSize:'standard',distanceBoardSetback:1.8};
-export {trackSlug} from './mod-identity.js?v=20261008-structure-design';
-import {trackFolder,validTrackId,serverConfig,synchronizeIdentity} from './mod-identity.js?v=20261008-structure-design';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261008-structure-design';
-import {idealLine} from './ideal-line.js?v=20261008-structure-design';
-import {createTerrain} from './terrain.js?v=20261008-structure-design';
-import {turnMarkerPlan,addTurnMarkers} from './turn-markers.js?v=20261008-structure-design';
+export {trackSlug} from './mod-identity.js?v=20261009-flush-joins';
+import {trackFolder,validTrackId,serverConfig,synchronizeIdentity} from './mod-identity.js?v=20261009-flush-joins';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-flush-joins';
+import {idealLine} from './ideal-line.js?v=20261009-flush-joins';
+import {createTerrain} from './terrain.js?v=20261009-flush-joins';
+import {turnMarkerPlan,addTurnMarkers} from './turn-markers.js?v=20261009-flush-joins';
 const unit=trackScale;
 const world=toGamePoint;
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
@@ -72,6 +74,9 @@ function openFrames(points,t){
   const sampled=resamplePath(points,unit(t));
   return sampled.map((p,i)=>{const a=sampled[Math.max(0,i-1)],b=sampled[Math.min(sampled.length-1,i+1)];return frame({...p,angle:Math.atan2(b.y-a.y,b.x-a.x)},t);});
 }
+function smoothPavementNormals(meshes){
+ const smooth=meshes.filter(m=>/^1(ROAD|PIT|KERB)/.test(m.name)),normals=new Map(),key=p=>p.map(v=>Math.round(v*1e6)).join(',');for(const mesh of smooth)for(let i=0;i<mesh.indices.length;i+=3){const v=mesh.indices.slice(i,i+3).map(j=>mesh.vertices[j]),n=cross(sub(v[1].pos,v[0].pos),sub(v[2].pos,v[0].pos));if(n[1]<0)for(let j=0;j<3;j++)n[j]=-n[j];for(const point of v){const k=key(point.pos);if(!normals.has(k))normals.set(k,[0,0,0]);const total=normals.get(k);for(let j=0;j<3;j++)total[j]+=n[j];}}for(const mesh of smooth)for(const v of mesh.vertices)if(normals.has(key(v.pos)))v.normal=normalize(normals.get(key(v.pos)));
+}
 export function createScene(track){
   const closed=track.complete!==false,g=buildGeometry(track.points,track.smooth,closed,track),options={...DEFAULT_EXPORT,...track.export,...surfaceSettings(track.export)},s=unit(track),total=g.length*s;
   const pitCount=clamp(Math.round(Number(options.pitboxes)||8),1,16);
@@ -114,17 +119,18 @@ export function createScene(track){
   }
   drapePaint(finishPaint,road);
   // A separate pit ribbon and explicit spawns make practice sessions usable immediately.
-  const pitFrames=openFrames(pitPlan.aiPath,track);
+  const ribbons=pitRibbons(pitPlan),pitSurface=pavementSampler([...roadLayout.quads,...ribbons.map(r=>r.corners),...pitPlan.apron],s),onPitSurface=p=>({...p,elevation:pitSurface.nearest(p,.02)?.height??pitPlan.heightAt(p)}),pitFrames=openFrames(pitPlan.aiPath.map(onPitSurface),track);for(const f of pitFrames){const p={x:f.pos[0]/s+500,y:f.pos[2]/s+370,elevation:f.pos[1]};f.pos[1]=onPitSurface(p).elevation;}
+  const drapePit=(m,lift=.003)=>{for(const v of m.vertices){const p={x:v.pos[0]/s+500,y:v.pos[2]/s+370,elevation:v.pos[1]-lift},near=pitSurface.nearest(p,.08);if(near)v.pos[1]=near.height+lift;}};
   const pit=add('1PIT_LANE',5),merge=add('1ROAD_PIT_MERGE',5),pitPaint=add('PIT_EDGE_MARKINGS',2);
-  for(const ribbon of pitRibbons(pitPlan)){
+  for(const ribbon of ribbons){
     quad(ribbon.merge?merge:pit,...ribbon.corners.map(p=>world(p,track)));
     ribbon.paint.forEach(corners=>quad(pitPaint,...corners.map(p=>{const v=world(p,track);v[1]+=.003;return v;})));
   }
   for(const corners of pitArrows(pitPlan))quad(pitPaint,...corners.map(p=>{const v=world(p,track);v[1]+=.003;return v;}));
-  // Overlapping merge collision follows the exact road height, including banking.
-  drapePaint(merge,road,0);drapePaint(pit,road,0);drapePaint(pitPaint,road,.003);
+  // Pit rails conform to road triangle heights; drape only visual paint here.
+  drapePit(pitPaint);
   const apron=add('1PIT_PARKING_APRON',6),bayPaint=add('PIT_BAY_MARKINGS',7);
-  pitPlan.bays.forEach(b=>{const corners=b.corners.map(p=>world(p,track));quad(apron,...corners,3);for(let i=0;i<4;i++)band(bayPaint,openFrames([b.corners[i],b.corners[(i+1)%4]],track),.06,-.06,.003,false);});
+  for(const corners of pitPlan.apron)quad(apron,...corners.map(p=>world(p,track)),3);for(const corners of pitStopPaint(pitPlan))quad(bayPaint,...corners.map(p=>{const v=world(p,track);v[1]+=.003;return v;}));
   const terrain=createTerrain(meshes.filter(m=>/^1(ROAD|PIT|KERB)/.test(m.name)).map(m=>({...m,indices:m.terrainIndices??m.indices})),base,structureGroundRule(track,g)),buildingGround=new Map();
   for(const source of (options.buildings?track.buildings||[]:[]).slice(0,60)){
     const b={...source,...buildingSettings(source)},r=b.rotation*Math.PI/180,c=Math.cos(r),sin=Math.sin(r),center=world(b,track),corners=buildingCorners(b,s).map(p=>world(p,track)),local=corners.map(p=>{const x=p[0]-center[0],z=p[2]-center[2];return [x*c+z*sin,-x*sin+z*c];}),minU=Math.min(...local.map(p=>p[0]))-.6,maxU=Math.max(...local.map(p=>p[0]))+.6,minV=Math.min(...local.map(p=>p[1]))-.6,maxV=Math.max(...local.map(p=>p[1]))+.6,u=(minU+maxU)/2,v=(minV+maxV)/2;
@@ -134,10 +140,11 @@ export function createScene(track){
   gantry=gantryPlan(track,timingPlan,pitPlan,terrain.heightAt);
   const digits=['abcdef','bc','abdeg','abcdg','bcfg','acdfg','acdefg','abc','abcdefg','abcdfg'],segments={a:[[-.3,.6],[.3,.6]],b:[[.3,.6],[.3,0]],c:[[.3,0],[.3,-.6]],d:[[.3,-.6],[-.3,-.6]],e:[[-.3,-.6],[-.3,0]],f:[[-.3,0],[-.3,.6]],g:[[-.3,0],[.3,0]]};
   pitPlan.stalls.forEach(p=>{const f=frame(p,track),number=String(p.number);[...number].forEach((digit,index)=>{for(const key of digits[Number(digit)]){const [a,b]=segments[key],off=(index-(number.length-1)/2)*.8,point=v=>({x:p.x+(f.forward[0]*(v[0]+off)+f.left[0]*v[1])/s,y:p.y+(f.forward[2]*(v[0]+off)+f.left[2]*v[1])/s,elevation:p.elevation||0});band(bayPaint,openFrames([point(a),point(b)],track),.035,-.035,.004,false);}});});
+  drapePit(bayPaint);
   function dummy(name,f,lateral=0){dummies.push({name,pos:edge(f,lateral,1),forward:f.forward});}
   for(let i=0;i<pitCount;i++){
     const f=frame(pointOnTrack(g,track.start-(8+Math.floor(i/2)*clamp(Number(options.gridSpacing)||6,4,12))/total),track);dummy(`AC_START_${i}`,f,(i%2?1:-1)*Math.min(2.2,half*.4));
-    dummy(`AC_PIT_${i}`,frame(pitPlan.stalls[i],track));
+    dummy(`AC_PIT_${i}`,frame(onPitSurface(pitPlan.stalls[i]),track));
   }
   dummy('AC_HOTLAP_START_0',frame(pointOnTrack(g,track.start-25/total),track));
   for(const gate of timingPlan.gates)for(const [side,p] of [['L',gate.left],['R',gate.right]])dummies.push({name:`AC_TIME_${gate.id}_${side}`,pos:world(p,track),forward:gameDirection(gate.point.angle).forward});
@@ -228,6 +235,7 @@ export function createScene(track){
     }
     guideMeshes.forEach(m=>drapePaint(m,road,.004));
   }
+  smoothPavementNormals(meshes);
   return {meshes:meshes.filter(m=>m.indices.length).flatMap(meshChunks),dummies,materials,frames,idealFrames,pitFrames,pitPlan,pitWalls,roadLayout,timingPlan,gantry,turnMarkers,structures:g.structureProfile?.ranges||[],weather,length:total,pitCount,options};
 }
 
@@ -313,7 +321,7 @@ export function validateExport(track){
   return {errors,warnings,length:g.length*s};
 }
 function sceneExtension(scene,track){
-  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=22.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
+  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=23.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
   scene.materials.forEach((m,index)=>{lines.push(`[SHADER_REPLACEMENT_${index}]`,`MATERIALS=${m.name}`,'SHADER=ksPerPixel','RESOURCE_0=txDiffuse',`RESOURCE_TEXTURE_0=${scene.textures[index].name}`);Object.entries(materialProperties(m)).forEach(([key,value],i)=>lines.push(`PROP_${i}=${key}, ${Array.isArray(value)?value.join(', '):value}`));lines.push('');});
   const grass=GRASS[track.grass]||GRASS.mown;lines.push('[GRASS_FX]',`ACTIVE=${scene.options.grassFx?1:0}`,`GRASS_MESHES=${scene.meshes.filter(m=>m.name.startsWith('1GRASS_TERRAIN')).map(m=>m.name).join(', ')}`,'GRASS_MATERIALS=Grass',`OCCLUDING_MATERIALS=${scene.materials.filter(m=>m.name!=='Grass'&&!m.tree).map(m=>m.name).join(', ')}`,'ORIGINAL_GRASS_MATERIALS=','MASK_MAIN_THRESHOLD=-1','MASK_RED_THRESHOLD=0','MASK_MIN_LUMINANCE=-1','MASK_MAX_LUMINANCE=1',`SHAPE_SIZE=${grass.size}`,`SHAPE_TIDY=${grass.tidy}`,`SHAPE_CUT=${grass.cut}`,'SHAPE_WIDTH=1','');return lines.join('\n');
 }
@@ -336,10 +344,11 @@ export function exportFiles(track,images={}){
   if(scene.options.ai||scene.options.idealLine){put('ai/fast_lane.ai',writeAi(scene.idealFrames.length?scene.idealFrames:scene.frames,track.width));if(scene.options.idealLine)put('data/ideal_line.ai',writeAi(scene.idealFrames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitFrames,scene.pitPlan.settings.width,false));}
   for(const [name,bytes] of Object.entries(images))put(name,bytes);
   if(images['map.png'])put('data/map.ini',mapIni(createTrackMap(track,undefined,scene.pitPlan,scene.roadLayout)));
-  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:22,export:{...track.export,trackId:slug},background:null},null,2));
-  put('apex_structures.json',JSON.stringify({structures:scene.structures,automaticElevation:true,method:'Level spans with seventh-order approaches blended into authored heights; clearance includes deck thickness or tunnel cover.'},null,2));
+  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:23,export:{...track.export,trackId:slug},background:null},null,2));
+  put('apex_structures.json',JSON.stringify({structures:scene.structures,automaticElevation:true,method:'Level spans with seventh-order approaches and direct blends between nearby spans; clearance includes deck thickness or tunnel cover.'},null,2));
   put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
-  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.options.gridSpacing} m row spacing\nRoad grip ${scene.options.roadGrip} · kerb grip ${scene.options.kerbGrip} · pit grip ${scene.options.pitGrip} · grass grip ${scene.options.grassGrip}\nGrass drag ${scene.options.grassDrag} · dirt pickup ${scene.options.grassDirt}\nStart/Finish Gantry: ${scene.gantry?"included":"off"}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nBridge decks, guard rails and pillars, and below-ground tunnel walls, ceilings and portals are native collision geometry. Automatic structural elevations use level covered spans and seventh-order approach profiles with eased grade and curvature transitions. Suspended decks do not raise terrain beneath them; tunnel cover remains above the ceiling while portals and approach cuttings stay open.
+  files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.options.gridSpacing} m row spacing\nRoad grip ${scene.options.roadGrip} · kerb grip ${scene.options.kerbGrip} · pit grip ${scene.options.pitGrip} · grass grip ${scene.options.grassGrip}\nGrass drag ${scene.options.grassDrag} · dirt pickup ${scene.options.grassDirt}\nStart/Finish Gantry: ${scene.gantry?"included":"off"}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nBridge decks, guard rails and pillars, and below-ground tunnel walls, ceilings and portals are native collision geometry. Bridge end faces stop below the asphalt, preserving a single continuous driving surface. Nearby structural spans blend directly instead of adding an intermediate crest or dip. Pit mouths conform to the road triangles with a smooth shoulder blend, and pit stops use one continuous apron with painted bay lines.
+Automatic structural elevations use level covered spans and seventh-order approach profiles with eased grade and curvature transitions. Suspended decks do not raise terrain beneath them; tunnel cover remains above the ceiling while portals and approach cuttings stay open.
 Native KN5 geometry and textures, collision surfaces, start and pit spawns, timing gates, and optional generated AI and a visible ideal-line guide are generated in the browser. No Blender or ksEditor conversion is required.\nOpaque uncompressed BGRA DDS textures with mipmaps are embedded in the KN5 and copied to texture/. Opaque materials include explicit shader properties with moderated diffuse lighting and zero emissive output. An extension/ext_config.ini supplies explicit texture bindings and optional Grass FX for CSP; the colored base works without CSP. Textured grass covers the empty ground. Placed buildings have collision bodies and detailed roofs, windows, and garage doors. Trees and buildings follow the scenery switches in Assetto Corsa setup. Custom corners and styled pit lanes are included. Road and kerbs share joined boundary geometry at sharp turns. Kerbs are flush with the road, with no 35 mm lift, sine displacement or extra vibration. Road, pit, kerb and grass friction are configured independently. The signed start/finish gantry follows the timing gate, with supports beside road and adjacent pit pavement. Start/finish white tiles are visual paint on a non-collision mesh; no raised tiles are added to the collision road. Preview weather does not enable rain physics; choose game weather in Content Manager. Reference imagery is not included. Road elevation and banking use shape-preserving curves with continuous grades through control points, crests, valleys and the closed seam. Authored heights are preserved. Pit bends use tangent curves and grade-aware road joins; the 35 mm lane lift and raised parking apron have been removed. Enabled 10 m and 5 m boards use large condensed numerals, METRES labels, turn arrows and two galvanized posts. Classic or high-contrast faces and standard or large panels are configurable, with a preferred gap beyond the kerbs. Corner selection can include both distances, either distance, or no boards. Authored board sides and turn-entry adjustments are preserved. Corner inventory and boards share filtered curvature analysis and numbering from start/finish. Board pairs prefer one side and face approaching drivers. Panels rise above crossed safety walls, subject to a height limit. They sit beside clear trackside positions before geometrically detected turn entries, measured along the 3D surface centerline, including elevation. See apex_turn_markers.json for stations and world positions. Extremely close scenery may prevent a board placement; review the export notes. Manual elevation and banking reshape the surrounding textured grass terrain. Grass meets actual road, kerb and pit edges, blends into the landscape, and is cut out beneath pavement to avoid collision bumps. Trees, building pads, gantry posts and barrier foundations follow the terrain. This is procedural terrain, not surveyed terrain or LIDAR.\nLap timing uses start/finish plus S1 and S2 in driving order. Exported gates span the actual joined road edges, and sections.ini follows the configured split percentages. apex_timing.json lists native checkpoint positions and sector lengths. Fast-lane AI uses unique cyclic points and local segment lengths, with progress starting at the same finish line. Replace both AI files when updating an installed mod; old AI data can misreport progress. AI is a generated starting guide; refine it for competitive racing. Inspect spawn positions and test the track in-game.\nThe minimap PNG and map.ini share one native X/Z projection, including pits beyond the drawing bounds. Image dimensions are pixels, offsets are world meters, and SCALE_FACTOR is meters per pixel. Replace both map.png and data/map.ini when updating an installed track. Exit the current driving session, export a fresh ZIP, and replace the old track files in Content Manager. Re-enter the session to load the new model and versioned textures. Old downloads cannot update themselves. ui/preview.png is the color overview; map.png and ui/outline.png are white route masks by design. This export has not been certified in Assetto Corsa.\n\n${report.warnings.join('\n')}\n`;
   put('extension/ext_config.ini',sceneExtension(scene,track));
   files['SERVER_CONFIG.txt']=serverConfig(track);

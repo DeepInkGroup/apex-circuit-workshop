@@ -1,4 +1,4 @@
-import {clamp} from './engine.js?v=20261008-structure-design';
+import {clamp} from './engine.js?v=20261009-flush-joins';
 
 export const SURFACE_FIELDS={
  roadGrip:{label:'Road grip',min:.8,max:1.2,step:.01,value:1},

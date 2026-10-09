@@ -1,5 +1,5 @@
-import {heightProfile,profileAt} from './height-profile.js?v=20261008-structure-design';
-import {createStructureProfile} from './structure-profile.js?v=20261008-structure-design';
+import {heightProfile,profileAt} from './height-profile.js?v=20261009-flush-joins';
+import {createStructureProfile} from './structure-profile.js?v=20261009-flush-joins';
 export const METERS_PER_UNIT = 0.2;
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);

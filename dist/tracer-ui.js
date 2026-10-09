@@ -1,23 +1,24 @@
-import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-structure-design';
-import {barrierSettings} from './auto-barriers.js?v=20261008-structure-design';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261008-structure-design';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-structure-design';
-import {drawStructures} from './structures.js?v=20261008-structure-design';
-import {trackFolder} from './mod-identity.js?v=20261008-structure-design';
-import {buildGeometry} from './engine.js?v=20261008-structure-design';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261008-structure-design';
-import {DEFAULT_EXPORT,exportZip,exportTrackFolderZip,validateExport} from './ac-export.js?v=20261008-structure-design';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-structure-design';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261008-structure-design';
-import {WEATHER} from './environment.js?v=20261008-structure-design';
-import {drawTree} from './trees.js?v=20261008-structure-design';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261008-structure-design';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-structure-design';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261008-structure-design';
-import {toGamePoint} from './coordinates.js?v=20261008-structure-design';
-import {buildTimingPlan} from './timing.js?v=20261008-structure-design';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261008-structure-design';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-structure-design';
+import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261009-flush-joins';
+import {barrierSettings} from './auto-barriers.js?v=20261009-flush-joins';
+import {pitStopPaint} from './pit-stop.js?v=20261009-flush-joins';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-flush-joins';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261009-flush-joins';
+import {drawStructures} from './structures.js?v=20261009-flush-joins';
+import {trackFolder} from './mod-identity.js?v=20261009-flush-joins';
+import {buildGeometry} from './engine.js?v=20261009-flush-joins';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261009-flush-joins';
+import {DEFAULT_EXPORT,exportZip,exportTrackFolderZip,validateExport} from './ac-export.js?v=20261009-flush-joins';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261009-flush-joins';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261009-flush-joins';
+import {WEATHER} from './environment.js?v=20261009-flush-joins';
+import {drawTree} from './trees.js?v=20261009-flush-joins';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261009-flush-joins';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261009-flush-joins';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261009-flush-joins';
+import {toGamePoint} from './coordinates.js?v=20261009-flush-joins';
+import {buildTimingPlan} from './timing.js?v=20261009-flush-joins';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261009-flush-joins';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261009-flush-joins';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
@@ -37,7 +38,7 @@ export async function exportImages(track){
     fillRoadPolygons(ctx,ribbons.map(r=>r.corners),background?`rgb(${PIT_STYLES[plan.settings.style].color.join(',')})`:'#fff');
     if(background){fillRoadPolygons(ctx,ribbons.flatMap(r=>r.paint),'#eee9d7');fillRoadPolygons(ctx,pitArrows(plan),'#d6e9e7');if(track.export?.idealLine)drawIdealLine(ctx,idealLine(track,road),s,factor,track.complete!==false);}
     if(background){
-      plan.bays.forEach(b=>{fillRoadPolygons(ctx,[b.corners],'#acb4ab');ctx.strokeStyle='#e8cf88';ctx.lineWidth=.14/s;ctx.stroke();});
+      fillRoadPolygons(ctx,plan.apron,'#929e92');fillRoadPolygons(ctx,pitStopPaint(plan),'#e8cf88');
       [...(track.barriers||[]),...pitWalls].forEach(b=>drawBarrier(ctx,b,s,factor));
       (track.export?.buildings!==false?(track.buildings||[]):[]).forEach(b=>drawBuilding(ctx,b,s,false,factor));
       (track.export?.trees!==false?(track.trees||[]):[]).forEach(t=>drawTree(ctx,t,s,false,factor));
@@ -55,7 +56,7 @@ export async function exportImages(track){
   const map=document.createElement('canvas');map.width=mapLayout.width;map.height=mapLayout.height;const mc=map.getContext('2d'),project=p=>worldToMap(toGamePoint(p,track),mapLayout);
   fillRoadPolygons(mc,road.quads.map(corners=>corners.map(project)),'#fff');
   fillRoadPolygons(mc,ribbons.map(r=>r.corners.map(project)),'#fff');
-  fillRoadPolygons(mc,plan.bays.map(b=>b.corners.map(project)),'#fff');
+  fillRoadPolygons(mc,plan.apron.map(c=>c.map(project)),'#fff');
   return {'ui/preview.png':await png(preview),'ui/outline.png':await png(outline),'map.png':await png(map)};
 }
 

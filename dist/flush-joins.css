@@ -1,0 +1,15 @@
+/* Prioritize drawing space while retaining the user's saved layout choice. */
+.tracer-app .workspace{height:max(1500px,155dvh)}
+.tracer-app .canvas-wrap{min-height:1160px}
+.tracer-app .studio.canvas-wide .canvas-wrap{height:max(1220px,132dvh);min-height:1220px}
+.tracer-app .studio[data-canvas-size=extra] .workspace{height:max(1720px,175dvh)}
+.tracer-app .studio.canvas-wide[data-canvas-size=extra] .workspace{height:auto}
+.tracer-app .studio[data-canvas-size=extra] .canvas-wrap{min-height:1400px}
+.tracer-app .studio.canvas-wide[data-canvas-size=extra] .canvas-wrap{height:max(1440px,155dvh);min-height:1440px}
+.ribbon-options #drawing-size{max-width:125px;min-height:33px;border:1px solid #d3dccb;background:#fafcf4;color:#52694c;padding:6px;border-radius:6px;font-size:10px}
+.pit-stop-controls{padding:14px;margin:18px 0;border:1px solid #c8d7c1;border-radius:11px;background:#eef4e8}
+.pit-stop-controls h3{font-size:13px;color:#334f40;margin:0 0 12px}.pit-stop-controls .studio-field{margin:12px 0}.pit-stop-controls .studio-fields{gap:10px}.pit-stop-controls .field-hint{margin:10px 0}
+.pit-stop-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:12px 0}.pit-stop-status>div{border:1px solid #d7e0ce;border-radius:6px;background:#fafcf5;padding:9px 5px;text-align:center}.pit-stop-status span{display:block;font-size:8px;color:#819077;line-height:1.5}.pit-stop-status b{display:block;font-size:11px;margin-top:5px;color:#4b654b}.pit-stop-controls .pit-stop-locate{display:flex;gap:8px;align-items:center}.pit-stop-locate select{min-width:0;flex:1}.pit-stop-locate button{white-space:nowrap;font-size:10px;padding:10px}
+.tracer-app .studio.drawing-focus .workspace,.tracer-app .studio.expanded .workspace{height:auto;min-height:0;flex:1}.tracer-app .studio.drawing-focus .canvas-wrap,.tracer-app .studio.expanded .canvas-wrap{height:auto;min-height:0;flex:1}
+@media(max-width:800px){.tracer-app .workspace,.tracer-app .studio[data-canvas-size=extra] .workspace{height:auto}.tracer-app .canvas-wrap,.tracer-app .studio.canvas-wide .canvas-wrap{height:110dvh;min-height:820px}.tracer-app .studio[data-canvas-size=extra] .canvas-wrap,.tracer-app .studio.canvas-wide[data-canvas-size=extra] .canvas-wrap{height:125dvh;min-height:940px}.tracer-app .studio.drawing-focus .canvas-wrap,.tracer-app .studio.expanded .canvas-wrap{height:auto;min-height:0;flex:1}}
+@media(max-width:540px){.ribbon-options{flex-wrap:wrap}.ribbon-options #drawing-size{max-width:100px;font-size:9px}.tracer-app .canvas-wrap,.tracer-app .studio.canvas-wide .canvas-wrap{min-height:760px}.tracer-app .studio[data-canvas-size=extra] .canvas-wrap,.tracer-app .studio.canvas-wide[data-canvas-size=extra] .canvas-wrap{min-height:860px}.tracer-app .studio.drawing-focus .canvas-wrap,.tracer-app .studio.expanded .canvas-wrap{min-height:0}}

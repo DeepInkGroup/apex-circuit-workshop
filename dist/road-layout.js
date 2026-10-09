@@ -1,6 +1,6 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261008-structure-design';
-import {trackScale} from './coordinates.js?v=20261008-structure-design';
-import {kerbSides} from './corner-settings.js?v=20261008-structure-design';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-flush-joins';
+import {trackScale} from './coordinates.js?v=20261009-flush-joins';
+import {kerbSides} from './corner-settings.js?v=20261009-flush-joins';
 
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};
@@ -39,11 +39,15 @@ export function buildRoadLayout(track,geometry=buildGeometry(track.points||[],tr
   geometry.cumulative.forEach((d,i)=>{if(i===0||geometry.segments[i]!==geometry.segments[i-1])stations.push(d);});
   if(closed)stations.push(((track.start||0)%1+1)%1*total);
   for(const range of geometry.structureProfile?.ranges||[])for(const offset of [-range.span/2-range.ramp,-range.span/2,-range.span/2+2,range.span/2-2,range.span/2,range.span/2+range.ramp]){const station=(range.center+offset)/s;stations.push(closed?((station%total)+total)%total:Math.max(0,Math.min(total,station)));}
+  // Dense, shared road stations across structural approaches limit triangle
+  // grade changes even when the base circuit sampling reaches its cap.
+  for(const range of geometry.structureProfile?.ranges||[]){const length=range.span+2*range.ramp,count=Math.min(1800,Math.max(32,Math.ceil(length/.4)));for(let i=0;i<=count;i++){const station=(range.center-length/2+length*i/count)/s;stations.push(closed?((station%total)+total)%total:Math.max(0,Math.min(total,station)));}}
   stations.sort((a,b)=>a-b);const center=stations.filter((d,i)=>!i||d-stations[i-1]>1e-5).map(d=>({...pointOnTrack(geometry,d/total),station:d*s}));
   const n=center.length,joins=center.map((p,i)=>{
     const before=closed?center[(i+n-1)%n]:center[Math.max(0,i-1)],after=closed?center[(i+1)%n]:center[Math.min(n-1,i+1)],a=i===0&&!closed?direction(p,after):direction(before,p),b=i===n-1&&!closed?a:direction(p,after),nx=a.y+b.y,ny=-a.x-b.x,len=Math.hypot(nx,ny);
     if(len<1e-5)return {x:b.y,y:-b.x};const x=nx/len,y=ny/len,factor=Math.min(2,1/Math.max(.05,x*b.y-y*b.x));return {x:x*factor,y:y*factor};
   });
+  center.forEach((p,i)=>p.edgeNormal=joins[i]);
   const rail=offset=>trimLoops(center.map((p,i)=>{const off=typeof offset==='function'?offset(p):offset;return {station:p.station,x:p.x+joins[i].x*off/s,y:p.y+joins[i].y*off/s,elevation:(p.elevation||0)+off*Math.tan((p.bank||0)*Math.PI/180)};}),center,closed,(half+2)/s);
   const left=rail(half),right=rail(-half),outerLeft=rail(p=>half+(p.kerbWidth||.7)),outerRight=rail(p=>-half-(p.kerbWidth||.7)),segments=closed?n:n-1,quads=[],kerbs=[];
   for(let i=0;i<segments;i++){

@@ -1,36 +1,37 @@
-import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261008-structure-design';
-import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261008-structure-design';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261008-structure-design';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261008-structure-design';
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261008-structure-design';
-import {ReferenceLayer} from './tracing.js?v=20261008-structure-design';
-import {mountTracer} from './tracer-ui.js?v=20261008-structure-design';
-import {TrackPreview} from './preview3d.js?v=20261008-structure-design';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261008-structure-design';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261008-structure-design';
-import {mountAnalysis} from './analysis-ui.js?v=20261008-structure-design';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261008-structure-design';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261008-structure-design';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261008-structure-design';
-import {toGamePoint} from './coordinates.js?v=20261008-structure-design';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261008-structure-design';
-import {mountDrawStudio} from './studio-ui.js?v=20261008-structure-design';
-import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261008-structure-design';
-import {drawStructures} from './structures.js?v=20261008-structure-design';
-import {mountStructures} from './structure-ui.js?v=20261008-structure-design';
-import {mountCorners} from './corner-ui.js?v=20261008-structure-design';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261008-structure-design';
-import {mountScenery} from './scenery-ui.js?v=20261008-structure-design';
-import {mountACSetup} from './ac-setup-ui.js?v=20261008-structure-design';
-import {mountSharing} from './sharing.js?v=20261008-structure-design';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261008-structure-design';
-import {timingSettings,buildTimingPlan} from './timing.js?v=20261008-structure-design';
-import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261008-structure-design';
-import {mountTiming} from './timing-ui.js?v=20261008-structure-design';
-import {mountSurfaces} from './surface-ui.js?v=20261008-structure-design';
-import {surfaceSettings} from './surface-settings.js?v=20261008-structure-design';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261008-structure-design';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261008-structure-design';
+import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261009-flush-joins';
+import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261009-flush-joins';
+import {pitStopPaint} from './pit-stop.js?v=20261009-flush-joins';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-flush-joins';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261009-flush-joins';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261009-flush-joins';
+import {ReferenceLayer} from './tracing.js?v=20261009-flush-joins';
+import {mountTracer} from './tracer-ui.js?v=20261009-flush-joins';
+import {TrackPreview} from './preview3d.js?v=20261009-flush-joins';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261009-flush-joins';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261009-flush-joins';
+import {mountAnalysis} from './analysis-ui.js?v=20261009-flush-joins';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261009-flush-joins';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261009-flush-joins';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261009-flush-joins';
+import {toGamePoint} from './coordinates.js?v=20261009-flush-joins';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261009-flush-joins';
+import {mountDrawStudio} from './studio-ui.js?v=20261009-flush-joins';
+import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261009-flush-joins';
+import {drawStructures} from './structures.js?v=20261009-flush-joins';
+import {mountStructures} from './structure-ui.js?v=20261009-flush-joins';
+import {mountCorners} from './corner-ui.js?v=20261009-flush-joins';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261009-flush-joins';
+import {mountScenery} from './scenery-ui.js?v=20261009-flush-joins';
+import {mountACSetup} from './ac-setup-ui.js?v=20261009-flush-joins';
+import {mountSharing} from './sharing.js?v=20261009-flush-joins';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261009-flush-joins';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261009-flush-joins';
+import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261009-flush-joins';
+import {mountTiming} from './timing-ui.js?v=20261009-flush-joins';
+import {mountSurfaces} from './surface-ui.js?v=20261009-flush-joins';
+import {surfaceSettings} from './surface-settings.js?v=20261009-flush-joins';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261009-flush-joins';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261009-flush-joins';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -240,7 +241,8 @@ function drawPitLane(){
   const ribbons=pitRibbonLayout;fillRoadPolygons(ctx,ribbons.map(r=>r.corners),color);fillRoadPolygons(ctx,ribbons.flatMap(r=>r.paint),'#fff7da');
   fillRoadPolygons(ctx,pitArrows(plan),style.line);
   ctx.setLineDash([3*meter,2*meter]);strokePath(style.line,.12*meter,plan.path,false);ctx.setLineDash([]);
-  plan.bays.forEach(b=>{ctx.beginPath();b.corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='#aeb6ac';ctx.fill();ctx.strokeStyle='#ead183';ctx.lineWidth=.12*meter;ctx.stroke();ctx.save();ctx.translate(b.center.x,b.center.y);ctx.rotate(b.center.angle);ctx.fillStyle='#334d52';ctx.font=`bold ${Math.min(2*meter,16/scale)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(b.center.number),0,0);ctx.restore();});
+  fillRoadPolygons(ctx,plan.apron,'#929e92');fillRoadPolygons(ctx,pitStopPaint(plan),'#ead183');
+  plan.bays.forEach(b=>{ctx.beginPath();b.corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();ctx.fillStyle='#aeb6ac';ctx.globalAlpha=.25;ctx.fill();ctx.globalAlpha=1;ctx.save();ctx.translate(b.center.x,b.center.y);ctx.rotate(b.center.angle);ctx.fillStyle='#334d52';ctx.font=`bold ${Math.min(2*meter,16/scale)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(b.center.number),0,0);ctx.restore();});
   for(const [text,p] of [['PIT ENTRY',plan.entry],['PIT EXIT',plan.exit]]){if(!p)continue;ctx.fillStyle='#315868';ctx.font=`bold ${9/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(text,p.x,p.y-9/scale);}
   track.pit.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.x,p.y,5/scale,0,Math.PI*2);ctx.fillStyle='#edf9f6';ctx.fill();ctx.strokeStyle='#43889c';ctx.lineWidth=1.5/scale;ctx.stroke();});
 }
@@ -436,13 +438,15 @@ function frame(){draw();requestAnimationFrame(frame);}
 function stopPreview(){if(mode!=='preview')return;mode='build';$('.studio').classList.remove('preview-active');$('#preview-canvas').hidden=true;canvas.hidden=false;$('#preview-mode').classList.remove('active');$('#build-mode').classList.add('active');$('#canvas-caption').innerHTML='TRACE EDITOR <span>/</span> TOP VIEW';syncUI();resize();setTool(tool);}
 function showPreview(viewMode='orbit'){
   if(track.points.length<3||!length){toast('Trace a circuit with at least three points first.');return;}
-  try{if(!preview3D)preview3D=new TrackPreview($('#preview-canvas'));if(!preview3D.gl){toast('3D preview needs WebGL. You can still trace and export the track.');return;}mode='preview';$('.studio').classList.add('preview-active');canvas.hidden=true;$('#preview-canvas').hidden=false;$('#preview-mode').classList.add('active');$('#build-mode').classList.remove('active');$('#canvas-caption').innerHTML='GEOMETRY PREVIEW <span>/</span> 3D';$('#canvas-hint span').textContent='Drag to orbit. Scroll to zoom. Inspect road and pit placement.';preview3D.focusedIndex=undefined;preview3D.cutaway=false;preview3D.load(track);}
+  try{if(!preview3D)preview3D=new TrackPreview($('#preview-canvas'));if(!preview3D.gl){toast('3D preview needs WebGL. You can still trace and export the track.');return;}mode='preview';$('.studio').classList.add('preview-active');canvas.hidden=true;$('#preview-canvas').hidden=false;$('#preview-mode').classList.add('active');$('#build-mode').classList.remove('active');$('#canvas-caption').innerHTML='GEOMETRY PREVIEW <span>/</span> 3D';$('#canvas-hint span').textContent='Drag to orbit. Scroll to zoom. Inspect road and pit placement.';preview3D.focusedMode=undefined;preview3D.focusedIndex=undefined;preview3D.cutaway=false;preview3D.load(track);}
   catch(error){stopPreview();toast('3D preview failed: '+error.message);}
   if(mode==='preview'&&['top','reset'].includes(viewMode))preview3D.setView(viewMode==='top');
   syncUI();
 }
 referenceLayer=new ReferenceLayer(()=>{},toast);
 const editorApi={
+  previewPits(){showPreview();if(mode==='preview'){preview3D.focusPits();syncUI();}},
+  focusPitStop(index){const p=pitLayout.stalls[index];if(!p)return;stopPreview();analysisFocus=null;view.zoom=2.8;const base=Math.min(cssW/1000,cssH/740)*view.zoom;view.panX=(500-p.x)*base;view.panY=(370-p.y)*base;updateTransform();canvas.focus();toast(`Pit stop ${index+1} · ${pitLayout.settings.boxWidth.toFixed(1)} m wide`);},
   editDrawing(){stopPreview();setTool('move');canvas.focus();},
   previewStructure(index){showPreview();if(mode!=='preview')return;preview3D.focusStructure(track,index);const range=geometry.structureProfile?.ranges.find(r=>r.index===index);if(range?.type==='tunnel')preview3D.setCutaway(true);syncUI();},
   toggleTunnelCutaway(){if(mode!=='preview')showPreview();if(mode==='preview'){preview3D.setCutaway(!preview3D.cutaway);syncUI();}},

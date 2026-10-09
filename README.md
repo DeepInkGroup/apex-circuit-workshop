@@ -8,6 +8,10 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Bridge end faces now finish below the driving surface. Nearby spans connect directly without an extra dip, and structural approaches use denser collision sampling and shared pavement normals. Tunnel entrances have curved, flared retaining walls that follow the road.
+- Pit joins match road triangle heights and use smoother tangent/curvature transitions. Pit stops share a continuous flush apron with open bay mouths, stop lines and numbered spaces. Adjust box width, spacing and row layout; locate individual stops or inspect the whole route in 3D. Fitted parking rows connect directly to the track.
+- Larger drawing workspace with **Large canvas / Extra large canvas**, full-width layout by default, and saved layout/size preferences. Export a fresh ZIP and replace the installed revision to receive the geometry changes.
+
 - Redesigned bridge/tunnel controls with visual type cards, Gentle/Balanced/Compact ramps, a live elevation profile, actual peak grades, placement offset, approach reserve and saved-span navigation. **Bridges & tunnels** is available beside the drawing tools. **Inspect in 3D** focuses the selected structure; a preview-only **Tunnel cutaway** reveals the interior.
 - Smoother structural ramps ease grade and curvature changes at the ends. Bridges have selectable steel detailing or concrete parapets, underside girders and approach guards. Tunnels have rounded-vault or flat roofs, smooth roof shading, portal collars, entrance wings, reflective guides and luminous ceiling strips. Native exports include the updated geometry.
 

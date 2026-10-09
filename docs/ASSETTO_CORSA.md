@@ -218,12 +218,20 @@ Bridge exports contain a native deck underside, shoulders, girders, approach gua
 
 ## Pit fitting and route controls
 
+**Pit stops & parking apron** adds adjustable box width (2.8–5 m), spacing (6–12 m), and Automatic / Along the service lane / Separate straight row layouts. Automatic mode finds the straightest suitable stop section and fits a separate straight row for short or tightly curved routes. The selected pit count is preserved. **Locate stop** centers the drawing on a selected bay; **Inspect lane & pit stops in 3D** frames the connected route and apron.
+
+The working apron shares the service lane's joined edge vertices. Bays are painted spaces on continuous pavement, with open mouths and stop lines; they no longer have individual collision slabs. Entry and exit use quintic curves matching endpoint position, heading, grade and available curvature. Pit mouths conform to the actual racing-road triangle planes, with a gradual blend into service pavement. Pit AI and spawn elevations sample the exported pavement. A fitted row connects directly to the racing road instead of returning through short authoring hints. Custom handles remain editable.
+
 **Fit automatic connected lane** searches both sides when Pit side is Automatic, checking lane/bay clearance, scenery, racing-road crossings and merge grades. Covered bridge/tunnel cores are avoided as connection mouths. If no unobstructed fit exists, the lane remains editable and the fit notes explain what to move; inspect those notes before installation.
 
 For a drawn service lane, **Bend smoothing reach** controls the tangent fillets without moving the editable handles. **Automatic pit elevation** derives route heights from the authored landscape; turn it off to keep manual pit elevations. Merge candidates are compared for clearance and grade, with tapered shoulder mouths and matching road elevation/banking. Direction arrows show the route in the drawing, color preview and native mod. Analysis and Assetto Corsa setup report peak pit grade and whether the connections need review.
 
 
 ## Smooth grades, pit bends and turn distance boards
+
+Bridge end faces stop 8 cm below the asphalt, leaving the continuous road mesh as the driving surface. Close structural spans blend directly between their levels, avoiding an unnecessary dip between equal-height decks. Export grade checks use the effective profile, including linked spans. Additional road samples across structural approaches and shared pavement normals improve the joins. Tunnel approach retaining walls curve with the road, flare outward and taper into the portal. Export a fresh ZIP and replace the installed track to receive these changes; driving behavior still needs confirmation in Assetto Corsa.
+
+The drawing ribbon offers **Large canvas** and **Extra large canvas**. New layout preferences default to full width and extra large; existing side-by-side preferences are retained. Size and layout persist locally. **Focus canvas** remains available for a full-window workspace.
 
 Elevation and banking use shape-preserving cubic profiles over centerline distance, with a shared grade on both sides of every control point and the closed circuit seam. The curve passes through authored heights, flattens at crests/valleys and avoids height overshoot. Road collision is sampled at approximately 0.75 m, capped for very long circuits. Height differences over a short distance can still create a steep slope: spread the rise over more road points for a gentler gradient. Surrounding terrain follows the updated pavement.
 

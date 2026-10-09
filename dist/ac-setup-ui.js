@@ -1,7 +1,7 @@
-import {trackFolder,newTrackId,validTrackId,serverConfig} from './mod-identity.js?v=20261008-structure-design';
-import {exportImages} from './tracer-ui.js?v=20261008-structure-design';
-import {DEFAULT_EXPORT,validateExport,exportServerZip} from './ac-export.js?v=20261008-structure-design';
-import {GRASS} from './scenery.js?v=20261008-structure-design';
+import {trackFolder,newTrackId,validTrackId,serverConfig} from './mod-identity.js?v=20261009-flush-joins';
+import {exportImages} from './tracer-ui.js?v=20261009-flush-joins';
+import {DEFAULT_EXPORT,validateExport,exportServerZip} from './ac-export.js?v=20261009-flush-joins';
+import {GRASS} from './scenery.js?v=20261009-flush-joins';
 const $=s=>document.querySelector(s);
 export function mountACSetup(api){const section=$('.export-settings'),body=section.querySelector('.details-body');
  const inputs=Object.fromEntries(['author','country','city','pits','kerbs','barriers','ai'].map(k=>[k,$('#export-'+k)]));

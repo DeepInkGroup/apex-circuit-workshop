@@ -1,5 +1,5 @@
-import {toGamePoint,trackScale} from './coordinates.js?v=20261008-structure-design';
-import {clamp} from './engine.js?v=20261008-structure-design';
+import {toGamePoint,trackScale} from './coordinates.js?v=20261009-flush-joins';
+import {clamp} from './engine.js?v=20261009-flush-joins';
 
 export function gantryPlan(track,timing,pit,ground=0){
  if(track.complete===false||track.export?.gantry===false||!timing.gates.length)return null;

@@ -1,11 +1,11 @@
-import {clamp,closestOnTrack,pointOnTrack} from './engine.js?v=20261008-structure-design';
-import {buildingContains} from './scenery.js?v=20261008-structure-design';
-import {treeRadius} from './trees.js?v=20261008-structure-design';
+import {clamp,closestOnTrack,pointOnTrack} from './engine.js?v=20261009-flush-joins';
+import {buildingContains} from './scenery.js?v=20261009-flush-joins';
+import {treeRadius} from './trees.js?v=20261009-flush-joins';
 export const BARRIER_TYPES={concrete:{label:'Concrete safety wall',width:.8,color:'#a9adb0'},tyres:{label:'Tyre wall',width:1.1,color:'#303734'},steel:{label:'Steel crash barrier',width:.8,color:'#a1b4bc'}};
 export function barrierProperties(raw={}){const type=BARRIER_TYPES[raw.type]?raw.type:'concrete';return {type,width:clamp(Number(raw.width)||BARRIER_TYPES[type].width,BARRIER_TYPES[type].width,2),height:clamp(Number(raw.height)||1.2,1,4),style:raw.style==='striped'?'striped':'concrete'};}
 export function pitOuterBarriers(track,plan,geometry,gantry=null){
  if(plan.settings.outerBarriers===false||!geometry.length)return [];
- const source=plan.expanded?plan.parkingPath:plan.path,s=plan.scale,side=plan.side,props=barrierProperties({type:plan.settings.barrierType,height:plan.settings.barrierHeight}),offset=side*(plan.settings.width/2+4.2+props.width/2),paths=[];
+ const source=plan.expanded?plan.parkingPath:plan.path,s=plan.scale,side=plan.side,props=barrierProperties({type:plan.settings.barrierType,height:plan.settings.barrierHeight}),offset=side*(plan.settings.width/2+plan.settings.boxWidth+.45+.7+props.width/2),paths=[];
  let distance=0;const stations=source.map((p,i)=>{if(i)distance+=Math.hypot(p.x-source[i-1].x,p.y-source[i-1].y)*s;return distance;});
  let segment=[];const finish=()=>{if(segment.length>1)paths.push({...props,points:segment,pitOuter:true});segment=[];};
  source.forEach((p,i)=>{
@@ -13,7 +13,7 @@ export function pitOuterBarriers(track,plan,geometry,gantry=null){
   if(stations[i]<6||stations[i]>distance-6){finish();return;}
   const a=source[Math.max(0,i-1)],b=source[Math.min(source.length-1,i+1)],angle=Math.atan2(b.y-a.y,b.x-a.x),v={x:p.x+Math.sin(angle)*offset/s,y:p.y-Math.cos(angle)*offset/s,elevation:(p.elevation||0)+offset*Math.tan((p.bank||0)*Math.PI/180)};
   const near=closestOnTrack(geometry,v),entryExit=[plan.entryConnection,plan.exitConnection,plan.connector,plan.exitConnector];
-  const blocked=near.distance*s<track.width/2+props.width/2+1||entryExit.some(route=>route.some(q=>Math.hypot(q.x-v.x,q.y-v.y)*s<(q.width||plan.settings.width)/2+props.width/2+1.2))||plan.stalls.some(q=>Math.hypot(q.x-v.x,q.y-v.y)*s<3)||gantry?.supports.some(q=>Math.hypot(q.x-v.x,q.y-v.y)*s<props.width/2+1)||track.buildings?.some(q=>buildingContains(q,v,s,props.width/2+1))||track.trees?.some(q=>Math.hypot(q.x-v.x,q.y-v.y)*s<treeRadius(q)+props.width/2+.5);
+  const blocked=near.distance*s<track.width/2+props.width/2+1||entryExit.some(route=>route.some(q=>Math.hypot(q.x-v.x,q.y-v.y)*s<(q.width||plan.settings.width)/2+props.width/2+1.2))||plan.stalls.some(q=>Math.hypot(q.x-v.x,q.y-v.y)*s<plan.settings.boxWidth/2+props.width/2+.6)||gantry?.supports.some(q=>Math.hypot(q.x-v.x,q.y-v.y)*s<props.width/2+1)||track.buildings?.some(q=>buildingContains(q,v,s,props.width/2+1))||track.trees?.some(q=>Math.hypot(q.x-v.x,q.y-v.y)*s<treeRadius(q)+props.width/2+.5);
   if(blocked){finish();return;}segment.push(v);
  });finish();return paths;
 }
