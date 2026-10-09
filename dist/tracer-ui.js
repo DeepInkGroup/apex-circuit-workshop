@@ -1,24 +1,26 @@
-import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261009-flush-joins';
-import {barrierSettings} from './auto-barriers.js?v=20261009-flush-joins';
-import {pitStopPaint} from './pit-stop.js?v=20261009-flush-joins';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-flush-joins';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261009-flush-joins';
-import {drawStructures} from './structures.js?v=20261009-flush-joins';
-import {trackFolder} from './mod-identity.js?v=20261009-flush-joins';
-import {buildGeometry} from './engine.js?v=20261009-flush-joins';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261009-flush-joins';
-import {DEFAULT_EXPORT,exportZip,exportTrackFolderZip,validateExport} from './ac-export.js?v=20261009-flush-joins';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261009-flush-joins';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261009-flush-joins';
-import {WEATHER} from './environment.js?v=20261009-flush-joins';
-import {drawTree} from './trees.js?v=20261009-flush-joins';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261009-flush-joins';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261009-flush-joins';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261009-flush-joins';
-import {toGamePoint} from './coordinates.js?v=20261009-flush-joins';
-import {buildTimingPlan} from './timing.js?v=20261009-flush-joins';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261009-flush-joins';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261009-flush-joins';
+import {CROSSING_ERROR} from './crossings.js?v=20261009-auto-crossing';
+import {crossingAction} from './crossing-action.js?v=20261009-auto-crossing';
+import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261009-auto-crossing';
+import {barrierSettings} from './auto-barriers.js?v=20261009-auto-crossing';
+import {pitStopPaint} from './pit-stop.js?v=20261009-auto-crossing';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-auto-crossing';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261009-auto-crossing';
+import {drawStructures} from './structures.js?v=20261009-auto-crossing';
+import {trackFolder} from './mod-identity.js?v=20261009-auto-crossing';
+import {buildGeometry} from './engine.js?v=20261009-auto-crossing';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261009-auto-crossing';
+import {DEFAULT_EXPORT,exportZip,exportTrackFolderZip,validateExport} from './ac-export.js?v=20261009-auto-crossing';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261009-auto-crossing';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261009-auto-crossing';
+import {WEATHER} from './environment.js?v=20261009-auto-crossing';
+import {drawTree} from './trees.js?v=20261009-auto-crossing';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261009-auto-crossing';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261009-auto-crossing';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261009-auto-crossing';
+import {toGamePoint} from './coordinates.js?v=20261009-auto-crossing';
+import {buildTimingPlan} from './timing.js?v=20261009-auto-crossing';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261009-auto-crossing';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261009-auto-crossing';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
@@ -157,13 +159,13 @@ export function mountTracer(api){
   $('#preview-mode').onclick=()=>api.preview();
   const colorPreview=document.createElement('img');colorPreview.id='export-color-preview';colorPreview.className='export-color-preview';colorPreview.alt='Colored track preview with asphalt, pits, and scenery';colorPreview.hidden=true;$('.export-card').after(colorPreview);
   const previewActions=document.createElement('div');previewActions.className='export-preview-actions';previewActions.innerHTML='<span>Track preview · asphalt, kerbs & scenery</span><button id="download-color-preview" class="outline-button" disabled>Download color preview</button>';colorPreview.after(previewActions);
-  let previewUrl='',cachedImages=null,cachedKey='',previewRequest=0;
+  let previewUrl='',cachedImages=null,cachedKey='',previewRequest=0,crossingReceipt=null;
   async function preparePreview(){const request=++previewRequest,t=JSON.parse(JSON.stringify(api.getTrack())),key=JSON.stringify(t);colorPreview.hidden=true;$('#download-color-preview').disabled=true;try{const images=await exportImages(t);if(request!==previewRequest)return;cachedImages=images;cachedKey=key;if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=URL.createObjectURL(new Blob([images['ui/preview.png']],{type:'image/png'}));colorPreview.src=previewUrl;colorPreview.hidden=false;$('#download-color-preview').disabled=false;}catch(error){if(request===previewRequest)$('#export-error').textContent='Preview could not be created: '+error.message;}}
   $('#download-color-preview').onclick=()=>{if(!previewUrl)return;const a=document.createElement('a');a.href=previewUrl;a.download=trackFolder(api.getTrack())+'_color_preview.png';a.click();};
   function openExport(){
     stopForDialog();const track=api.getTrack(),report=validateExport(track);$('#export-track-title').textContent=track.name;$('#export-track-details').textContent=`${Math.round(report.length)} m · ${track.width} m wide · ${track.export?.pitboxes||8} pit boxes · ${track.export?.buildings!==false?(track.buildings||[]).length:0} buildings · ${track.export?.trees!==false?(track.trees||[]).length:0} trees`;
-    const reportEl=$('#export-report');reportEl.replaceChildren();[...report.errors.map(text=>({text,error:true})),...report.warnings.map(text=>({text,error:false}))].forEach(item=>{const p=document.createElement('p');p.className=item.error?'export-issue error':'export-issue';p.textContent=(item.error?'× ':'↳ ')+item.text;reportEl.append(p);});
-    $('#download-ac').disabled=$('#download-ac-cm').disabled=!!report.errors.length;$('#ai-included').hidden=track.export?.ai===false&&!track.export?.idealLine;$('#export-error').textContent='';exporter.showModal();preparePreview();
+    const reportEl=$('#export-report');reportEl.replaceChildren();[...report.errors.map(text=>({text,error:true})),...report.warnings.map(text=>({text,error:false}))].forEach(item=>{if(item.text===CROSSING_ERROR){reportEl.append(crossingAction(api,'× '+item.text,{className:'export-issue error',after:(result,message)=>{crossingReceipt={key:JSON.stringify(api.getTrack()),message};openExport();}}));return;}const p=document.createElement('p');p.className=item.error?'export-issue error':'export-issue';p.textContent=(item.error?'× ':'↳ ')+item.text;reportEl.append(p);});
+    if(crossingReceipt?.key===JSON.stringify(track)){const receipt=document.createElement('p');receipt.className='export-repair-receipt';receipt.textContent=crossingReceipt.message+' Inspect in 3D before installing.';reportEl.prepend(receipt);}else crossingReceipt=null;$('#download-ac').disabled=$('#download-ac-cm').disabled=!!report.errors.length;$('#ai-included').hidden=track.export?.ai===false&&!track.export?.idealLine;$('#export-error').textContent='';if(!exporter.open)exporter.showModal();preparePreview();
   }
   $('#ac-export-btn').onclick=openExport;$('#export-inspect').onclick=()=>{exporter.close();api.preview();};
   async function downloadPackage(contentManager){

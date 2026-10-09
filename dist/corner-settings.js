@@ -1,5 +1,5 @@
-import {clamp} from './engine.js?v=20261009-flush-joins';
-import {structureSettings} from './structure-settings.js?v=20261009-flush-joins';
+import {clamp} from './engine.js?v=20261009-auto-crossing';
+import {structureSettings} from './structure-settings.js?v=20261009-auto-crossing';
 export const KERB_MODES={inherit:'Use circuit setting',both:'Both sides',left:'Left side',right:'Right side',off:'No kerbs'};
 export function turnBoardSettings(value={}){return {ten:value?.ten!==false,five:value?.five!==false,side:['left','right'].includes(value?.side)?value.side:'auto',entryOffset:clamp(Number(value?.entryOffset)||0,-10,10)};}
 export function turnBoards(point={}){const settings={};for(const [key,value] of Object.entries(point.turnBoards||{}).slice(0,32))if(/^(left|right)_\d{1,2}$/.test(key))settings[key]=turnBoardSettings(value);return settings;}

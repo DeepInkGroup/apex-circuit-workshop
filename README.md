@@ -8,6 +8,8 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Click the crossing-clearance warning to **Resolve crossing automatically**. The fitter compares bridge/tunnel placements on both branches, checks road-width overlap clearance, and applies a complete result only when every crossing clears and structural grades remain at or below 12%. One Undo restores the original layout. The action is available in Export, Full analysis and Assetto Corsa setup; fitted spans remain editable and shareable.
+
 - Bridge end faces now finish below the driving surface. Nearby spans connect directly without an extra dip, and structural approaches use denser collision sampling and shared pavement normals. Tunnel entrances have curved, flared retaining walls that follow the road.
 - Pit joins match road triangle heights and use smoother tangent/curvature transitions. Pit stops share a continuous flush apron with open bay mouths, stop lines and numbered spaces. Adjust box width, spacing and row layout; locate individual stops or inspect the whole route in 3D. Fitted parking rows connect directly to the track.
 - Larger drawing workspace with **Large canvas / Extra large canvas**, full-width layout by default, and saved layout/size preferences. Export a fresh ZIP and replace the installed revision to receive the geometry changes.

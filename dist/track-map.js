@@ -1,7 +1,7 @@
-import {buildGeometry} from './engine.js?v=20261009-flush-joins';
-import {buildPitPlan} from './pit-plan.js?v=20261009-flush-joins';
-import {trackScale,toGamePoint} from './coordinates.js?v=20261009-flush-joins';
-import {buildRoadLayout} from './road-layout.js?v=20261009-flush-joins';
+import {buildGeometry} from './engine.js?v=20261009-auto-crossing';
+import {buildPitPlan} from './pit-plan.js?v=20261009-auto-crossing';
+import {trackScale,toGamePoint} from './coordinates.js?v=20261009-auto-crossing';
+import {buildRoadLayout} from './road-layout.js?v=20261009-auto-crossing';
 
 // Content Manager's map projection: pixel = (native position + offset) / scale.
 // WIDTH/HEIGHT are pixels; SCALE_FACTOR is meters per pixel. No Z reflection.

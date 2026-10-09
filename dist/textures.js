@@ -1,6 +1,6 @@
-import {BinaryWriter,crc32} from './binary.js?v=20261009-flush-joins';
-import {grassPixels} from './scenery.js?v=20261009-flush-joins';
-import {boardPixels} from './board-design.js?v=20261009-flush-joins';
+import {BinaryWriter,crc32} from './binary.js?v=20261009-auto-crossing';
+import {grassPixels} from './scenery.js?v=20261009-auto-crossing';
+import {boardPixels} from './board-design.js?v=20261009-auto-crossing';
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
 export function surfacePixels(material,size){
   if(material.distanceBoard)return boardPixels(material.distanceBoard,size);

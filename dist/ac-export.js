@@ -1,30 +1,31 @@
-import {pavementSampler} from './pavement-sampler.js?v=20261009-flush-joins';
-import {pitStopPaint} from './pit-stop.js?v=20261009-flush-joins';
-import {addStructures,terrainQuadExcluded,structureGroundRule} from './structures.js?v=20261009-flush-joins';
-import {addBarrierMeshes,pitOuterBarriers} from './barriers.js?v=20261009-flush-joins';
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-flush-joins';
-import {BinaryWriter,zipFiles,crc32} from './binary.js?v=20261009-flush-joins';
-import {ASPHALT} from './surfaces.js?v=20261009-flush-joins';
-import {analyzeTrack} from './analysis.js?v=20261009-flush-joins';
-import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261009-flush-joins';
-import {WEATHER} from './environment.js?v=20261009-flush-joins';
-import {TREE_SPECIES,treeSettings} from './trees.js?v=20261009-flush-joins';
-import {buildRoadLayout} from './road-layout.js?v=20261009-flush-joins';
-import {createTrackMap,mapIni} from './track-map.js?v=20261009-flush-joins';
-import {createTexture,materialProperties} from './textures.js?v=20261009-flush-joins';
-import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261009-flush-joins';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261009-flush-joins';
-import {buildTimingPlan,sectionsIni} from './timing.js?v=20261009-flush-joins';
-import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261009-flush-joins';
-import {gantryPlan,addGantry} from './gantry.js?v=20261009-flush-joins';
+import {roadCrossings,CROSSING_ERROR} from './crossings.js?v=20261009-auto-crossing';
+import {pavementSampler} from './pavement-sampler.js?v=20261009-auto-crossing';
+import {pitStopPaint} from './pit-stop.js?v=20261009-auto-crossing';
+import {addStructures,terrainQuadExcluded,structureGroundRule} from './structures.js?v=20261009-auto-crossing';
+import {addBarrierMeshes,pitOuterBarriers} from './barriers.js?v=20261009-auto-crossing';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-auto-crossing';
+import {BinaryWriter,zipFiles,crc32} from './binary.js?v=20261009-auto-crossing';
+import {ASPHALT} from './surfaces.js?v=20261009-auto-crossing';
+import {analyzeTrack} from './analysis.js?v=20261009-auto-crossing';
+import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261009-auto-crossing';
+import {WEATHER} from './environment.js?v=20261009-auto-crossing';
+import {TREE_SPECIES,treeSettings} from './trees.js?v=20261009-auto-crossing';
+import {buildRoadLayout} from './road-layout.js?v=20261009-auto-crossing';
+import {createTrackMap,mapIni} from './track-map.js?v=20261009-auto-crossing';
+import {createTexture,materialProperties} from './textures.js?v=20261009-auto-crossing';
+import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261009-auto-crossing';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261009-auto-crossing';
+import {buildTimingPlan,sectionsIni} from './timing.js?v=20261009-auto-crossing';
+import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261009-auto-crossing';
+import {gantryPlan,addGantry} from './gantry.js?v=20261009-auto-crossing';
 
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true,trees:true,buildings:true,...surfaceSettings(),grassFx:true,gridSpacing:6,wallHeight:2,gantry:true,gantryClearance:6,idealLine:false,distanceMarkers:true,distanceBoardStyle:'classic',distanceBoardSize:'standard',distanceBoardSetback:1.8};
-export {trackSlug} from './mod-identity.js?v=20261009-flush-joins';
-import {trackFolder,validTrackId,serverConfig,synchronizeIdentity} from './mod-identity.js?v=20261009-flush-joins';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-flush-joins';
-import {idealLine} from './ideal-line.js?v=20261009-flush-joins';
-import {createTerrain} from './terrain.js?v=20261009-flush-joins';
-import {turnMarkerPlan,addTurnMarkers} from './turn-markers.js?v=20261009-flush-joins';
+export {trackSlug} from './mod-identity.js?v=20261009-auto-crossing';
+import {trackFolder,validTrackId,serverConfig,synchronizeIdentity} from './mod-identity.js?v=20261009-auto-crossing';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-auto-crossing';
+import {idealLine} from './ideal-line.js?v=20261009-auto-crossing';
+import {createTerrain} from './terrain.js?v=20261009-auto-crossing';
+import {turnMarkerPlan,addTurnMarkers} from './turn-markers.js?v=20261009-auto-crossing';
 const unit=trackScale;
 const world=toGamePoint;
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
@@ -295,17 +296,8 @@ export function validateExport(track){
   if(track.width<4||track.width>30)errors.push('Track width must be between 4 and 30 meters.');
   const n=clamp(Math.ceil(g.length/8),32,350),poly=Array.from({length:n},(_,i)=>pointOnTrack(g,i/n));
   const orient=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
-  let intersect=false,gradeSeparated=0;
-  for(let i=0;i<n;i++)for(let j=i+2;j<n;j++){
-    if(i===0&&j===n-1)continue;const a=poly[i],b=poly[(i+1)%n],c=poly[j],d=poly[(j+1)%n];
-    if(!(orient(a,b,c)*orient(a,b,d)<0&&orient(c,d,a)*orient(c,d,b)<0))continue;
-    const dx=b.x-a.x,dy=b.y-a.y,ux=d.x-c.x,uy=d.y-c.y,den=dx*uy-dy*ux,t=((c.x-a.x)*uy-(c.y-a.y)*ux)/den,u=((c.x-a.x)*dy-(c.y-a.y)*dx)/den;
-    const first=pointOnTrack(g,(i+t)/n),second=pointOnTrack(g,(j+u)/n),gap=Math.abs(first.elevation-second.elevation)-track.width/2*(Math.abs(Math.tan(first.bank*Math.PI/180))+Math.abs(Math.tan(second.bank*Math.PI/180)))-.6;
-    const sectionA=g.structureProfile?.sectionAt((i+t)/n*g.length*s),sectionB=g.structureProfile?.sectionAt((j+u)/n*g.length*s);
-    const lowerSection=first.elevation<second.elevation?sectionA:sectionB,upperSection=first.elevation<second.elevation?sectionB:sectionA,roofRequirement=lowerSection?.core&&lowerSection.type==='tunnel'?lowerSection.clearance+(lowerSection.roofRise||0)+.85+(upperSection?.core&&upperSection.type==='bridge'?.6:0)+.15:4.5;
-    if(gap>=Math.max(4.5,roofRequirement)&&(sectionA?.core||sectionB?.core))gradeSeparated++;else intersect=true;
-  }
-  if(intersect)errors.push('The road crosses itself without enough vertical clearance. Add a bridge/tunnel at the crossing or separate the roads.');
+  const crossings=roadCrossings(track,g),gradeSeparated=crossings.filter(c=>c.safe).length;
+  if(crossings.some(c=>!c.safe))errors.push(CROSSING_ERROR);
   if(gradeSeparated)warnings.push(`${gradeSeparated} crossing(s) have separated road levels. Inspect deck, tunnel and approach clearance in 3D.`);
   errors.push(...(g.structureProfile?.issues||[]));for(const range of g.structureProfile?.ranges||[])if(range.actualGrade>range.targetGrade+.5&&range.actualGrade<=18)warnings.push(`Handle ${range.index+1}: blended ${range.type} approaches reach ${range.actualGrade.toFixed(1)}% grade. Extend the layout or adjust span clearance and neighboring elevations for a gentler result.`);
   const radiusSamples=poly.map((p,i)=>{const a=poly[(i+n-1)%n],b=poly[(i+1)%n],cross=Math.abs(orient(a,p,b));return cross>1e-6?Math.hypot(a.x-p.x,a.y-p.y)*Math.hypot(p.x-b.x,p.y-b.y)*Math.hypot(a.x-b.x,a.y-b.y)/(2*cross)*s:Infinity;});
@@ -318,10 +310,10 @@ export function validateExport(track){
   if(track.export?.distanceMarkers!==false&&g.length){const markerGantry=gantryPlan(track,buildTimingPlan(track,g),buildingPitPlan),markers=turnMarkerPlan(track,g,buildingPitPlan,pitOuterBarriers(track,buildingPitPlan,g,markerGantry));if(markers.skipped)warnings.push(`${markers.skipped} selected turn distance boards could not be placed. Check each corner in the Corners tab for approach length, chosen side and obstructions.`);}
   if(g.length&&track.export?.gantry!==false){const gantry=gantryPlan(track,buildTimingPlan(track,g),buildingPitPlan);if(gantry){if((track.export?.buildings!==false?track.buildings||[]:[]).some(b=>gantry.supports.some(p=>buildingContains(b,p,s,1))))warnings.push('A building overlaps a gantry support. Move the building or start/finish line.');if((track.export?.trees!==false?track.trees||[]:[]).some(t=>gantry.supports.some(p=>Math.hypot(t.x-p.x,t.y-p.y)*s<treeSettings(t).height*.42+1)))warnings.push('Trees overlap the gantry supports. Move them or reposition start/finish.');}}
   for(const [index,raw] of (track.export?.buildings!==false?(track.buildings||[]):[]).entries()){const b={...raw,...buildingSettings(raw)},plan=buildingPitPlan,corners=buildingCorners(b,s);if(poly.some(p=>buildingContains(b,p,s,track.width/2))||[...plan.path,...plan.parkingPath,...plan.entryConnection,...plan.exitConnection,...plan.bays.flatMap(v=>v.corners)].some(p=>buildingContains(b,p,s,plan.settings.width/2)))warnings.push(`Building ${index+1} overlaps road or pits. Move it before driving.`);if(corners.some(p=>p.x<0||p.x>1000||p.y<0||p.y>740))warnings.push(`Building ${index+1} extends beyond the editor area. The exported grass base will expand to support it.`);}
-  return {errors,warnings,length:g.length*s};
+  return {errors,warnings,length:g.length*s,crossings};
 }
 function sceneExtension(scene,track){
-  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=23.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
+  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=24.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
   scene.materials.forEach((m,index)=>{lines.push(`[SHADER_REPLACEMENT_${index}]`,`MATERIALS=${m.name}`,'SHADER=ksPerPixel','RESOURCE_0=txDiffuse',`RESOURCE_TEXTURE_0=${scene.textures[index].name}`);Object.entries(materialProperties(m)).forEach(([key,value],i)=>lines.push(`PROP_${i}=${key}, ${Array.isArray(value)?value.join(', '):value}`));lines.push('');});
   const grass=GRASS[track.grass]||GRASS.mown;lines.push('[GRASS_FX]',`ACTIVE=${scene.options.grassFx?1:0}`,`GRASS_MESHES=${scene.meshes.filter(m=>m.name.startsWith('1GRASS_TERRAIN')).map(m=>m.name).join(', ')}`,'GRASS_MATERIALS=Grass',`OCCLUDING_MATERIALS=${scene.materials.filter(m=>m.name!=='Grass'&&!m.tree).map(m=>m.name).join(', ')}`,'ORIGINAL_GRASS_MATERIALS=','MASK_MAIN_THRESHOLD=-1','MASK_RED_THRESHOLD=0','MASK_MIN_LUMINANCE=-1','MASK_MAX_LUMINANCE=1',`SHAPE_SIZE=${grass.size}`,`SHAPE_TIDY=${grass.tidy}`,`SHAPE_CUT=${grass.cut}`,'SHAPE_WIDTH=1','');return lines.join('\n');
 }
@@ -344,7 +336,7 @@ export function exportFiles(track,images={}){
   if(scene.options.ai||scene.options.idealLine){put('ai/fast_lane.ai',writeAi(scene.idealFrames.length?scene.idealFrames:scene.frames,track.width));if(scene.options.idealLine)put('data/ideal_line.ai',writeAi(scene.idealFrames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitFrames,scene.pitPlan.settings.width,false));}
   for(const [name,bytes] of Object.entries(images))put(name,bytes);
   if(images['map.png'])put('data/map.ini',mapIni(createTrackMap(track,undefined,scene.pitPlan,scene.roadLayout)));
-  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:23,export:{...track.export,trackId:slug},background:null},null,2));
+  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:24,export:{...track.export,trackId:slug},background:null},null,2));
   put('apex_structures.json',JSON.stringify({structures:scene.structures,automaticElevation:true,method:'Level spans with seventh-order approaches and direct blends between nearby spans; clearance includes deck thickness or tunnel cover.'},null,2));
   put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
   files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.options.gridSpacing} m row spacing\nRoad grip ${scene.options.roadGrip} · kerb grip ${scene.options.kerbGrip} · pit grip ${scene.options.pitGrip} · grass grip ${scene.options.grassGrip}\nGrass drag ${scene.options.grassDrag} · dirt pickup ${scene.options.grassDirt}\nStart/Finish Gantry: ${scene.gantry?"included":"off"}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nBridge decks, guard rails and pillars, and below-ground tunnel walls, ceilings and portals are native collision geometry. Bridge end faces stop below the asphalt, preserving a single continuous driving surface. Nearby structural spans blend directly instead of adding an intermediate crest or dip. Pit mouths conform to the road triangles with a smooth shoulder blend, and pit stops use one continuous apron with painted bay lines.

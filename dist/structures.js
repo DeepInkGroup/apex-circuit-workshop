@@ -1,7 +1,7 @@
-import {pointOnTrack} from './engine.js?v=20261009-flush-joins';
-import {toGamePoint,gameDirection,trackScale} from './coordinates.js?v=20261009-flush-joins';
-import {buildRoadLayout} from './road-layout.js?v=20261009-flush-joins';
-import {kerbSides} from './corner-settings.js?v=20261009-flush-joins';
+import {pointOnTrack} from './engine.js?v=20261009-auto-crossing';
+import {toGamePoint,gameDirection,trackScale} from './coordinates.js?v=20261009-auto-crossing';
+import {buildRoadLayout} from './road-layout.js?v=20261009-auto-crossing';
+import {kerbSides} from './corner-settings.js?v=20261009-auto-crossing';
 const layoutCache=new WeakMap();
 const normalCache=new WeakMap();
 const spanCache=new WeakMap();

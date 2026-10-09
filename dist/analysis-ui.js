@@ -1,6 +1,8 @@
-import {analyzeTrack} from './analysis.js?v=20261009-flush-joins';
-import {validateExport} from './ac-export.js?v=20261009-flush-joins';
-import {trackFolder} from './mod-identity.js?v=20261009-flush-joins';
+import {CROSSING_ERROR} from './crossings.js?v=20261009-auto-crossing';
+import {crossingAction} from './crossing-action.js?v=20261009-auto-crossing';
+import {analyzeTrack} from './analysis.js?v=20261009-auto-crossing';
+import {validateExport} from './ac-export.js?v=20261009-auto-crossing';
+import {trackFolder} from './mod-identity.js?v=20261009-auto-crossing';
 
 const $=s=>document.querySelector(s),num=(n,d=0)=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:d}):'—';
 function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
@@ -31,7 +33,7 @@ export function mountAnalysis(api){
     full.append(metric('Road / pit grip',`${num(data.surfaces.roadGrip,2)} / ${num(data.surfaces.pitGrip,2)}`),metric('Flat kerb grip',num(data.surfaces.kerbGrip,2)),metric('Grass grip',num(data.surfaces.grassGrip,2)),metric('Grass drag / dirt',`${num(data.surfaces.grassDrag,3)} / ${num(data.surfaces.grassDirt,2)}`));
     full.append(...data.timing.sectorLengths.map((length,i)=>metric(`Sector ${i+1} length`,num(length,1),'m')));
     $('#elevation-profile').innerHTML=profile(data.closed&&data.samples.length?[...data.samples,{...data.samples[0],distance:m.lengthMeters}]:data.samples);
-    const checks=$('#analysis-checks');checks.replaceChildren();const entries=[...check.errors.map(text=>({text,level:'error'})),...check.warnings.map(text=>({text,level:'warning'}))];if(ready)entries.unshift({text:'Geometry and package requirements met.',level:'pass'});entries.forEach(item=>{const p=document.createElement('p');p.className='analysis-check '+item.level;p.textContent=item.text;checks.append(p);});
+    const checks=$('#analysis-checks');checks.replaceChildren();const entries=[...check.errors.map(text=>({text,level:'error'})),...check.warnings.map(text=>({text,level:'warning'}))];if(ready)entries.unshift({text:'Geometry and package requirements met.',level:'pass'});entries.forEach(item=>{if(item.text===CROSSING_ERROR){checks.append(crossingAction(api,item.text,{className:'analysis-check error',after:()=>{clearTimeout(timer);render();}}));return;}const p=document.createElement('p');p.className='analysis-check '+item.level;p.textContent=item.text;checks.append(p);});
     $('#use-pit-capacity').hidden=!(m.pitCapacity>0&&m.pitBoxes>m.pitCapacity);
     const metadata=$('#analysis-profile-data');metadata.replaceChildren();[['Name',t.name==='Untitled Circuit'?'Add a distinctive name':t.name],['Creator',t.export?.author||'Not set'],['Location',[t.export?.city,t.export?.country].filter(Boolean).join(', ')||'Not set'],['Description',t.details?.description?'Provided':'Not added'],['Mod version',t.details?.version||'1.0'],['Reference scale',data.scale.source==='manual'?'Manually entered; calibrate if needed':data.scale.source==='map'?'Calculated from satellite latitude & zoom':'Calibrated with a known distance']].forEach(([label,value])=>{const p=document.createElement('p'),b=document.createElement('b');b.textContent=label+': ';p.append(b,document.createTextNode(value));metadata.append(p);});
     const corners=$('#analysis-corners');corners.replaceChildren();if(!data.corners.length){const p=document.createElement('p');p.className='field-hint';p.textContent='No bends meet the current geometric threshold. Add or refine your road points.';corners.append(p);}data.corners.forEach(c=>{const b=document.createElement('button');b.className='corner-row';b.textContent=`${c.name||'C'+c.number} · ${c.direction} · radius ${num(c.radius,1)} m · ${num(c.angle)}° · ${num(c.length)} m · boards ${c.boards.ten&&c.boards.five?'10 + 5 m':c.boards.ten?'10 m':c.boards.five?'5 m':'off'}`;b.onclick=()=>{dialog.close();api.selectPoint(c.controlIndex);api.focusProgress(c.progress);api.showPanel('.corner-panel');};corners.append(b);});

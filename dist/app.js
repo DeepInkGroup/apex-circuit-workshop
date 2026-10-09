@@ -1,37 +1,38 @@
-import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261009-flush-joins';
-import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261009-flush-joins';
-import {pitStopPaint} from './pit-stop.js?v=20261009-flush-joins';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-flush-joins';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261009-flush-joins';
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261009-flush-joins';
-import {ReferenceLayer} from './tracing.js?v=20261009-flush-joins';
-import {mountTracer} from './tracer-ui.js?v=20261009-flush-joins';
-import {TrackPreview} from './preview3d.js?v=20261009-flush-joins';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261009-flush-joins';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261009-flush-joins';
-import {mountAnalysis} from './analysis-ui.js?v=20261009-flush-joins';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261009-flush-joins';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261009-flush-joins';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261009-flush-joins';
-import {toGamePoint} from './coordinates.js?v=20261009-flush-joins';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261009-flush-joins';
-import {mountDrawStudio} from './studio-ui.js?v=20261009-flush-joins';
-import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261009-flush-joins';
-import {drawStructures} from './structures.js?v=20261009-flush-joins';
-import {mountStructures} from './structure-ui.js?v=20261009-flush-joins';
-import {mountCorners} from './corner-ui.js?v=20261009-flush-joins';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261009-flush-joins';
-import {mountScenery} from './scenery-ui.js?v=20261009-flush-joins';
-import {mountACSetup} from './ac-setup-ui.js?v=20261009-flush-joins';
-import {mountSharing} from './sharing.js?v=20261009-flush-joins';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261009-flush-joins';
-import {timingSettings,buildTimingPlan} from './timing.js?v=20261009-flush-joins';
-import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261009-flush-joins';
-import {mountTiming} from './timing-ui.js?v=20261009-flush-joins';
-import {mountSurfaces} from './surface-ui.js?v=20261009-flush-joins';
-import {surfaceSettings} from './surface-settings.js?v=20261009-flush-joins';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261009-flush-joins';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261009-flush-joins';
+import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261009-auto-crossing';
+import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261009-auto-crossing';
+import {pitStopPaint} from './pit-stop.js?v=20261009-auto-crossing';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-auto-crossing';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261009-auto-crossing';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261009-auto-crossing';
+import {ReferenceLayer} from './tracing.js?v=20261009-auto-crossing';
+import {mountTracer} from './tracer-ui.js?v=20261009-auto-crossing';
+import {TrackPreview} from './preview3d.js?v=20261009-auto-crossing';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261009-auto-crossing';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261009-auto-crossing';
+import {mountAnalysis} from './analysis-ui.js?v=20261009-auto-crossing';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261009-auto-crossing';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261009-auto-crossing';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261009-auto-crossing';
+import {toGamePoint} from './coordinates.js?v=20261009-auto-crossing';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261009-auto-crossing';
+import {mountDrawStudio} from './studio-ui.js?v=20261009-auto-crossing';
+import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261009-auto-crossing';
+import {repairCrossings} from './crossing-repair.js?v=20261009-auto-crossing';
+import {drawStructures} from './structures.js?v=20261009-auto-crossing';
+import {mountStructures} from './structure-ui.js?v=20261009-auto-crossing';
+import {mountCorners} from './corner-ui.js?v=20261009-auto-crossing';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261009-auto-crossing';
+import {mountScenery} from './scenery-ui.js?v=20261009-auto-crossing';
+import {mountACSetup} from './ac-setup-ui.js?v=20261009-auto-crossing';
+import {mountSharing} from './sharing.js?v=20261009-auto-crossing';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261009-auto-crossing';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261009-auto-crossing';
+import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261009-auto-crossing';
+import {mountTiming} from './timing-ui.js?v=20261009-auto-crossing';
+import {mountSurfaces} from './surface-ui.js?v=20261009-auto-crossing';
+import {surfaceSettings} from './surface-settings.js?v=20261009-auto-crossing';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261009-auto-crossing';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261009-auto-crossing';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -444,7 +445,9 @@ function showPreview(viewMode='orbit'){
   syncUI();
 }
 referenceLayer=new ReferenceLayer(()=>{},toast);
+let crossingRepairBusy=false;
 const editorApi={
+  async fixCrossings(onProgress){if(crossingRepairBusy)return {ok:false,reason:'Automatic crossing fitting is already running.'};const before=JSON.stringify(track);crossingRepairBusy=true;try{const result=await repairCrossings(track,onProgress);if(JSON.stringify(track)!==before)return {ok:false,reason:'The circuit changed while fitting. Click the warning again to fit the current layout.'};if(result.ok&&result.changes.length){editorApi.updateTrack(t=>t.points=result.track.points);selectedPoint=result.changes.at(-1).index;selectedPoints.clear();selectedPoints.add(track.points[selectedPoint]);syncUI();}return result;}finally{crossingRepairBusy=false;}},
   previewPits(){showPreview();if(mode==='preview'){preview3D.focusPits();syncUI();}},
   focusPitStop(index){const p=pitLayout.stalls[index];if(!p)return;stopPreview();analysisFocus=null;view.zoom=2.8;const base=Math.min(cssW/1000,cssH/740)*view.zoom;view.panX=(500-p.x)*base;view.panY=(370-p.y)*base;updateTransform();canvas.focus();toast(`Pit stop ${index+1} · ${pitLayout.settings.boxWidth.toFixed(1)} m wide`);},
   editDrawing(){stopPreview();setTool('move');canvas.focus();},
@@ -485,7 +488,7 @@ const editorApi={
   editView(){if(mode==='preview')stopPreview();},
   updateTrack(fn){const previousName=track.name;remember();fn(track);commit(previousName);updateTransform();},
   clear(scope){if(mode==='preview')stopPreview();finishDrag();remember();if(scope==='geometry'||scope==='road'){track.points=[];track.complete=false;track.start=0;}if(scope==='geometry'||scope==='pits')track.pit=[];if(scope==='geometry'||scope==='barriers')track.barriers=[];if(scope==='geometry'||scope==='trees')track.trees=[];if(scope==='geometry'||scope==='buildings')track.buildings=[];selectedBuilding=-1;if(scope==='reference'){track.background=null;}selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;analysisData=null;measurement=[];commit();setTool(track.points.length?'move':'draw');toast('Selected items cleared. Undo restores them.');},
-  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start);remember();const previousCorners=track.points.map(cornerSettings).reverse(),boardCounts=new Map();for(const turn of turnMarkers.turns){if(!boardCounts.has(turn.controlIndex))boardCounts.set(turn.controlIndex,{});const counts=boardCounts.get(turn.controlIndex);counts[turn.direction]=(counts[turn.direction]||0)+1;}track.points.reverse();track.points.forEach((p,i)=>{p.turnBoards=reverseTurnBoards(p,boardCounts.get(track.points.length-1-i));if(p.structure)p.structure={...p.structure,offset:-(p.structure.offset||0)};p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
+  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start);remember();const reverseAnchorOrigin=geometry.closed?(geometry.cumulative[geometry.segments.indexOf(track.points.length-1)]||0)/geometry.length:1,previousCorners=track.points.map(cornerSettings).reverse(),boardCounts=new Map();for(const turn of turnMarkers.turns){if(!boardCounts.has(turn.controlIndex))boardCounts.set(turn.controlIndex,{});const counts=boardCounts.get(turn.controlIndex);counts[turn.direction]=(counts[turn.direction]||0)+1;}track.points.reverse();track.points.forEach((p,i)=>{p.turnBoards=reverseTurnBoards(p,boardCounts.get(track.points.length-1-i));if(p.structure)p.structure={...p.structure,offset:-(p.structure.offset||0),...(Number.isFinite(p.structure.anchorProgress)?{anchorProgress:geometry.closed?((reverseAnchorOrigin-p.structure.anchorProgress)%1+1)%1:1-p.structure.anchorProgress}:{})};p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
   onAnalysis(data){analysisData=data;},getOverlay:()=>analysisOverlay,setOverlay(value){analysisOverlay=value;analysisFocus=null;},
   focusProgress(progress){if(mode==='preview')stopPreview();analysisFocus=progress;const p=pointAt(progress);view.zoom=2.4;const base=Math.min(cssW/1000,cssH/740)*view.zoom;view.panX=(500-p.x)*base;view.panY=(370-p.y)*base;updateTransform();},
   setOpacity(value){referenceOpacity=value;},setTraceOverlay(value){traceOverlay=value;},
