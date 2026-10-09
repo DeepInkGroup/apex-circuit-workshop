@@ -1,6 +1,6 @@
-import {pointOnTrack,clamp} from './engine.js?v=20261009-auto-crossing';
-import {trackScale} from './coordinates.js?v=20261009-auto-crossing';
-import {cornerSettings,turnBoardSettings} from './corner-settings.js?v=20261009-auto-crossing';
+import {pointOnTrack,clamp} from './engine.js?v=20261009-ai-crash-fix';
+import {trackScale} from './coordinates.js?v=20261009-ai-crash-fix';
+import {cornerSettings,turnBoardSettings} from './corner-settings.js?v=20261009-ai-crash-fix';
 
 const delta=(a,b)=>Math.atan2(Math.sin(b-a),Math.cos(b-a));
 const wrap=(value,total)=>((value%total)+total)%total;

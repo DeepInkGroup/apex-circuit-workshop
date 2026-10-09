@@ -1,6 +1,6 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-auto-crossing';
-import {trackScale} from './coordinates.js?v=20261009-auto-crossing';
-import {kerbSides} from './corner-settings.js?v=20261009-auto-crossing';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-ai-crash-fix';
+import {trackScale} from './coordinates.js?v=20261009-ai-crash-fix';
+import {kerbSides} from './corner-settings.js?v=20261009-ai-crash-fix';
 
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};

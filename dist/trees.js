@@ -1,5 +1,5 @@
-import {closestOnTrack,pointOnTrack} from './engine.js?v=20261009-auto-crossing';
-import {buildingContains} from './scenery.js?v=20261009-auto-crossing';
+import {closestOnTrack,pointOnTrack} from './engine.js?v=20261009-ai-crash-fix';
+import {buildingContains} from './scenery.js?v=20261009-ai-crash-fix';
 
 export const TREE_SPECIES={
   broadleaf:{label:'Oak · broad canopy',radius:.37,height:8,colors:['#487447','#6b9456','#88ac64']},

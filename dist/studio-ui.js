@@ -1,7 +1,7 @@
-import {BARRIER_TYPES} from './barriers.js?v=20261009-auto-crossing';
-import {WEATHER,TREE_TYPES} from './environment.js?v=20261009-auto-crossing';
-import {TREE_SPECIES} from './trees.js?v=20261009-auto-crossing';
-import {PIT_STYLES,pitSettings} from './pit-plan.js?v=20261009-auto-crossing';
+import {BARRIER_TYPES} from './barriers.js?v=20261009-ai-crash-fix';
+import {WEATHER,TREE_TYPES} from './environment.js?v=20261009-ai-crash-fix';
+import {TREE_SPECIES} from './trees.js?v=20261009-ai-crash-fix';
+import {PIT_STYLES,pitSettings} from './pit-plan.js?v=20261009-ai-crash-fix';
 const $=s=>document.querySelector(s);
 export function mountDrawStudio(api){
   const tools=$('#editor-tools'),labels={move:'Move',draw:'Points',erase:'Erase',start:'Start line',pan:'Pan',measure:'Calibrate',pit:'Pit route',barrier:'Barrier',sketch:'Freehand',tree:'Trees',building:'Buildings'};

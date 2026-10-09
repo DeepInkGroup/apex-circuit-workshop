@@ -1,7 +1,7 @@
-import {buildGeometry,pointOnTrack} from './engine.js?v=20261009-auto-crossing';
-import {toGamePoint} from './coordinates.js?v=20261009-auto-crossing';
-import {createScene} from './ac-export.js?v=20261009-auto-crossing';
-import {surfacePixels} from './textures.js?v=20261009-auto-crossing';
+import {buildGeometry,pointOnTrack} from './engine.js?v=20261009-ai-crash-fix';
+import {toGamePoint} from './coordinates.js?v=20261009-ai-crash-fix';
+import {createScene} from './ac-export.js?v=20261009-ai-crash-fix';
+import {surfacePixels} from './textures.js?v=20261009-ai-crash-fix';
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);

@@ -1,6 +1,6 @@
-import {clamp,closestOnTrack,pointOnTrack} from './engine.js?v=20261009-auto-crossing';
-import {buildingContains} from './scenery.js?v=20261009-auto-crossing';
-import {treeRadius} from './trees.js?v=20261009-auto-crossing';
+import {clamp,closestOnTrack,pointOnTrack} from './engine.js?v=20261009-ai-crash-fix';
+import {buildingContains} from './scenery.js?v=20261009-ai-crash-fix';
+import {treeRadius} from './trees.js?v=20261009-ai-crash-fix';
 export const BARRIER_TYPES={concrete:{label:'Concrete safety wall',width:.8,color:'#a9adb0'},tyres:{label:'Tyre wall',width:1.1,color:'#303734'},steel:{label:'Steel crash barrier',width:.8,color:'#a1b4bc'}};
 export function barrierProperties(raw={}){const type=BARRIER_TYPES[raw.type]?raw.type:'concrete';return {type,width:clamp(Number(raw.width)||BARRIER_TYPES[type].width,BARRIER_TYPES[type].width,2),height:clamp(Number(raw.height)||1.2,1,4),style:raw.style==='striped'?'striped':'concrete'};}
 export function pitOuterBarriers(track,plan,geometry,gantry=null){

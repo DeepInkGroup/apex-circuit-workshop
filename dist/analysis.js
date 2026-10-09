@@ -1,10 +1,10 @@
-import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261009-auto-crossing';
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-auto-crossing';
-import {buildPitPlan} from './pit-plan.js?v=20261009-auto-crossing';
-import {WEATHER} from './environment.js?v=20261009-auto-crossing';
-import {buildTimingPlan} from './timing.js?v=20261009-auto-crossing';
-import {surfaceSettings} from './surface-settings.js?v=20261009-auto-crossing';
-import {GRASS,buildingSettings} from './scenery.js?v=20261009-auto-crossing';
+import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261009-ai-crash-fix';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-ai-crash-fix';
+import {buildPitPlan} from './pit-plan.js?v=20261009-ai-crash-fix';
+import {WEATHER} from './environment.js?v=20261009-ai-crash-fix';
+import {buildTimingPlan} from './timing.js?v=20261009-ai-crash-fix';
+import {surfaceSettings} from './surface-settings.js?v=20261009-ai-crash-fix';
+import {GRASS,buildingSettings} from './scenery.js?v=20261009-ai-crash-fix';
 
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const pathLength=(points,s)=>points.slice(1).reduce((n,p,i)=>n+distance(p,points[i])*s,0);

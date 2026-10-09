@@ -1,5 +1,13 @@
 # Native Assetto Corsa export
 
+## AI loading crash repair
+
+The October 9, 2026 crash report for Vinana Circuit failed in `AISpline::calculateNormals`. Inspection found AI heights below road triangles and a failed side probe at a bridge seam. The exporter now projects fast/ideal/pit AI onto the actual collision pavement, adds 15 cm of raycast clearance, and samples slightly inside pavement faces. It checks the center and both 0.6 m side probes before writing AI; unsupported generated routes stop export with a location in the message. Generated forward vectors include slope, surface normals follow the triangles, and duplicate points/seams are rejected.
+
+Physical merge meshes now match ROAD alone; pit-protection walls match WALL alone. Terrain mesh chunks have distinct names. Export validates native mesh names, finite vertices, indices and required start/pit nodes. AI record layout follows [AcTools' AI reader](https://github.com/gro-ove/actools/tree/master/AcTools/AiFile). CSP documents unsafe AI normal raycasting in its [AI spline configuration](https://github.com/ac-custom-shaders-patch/acc-extension-config/blob/master/config/new_behaviour.ini).
+
+The repaired Vinana Circuit loaded with its existing kart and CSP 0.2.11 and ran for a 60-second launch check without the crash. This checks that reproduced loading failure; it is not a certification of every circuit or car. Export a fresh ZIP and replace the installed track folder completely, keeping a backup. Old exported files and obsolete AI caches do not update themselves. Global CSP and car settings do not need to be reset for this repair.
+
 APEX 8.0 traces a circuit and generates a prototype track ZIP entirely in the browser. The package includes a native KN5 file: no Blender or ksEditor conversion step is needed.
 
 ## Trace and inspect

@@ -1,9 +1,9 @@
-import {CROSSING_ERROR} from './crossings.js?v=20261009-auto-crossing';
-import {crossingAction} from './crossing-action.js?v=20261009-auto-crossing';
-import {trackFolder,newTrackId,validTrackId,serverConfig} from './mod-identity.js?v=20261009-auto-crossing';
-import {exportImages} from './tracer-ui.js?v=20261009-auto-crossing';
-import {DEFAULT_EXPORT,validateExport,exportServerZip} from './ac-export.js?v=20261009-auto-crossing';
-import {GRASS} from './scenery.js?v=20261009-auto-crossing';
+import {CROSSING_ERROR} from './crossings.js?v=20261009-ai-crash-fix';
+import {crossingAction} from './crossing-action.js?v=20261009-ai-crash-fix';
+import {trackFolder,newTrackId,validTrackId,serverConfig} from './mod-identity.js?v=20261009-ai-crash-fix';
+import {exportImages} from './tracer-ui.js?v=20261009-ai-crash-fix';
+import {DEFAULT_EXPORT,validateExport,exportServerZip} from './ac-export.js?v=20261009-ai-crash-fix';
+import {GRASS} from './scenery.js?v=20261009-ai-crash-fix';
 const $=s=>document.querySelector(s);
 export function mountACSetup(api){const section=$('.export-settings'),body=section.querySelector('.details-body');
  const inputs=Object.fromEntries(['author','country','city','pits','kerbs','barriers','ai'].map(k=>[k,$('#export-'+k)]));

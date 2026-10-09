@@ -1,5 +1,5 @@
-import {structureSettings} from './structure-settings.js?v=20261009-auto-crossing';
-import {buildGeometry,pointOnTrack} from './engine.js?v=20261009-auto-crossing';
+import {structureSettings} from './structure-settings.js?v=20261009-ai-crash-fix';
+import {buildGeometry,pointOnTrack} from './engine.js?v=20261009-ai-crash-fix';
 const icons={none:'<path d="M4 19h48M4 25h48"/><path d="M8 22h8m6 0h8m6 0h8"/>',bridge:'<path d="M4 20h48M8 27h40M12 20v-9m32 9v-9M12 11h32M12 11l8 9m24-9-8 9M16 27v8m24-8v8"/>',tunnel:'<path d="M7 33V22a21 21 0 0 1 42 0v11M13 33V22a15 15 0 0 1 30 0v11M4 33h48M22 33l3-12m9 12-3-12"/>'};
 const $=s=>document.querySelector(s);
 const field=(id,label,min,max,step,unit)=>`<label class="structure-field" for="structure-${id}"><span>${label}<small>${unit}</small></span><div><input id="structure-${id}-slider" aria-label="${label}" type="range" min="${min}" max="${max}" step="${step}"><input id="structure-${id}" aria-label="${label} · ${unit}" type="number" min="${min}" max="${max}" step="${step}"></div></label>`;

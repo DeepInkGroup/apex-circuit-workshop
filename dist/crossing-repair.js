@@ -1,6 +1,6 @@
-import {buildGeometry,clamp} from './engine.js?v=20261009-auto-crossing';
-import {roadCrossings} from './crossings.js?v=20261009-auto-crossing';
-import {structureSettings} from './structure-settings.js?v=20261009-auto-crossing';
+import {buildGeometry,clamp} from './engine.js?v=20261009-ai-crash-fix';
+import {roadCrossings} from './crossings.js?v=20261009-ai-crash-fix';
+import {structureSettings} from './structure-settings.js?v=20261009-ai-crash-fix';
 
 const geometry=t=>buildGeometry(t.points||[],t.smooth,t.complete!==false,t),yieldFrame=()=>new Promise(resolve=>setTimeout(resolve,0));
 const maxGrade=g=>Math.max(0,...(g.structureProfile?.ranges||[]).map(r=>r.actualGrade));
