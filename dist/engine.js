@@ -1,6 +1,6 @@
-import {heightProfile,profileAt} from './height-profile.js?v=20261010-performance';
-import {createStructureProfile} from './structure-profile.js?v=20261010-performance';
-import {boundedCache} from './performance.js?v=20261010-performance';
+import {heightProfile,profileAt} from './height-profile.js?v=20261010-smooth-grid';
+import {createStructureProfile} from './structure-profile.js?v=20261010-smooth-grid';
+import {boundedCache} from './performance.js?v=20261010-smooth-grid';
 const geometryCache=boundedCache(6);
 export const METERS_PER_UNIT = 0.2;
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));

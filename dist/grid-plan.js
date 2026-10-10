@@ -1,22 +1,25 @@
-import {pointOnTrack} from './engine.js?v=20261010-performance';
-import {trackScale} from './coordinates.js?v=20261010-performance';
+import {pointOnTrack} from './engine.js?v=20261010-smooth-grid';
+import {trackScale} from './coordinates.js?v=20261010-smooth-grid';
 
 export const lapProgress=value=>((value%1)+1)%1;
 export const gridStartSetting=value=>Number.isFinite(value)?lapProgress(value):null;
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+export function gridSettings(value={}){value=value||{};return {gridLayout:['paired','staggered','single'].includes(value.gridLayout)?value.gridLayout:'paired',gridPoleSide:value.gridPoleSide==='left'?'left':'right',gridSpacing:clamp(Number(value.gridSpacing)||6,4,20),gridGap:Number.isFinite(value.gridGap)?clamp(value.gridGap,1.5,12):null,gridStagger:clamp(Number.isFinite(value.gridStagger)?value.gridStagger:2.5,.5,8),gridOffset:clamp(Number(value.gridOffset)||0,-10,10)};}
 
 // A custom anchor is the center of the front row. Null follows start/finish.
 export function buildGridPlan(track,g){
- const total=g.length*trackScale(track),custom=gridStartSetting(track.export?.gridStart),count=Math.max(1,Math.min(16,Math.round(Number(track.export?.pitboxes)||8))),spacing=Math.max(4,Math.min(12,Number(track.export?.gridSpacing)||6));
+ const settings=gridSettings(track.export),total=g.length*trackScale(track),custom=gridStartSetting(track.export?.gridStart),count=Math.max(1,Math.min(16,Math.round(Number(track.export?.pitboxes)||8))),spacing=settings.gridSpacing;
  const progress=custom??lapProgress((track.start||0)-8/(total||1)),slots=[];
- if(!total||track.complete===false)return {progress,custom:custom!==null,spacing,slots,total};
- const scale=trackScale(track),lateral=Math.min(2.2,track.width*.2),boxWidth=Math.min(1.6,track.width*.28);
+ const scale=trackScale(track),boxWidth=Math.min(1.6,track.width*.28),paired=settings.gridLayout!=='single',requestedGap=settings.gridGap??Math.min(4.4,track.width*.4),gap=paired?clamp(requestedGap,boxWidth+.3,Math.max(boxWidth+.3,track.width-boxWidth-.6)):0,lateral=gap/2,offsetLimit=Math.max(0,track.width/2-boxWidth/2-.3-lateral),offset=clamp(settings.gridOffset,-offsetLimit,offsetLimit),stagger=settings.gridLayout==='staggered'?Math.min(settings.gridStagger,spacing*.8):0,pole=settings.gridPoleSide==='left'?1:-1;
+ const result={progress,custom:custom!==null,spacing,slots,total,layout:settings.gridLayout,poleSide:settings.gridPoleSide,gap,offset,stagger,adjusted:paired&&Math.abs(gap-requestedGap)>.01||Math.abs(offset-settings.gridOffset)>.01||settings.gridLayout==='staggered'&&stagger<settings.gridStagger-.01,footprint:0};
+ if(!total||track.complete===false)return result;
  for(let i=0;i<count;i++){
-  const station=lapProgress(progress-Math.floor(i/2)*spacing/total),road=pointOnTrack(g,station),side=(i%2?1:-1)*lateral,dx=Math.cos(road.angle),dy=Math.sin(road.angle),point={...road,x:road.x+dy*side/scale,y:road.y-dx*side/scale,elevation:(road.elevation||0)+side*Math.tan((road.bank||0)*Math.PI/180)};
+  const row=paired?Math.floor(i/2):i,behind=row*spacing+(paired&&i%2?stagger:0),station=lapProgress(progress-behind/total),road=pointOnTrack(g,station),side=offset+(paired?(i%2?-pole:pole)*lateral:0),dx=Math.cos(road.angle),dy=Math.sin(road.angle),point={...road,x:road.x+dy*side/scale,y:road.y-dx*side/scale,elevation:(road.elevation||0)+side*Math.tan((road.bank||0)*Math.PI/180)};
   const at=(along,left)=>({x:point.x+(dx*along+dy*left)/scale,y:point.y+(dy*along-dx*left)/scale,elevation:point.elevation});
   const a=at(1.7,-boxWidth/2),b=at(1.7,boxWidth/2),c=at(-1.7,boxWidth/2),d=at(-1.7,-boxWidth/2);
-  slots.push({index:i,progress:station,point,corners:[a,b,c,d]});
+  slots.push({index:i,row,behind,side,progress:station,point,corners:[a,b,c,d]});result.footprint=Math.max(result.footprint,behind+3.4);
  }
- return {progress,custom:custom!==null,spacing,slots,total};
+ return result;
 }
 
 export function gridPaintQuads(plan,scale){

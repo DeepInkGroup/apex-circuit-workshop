@@ -1,4 +1,4 @@
-import {clamp} from './engine.js?v=20261010-performance';
+import {clamp} from './engine.js?v=20261010-smooth-grid';
 
 export const SURFACE_FIELDS={
  roadGrip:{label:'Road grip',min:.8,max:1.2,step:.01,value:1},

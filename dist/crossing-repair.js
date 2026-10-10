@@ -1,6 +1,6 @@
-import {buildGeometry,clamp} from './engine.js?v=20261010-performance';
-import {roadCrossings} from './crossings.js?v=20261010-performance';
-import {structureSettings} from './structure-settings.js?v=20261010-performance';
+import {buildGeometry,clamp} from './engine.js?v=20261010-smooth-grid';
+import {roadCrossings} from './crossings.js?v=20261010-smooth-grid';
+import {structureSettings} from './structure-settings.js?v=20261010-smooth-grid';
 
 const geometry=t=>buildGeometry(t.points||[],t.smooth,t.complete!==false,t),yieldFrame=()=>new Promise(resolve=>setTimeout(resolve,0));
 const maxGrade=g=>Math.max(0,...(g.structureProfile?.ranges||[]).map(r=>r.actualGrade));

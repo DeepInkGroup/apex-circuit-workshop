@@ -1,4 +1,4 @@
-import {pitRails} from './pit-ribbon.js?v=20261010-performance';
+import {pitRails} from './pit-ribbon.js?v=20261010-smooth-grid';
 export function pitStopApron(plan){
  const path=plan.expanded?plan.parkingPath:plan.path,rails=pitRails(path,plan),quads=[];let station=0;
  for(let i=1;i<path.length;i++){const length=Math.hypot(path[i].x-path[i-1].x,path[i].y-path[i-1].y)*plan.scale,mid=station+length/2;station+=length;if(!plan.expanded&&(mid<plan.workingStart||mid>plan.workingEnd))continue;const a=rails[i-1],b=rails[i],offset=p=>plan.side*((p.width||plan.settings.width)/2),innerA=a.at(offset(path[i-1])),innerB=b.at(offset(path[i])),outerA=a.at(offset(path[i-1])+plan.side*(plan.settings.boxWidth+.45)),outerB=b.at(offset(path[i])+plan.side*(plan.settings.boxWidth+.45));quads.push([innerA,innerB,outerB,outerA]);}

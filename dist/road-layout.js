@@ -1,18 +1,18 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-performance';
-import {trackScale} from './coordinates.js?v=20261010-performance';
-import {kerbSides} from './corner-settings.js?v=20261010-performance';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-smooth-grid';
+import {trackScale} from './coordinates.js?v=20261010-smooth-grid';
+import {kerbSides} from './corner-settings.js?v=20261010-smooth-grid';
 
-import {boundedCache} from './performance.js?v=20261010-performance';
+import {boundedCache} from './performance.js?v=20261010-smooth-grid';
 const layoutCache=new WeakMap();
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};
-function intersection(a,b,c,d){
+function intersection(a,b,c,d,heightGap=.5){
   const x=b.x-a.x,y=b.y-a.y,u=d.x-c.x,v=d.y-c.y,den=x*v-y*u;if(Math.abs(den)<1e-9)return null;
   const t=((c.x-a.x)*v-(c.y-a.y)*u)/den,s=((c.x-a.x)*y-(c.y-a.y)*x)/den;
-  const ya=a.elevation+(b.elevation-a.elevation)*t,yb=c.elevation+(d.elevation-c.elevation)*s;if(Math.abs(ya-yb)>.5)return null;
-  return t>=-1e-7&&t<=1+1e-7&&s>=-1e-7&&s<=1+1e-7?{x:a.x+x*t,y:a.y+y*t,elevation:a.elevation+(b.elevation-a.elevation)*t}:null;
+  const ya=a.elevation+(b.elevation-a.elevation)*t,yb=c.elevation+(d.elevation-c.elevation)*s;if(Math.abs(ya-yb)>heightGap)return null;
+  return t>=-1e-7&&t<=1+1e-7&&s>=-1e-7&&s<=1+1e-7?{x:a.x+x*t,y:a.y+y*t,elevation:(ya+yb)/2}:null;
 }
-function trimLoops(rail,center,closed,radius){
+function trimLoops(rail,center,closed,radius,scale){
   // Inner offsets can double back around a zero-radius corner. Collapse that
   // local loop to the intersection; the outer road edge remains continuous.
   const n=rail.length,segments=closed?n:n-1;
@@ -22,7 +22,10 @@ function trimLoops(rail,center,closed,radius){
       const j=(i+step)%n;if(!closed&&i+step>=segments)break;
       travel+=distance(center[(i+step-1)%n],center[j]);if(travel>radius*6)break;
       const c=rail[j],d=rail[(j+1)%n];if(distance(c,d)<1e-7)continue;
-      const hit=intersection(a,b,c,d);if(!hit)continue;
+      // A local ramp changes corner-edge heights. Trim the folded inside rail
+      // to one shared 3D vertex while keeping separated crossing levels apart.
+      const heightGap=Math.min(4,Math.max(.5,(travel+distance(center[i],center[(i+1)%n]))*scale*.15));
+      const hit=intersection(a,b,c,d,heightGap);if(!hit)continue;
       for(let k=1;k<=step;k++)rail[(i+k)%n]={...rail[(i+k)%n],...hit};break;
     }
   }
@@ -46,17 +49,17 @@ function calculateRoadLayout(track,geometry,pit){
   // by uniform sampling. Include the start seam without altering point order.
   geometry.cumulative.forEach((d,i)=>{if(i===0||geometry.segments[i]!==geometry.segments[i-1])stations.push(d);});
   if(closed)stations.push(((track.start||0)%1+1)%1*total);
-  for(const range of geometry.structureProfile?.ranges||[])for(const offset of [-range.span/2-range.ramp,-range.span/2,-range.span/2+2,range.span/2-2,range.span/2,range.span/2+range.ramp]){const station=(range.center+offset)/s;stations.push(closed?((station%total)+total)%total:Math.max(0,Math.min(total,station)));}
+  for(const range of geometry.structureProfile?.ranges||[])for(const offset of [-range.span/2-range.rampBefore,-range.span/2,-range.span/2+2,range.span/2-2,range.span/2,range.span/2+range.rampAfter]){const station=(range.center+offset)/s;stations.push(closed?((station%total)+total)%total:Math.max(0,Math.min(total,station)));}
   // Dense, shared road stations across structural approaches limit triangle
   // grade changes even when the base circuit sampling reaches its cap.
-  for(const range of geometry.structureProfile?.ranges||[]){const length=range.span+2*range.ramp,count=Math.min(1800,Math.max(32,Math.ceil(length/.4)));for(let i=0;i<=count;i++){const station=(range.center-length/2+length*i/count)/s;stations.push(closed?((station%total)+total)%total:Math.max(0,Math.min(total,station)));}}
+  for(const range of geometry.structureProfile?.ranges||[]){const length=range.span+range.rampBefore+range.rampAfter,start=range.center-range.span/2-range.rampBefore,count=Math.min(2400,Math.max(32,Math.ceil(length/.4)));for(let i=0;i<=count;i++){const station=(start+length*i/count)/s;stations.push(closed?((station%total)+total)%total:Math.max(0,Math.min(total,station)));}}
   stations.sort((a,b)=>a-b);const center=stations.filter((d,i)=>!i||d-stations[i-1]>1e-5).map(d=>({...pointOnTrack(geometry,d/total),station:d*s}));
   const n=center.length,joins=center.map((p,i)=>{
     const before=closed?center[(i+n-1)%n]:center[Math.max(0,i-1)],after=closed?center[(i+1)%n]:center[Math.min(n-1,i+1)],a=i===0&&!closed?direction(p,after):direction(before,p),b=i===n-1&&!closed?a:direction(p,after),nx=a.y+b.y,ny=-a.x-b.x,len=Math.hypot(nx,ny);
     if(len<1e-5)return {x:b.y,y:-b.x};const x=nx/len,y=ny/len,factor=Math.min(2,1/Math.max(.05,x*b.y-y*b.x));return {x:x*factor,y:y*factor};
   });
   center.forEach((p,i)=>p.edgeNormal=joins[i]);
-  const rail=offset=>trimLoops(center.map((p,i)=>{const off=typeof offset==='function'?offset(p):offset;return {station:p.station,x:p.x+joins[i].x*off/s,y:p.y+joins[i].y*off/s,elevation:(p.elevation||0)+off*Math.tan((p.bank||0)*Math.PI/180)};}),center,closed,(half+2)/s);
+  const rail=offset=>trimLoops(center.map((p,i)=>{const off=typeof offset==='function'?offset(p):offset;return {station:p.station,x:p.x+joins[i].x*off/s,y:p.y+joins[i].y*off/s,elevation:(p.elevation||0)+off*Math.tan((p.bank||0)*Math.PI/180)};}),center,closed,(half+2)/s,s);
   const left=rail(half),right=rail(-half),outerLeft=rail(p=>half+(p.kerbWidth||.7)),outerRight=rail(p=>-half-(p.kerbWidth||.7)),segments=closed?n:n-1,quads=[],kerbs=[];
   for(let i=0;i<segments;i++){
     const j=(i+1)%n;quads.push([left[i],left[j],right[j],right[i]]);

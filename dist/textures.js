@@ -1,7 +1,7 @@
-import {BinaryWriter,crc32} from './binary.js?v=20261010-performance';
-import {grassPixels} from './scenery.js?v=20261010-performance';
-import {boardPixels} from './board-design.js?v=20261010-performance';
-import {boundedCache} from './performance.js?v=20261010-performance';
+import {BinaryWriter,crc32} from './binary.js?v=20261010-smooth-grid';
+import {grassPixels} from './scenery.js?v=20261010-smooth-grid';
+import {boardPixels} from './board-design.js?v=20261010-smooth-grid';
+import {boundedCache} from './performance.js?v=20261010-smooth-grid';
 const pixelsCache=boundedCache(24),textureCache=boundedCache(16);
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
 export function surfacePixels(material,size){const key=JSON.stringify([material,size]),cached=pixelsCache.get(key);return cached??pixelsCache.set(key,calculatePixels(material,size));}

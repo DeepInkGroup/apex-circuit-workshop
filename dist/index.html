@@ -10,15 +10,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&amp;family=DM+Sans:wght@400;450;500;550;600;650;700&amp;display=swap" />
-  <link rel="stylesheet" href="./app.css?v=20261010-performance" />
-  <link rel="modulepreload" href="./app.js?v=20261010-performance" />
-  <link rel="modulepreload" href="./engine.js?v=20261010-performance" />
-  <link rel="modulepreload" href="./ac-export.js?v=20261010-performance" />
-  <link rel="modulepreload" href="./pit-plan.js?v=20261010-performance" />
-  <link rel="modulepreload" href="./road-layout.js?v=20261010-performance" />
-  <link rel="modulepreload" href="./performance.js?v=20261010-performance" />
-  <link rel="modulepreload" href="./structure-profile.js?v=20261010-performance" />
-  <link rel="modulepreload" href="./corner-analysis.js?v=20261010-performance" />
+  <link rel="stylesheet" href="./app.css?v=20261010-smooth-grid" />
+  <link rel="modulepreload" href="./app.js?v=20261010-smooth-grid" />
+  <link rel="modulepreload" href="./engine.js?v=20261010-smooth-grid" />
+  <link rel="modulepreload" href="./ac-export.js?v=20261010-smooth-grid" />
+  <link rel="modulepreload" href="./pit-plan.js?v=20261010-smooth-grid" />
+  <link rel="modulepreload" href="./road-layout.js?v=20261010-smooth-grid" />
+  <link rel="modulepreload" href="./performance.js?v=20261010-smooth-grid" />
+  <link rel="modulepreload" href="./structure-profile.js?v=20261010-smooth-grid" />
+  <link rel="modulepreload" href="./corner-analysis.js?v=20261010-smooth-grid" />
 </head>
 <body>
   <header class="topbar">
@@ -58,6 +58,6 @@
   <dialog id="library-dialog"><div class="dialog-top"><p class="eyebrow">YOUR CIRCUITS</p><button class="icon-button close-dialog" aria-label="Close circuit library">×</button></div><h2>My circuits<span>.</span></h2><p class="dialog-description">Your layouts, saved in this browser.</p><div id="library-list"></div><div class="library-actions"><button id="import-btn" class="subtle-button"><i data-icon="upload"></i> Import</button><button id="export-current" class="subtle-button"><i data-icon="download"></i> Export current</button><input id="import-file" type="file" accept=".json,application/json" hidden /><button class="primary-button close-dialog">Back to studio ↗</button></div></dialog>
   <dialog id="confirm-dialog"><div class="dialog-top"><p class="eyebrow">NEW LAYOUT</p><button class="icon-button close-dialog" aria-label="Cancel">×</button></div><h2>A fresh starting line.</h2><p class="dialog-description">This will replace your current layout. Save it first if you want to keep it.</p><div class="confirm-actions"><button class="subtle-button close-dialog">Cancel</button><button id="confirm-save" class="subtle-button">Save & continue</button><button id="confirm-replace" class="primary-button">Continue ↗</button></div></dialog>
   <div id="toast" class="toast" role="status"></div>
-  <script type="module" src="./app.js?v=20261010-performance"></script>
+  <script type="module" src="./app.js?v=20261010-smooth-grid"></script>
 </body>
 </html>

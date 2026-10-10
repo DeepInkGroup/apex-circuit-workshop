@@ -1,5 +1,13 @@
 # Native Assetto Corsa export
 
+## Grid arrangements and smooth structural corners
+
+**Paddock & starting grid** supports side-by-side, staggered and single-file starts. Choose the front-row location on the drawing or by lap percentage. Select pole side, row spacing (4–20 m), center-to-center column gap, the staggered second-car setback and lateral offset. A blank column gap uses automatic spacing. The effective layout is fitted to road width and shown as numbered slots; exported markings and `AC_START_n` use the same plan. Export rejects a slot with no collision pavement beneath it. Layout settings are saved, shared and recorded in client/server grid metadata.
+
+Bridge/tunnel approaches now distribute elevation using corner radius: tight corners receive less vertical slope, with independent approach and departure lengths. Neighboring spans blend through this same smooth distance profile. Local inside-edge folds on elevated corners are trimmed to shared 3D vertices, while separated crossing levels stay distinct. New edits that create excessive structural grades are refused, and export blocks structural grades over 12%. **Normalize height & ramps** resets the selected span to automatic height, 6 m clearance and a gentler ramp setup. If a bridge and tunnel are too close for their level difference, move or shorten a span or extend the connecting road.
+
+Export a fresh ZIP and replace the installed track to apply updated collision geometry and grid spawns.
+
 ## Grid position and structure height
 
 In **Assetto Corsa setup → 02 / Paddock & starting grid**, choose **Choose front row position** and enter the percentage of the lap after start/finish, or use **Choose on drawing** and click the road. Rows extend backwards in driving order. **Follow start / finish** restores the front row 8 m before the line. The drawing shows numbered slots; matching flat markings appear in 3D and the native model. `AC_START_n` race spawns use this position, while pit spawns, hotlap start, timing gates and the gantry keep their own positions. `apex_grid.json` records the exported setup. Grid position is included in saved circuits, shared snapshots and client/server exports.

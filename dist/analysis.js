@@ -1,10 +1,10 @@
-import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261010-performance';
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-performance';
-import {buildPitPlan} from './pit-plan.js?v=20261010-performance';
-import {WEATHER} from './environment.js?v=20261010-performance';
-import {buildTimingPlan} from './timing.js?v=20261010-performance';
-import {surfaceSettings} from './surface-settings.js?v=20261010-performance';
-import {GRASS,buildingSettings} from './scenery.js?v=20261010-performance';
+import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261010-smooth-grid';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-smooth-grid';
+import {buildPitPlan} from './pit-plan.js?v=20261010-smooth-grid';
+import {WEATHER} from './environment.js?v=20261010-smooth-grid';
+import {buildTimingPlan} from './timing.js?v=20261010-smooth-grid';
+import {surfaceSettings} from './surface-settings.js?v=20261010-smooth-grid';
+import {GRASS,buildingSettings} from './scenery.js?v=20261010-smooth-grid';
 
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const pathLength=(points,s)=>points.slice(1).reduce((n,p,i)=>n+distance(p,points[i])*s,0);

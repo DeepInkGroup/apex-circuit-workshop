@@ -1,7 +1,7 @@
-import {pointOnTrack} from './engine.js?v=20261010-performance';
-import {toGamePoint,gameDirection,trackScale} from './coordinates.js?v=20261010-performance';
-import {buildRoadLayout} from './road-layout.js?v=20261010-performance';
-import {kerbSides} from './corner-settings.js?v=20261010-performance';
+import {pointOnTrack} from './engine.js?v=20261010-smooth-grid';
+import {toGamePoint,gameDirection,trackScale} from './coordinates.js?v=20261010-smooth-grid';
+import {buildRoadLayout} from './road-layout.js?v=20261010-smooth-grid';
+import {kerbSides} from './corner-settings.js?v=20261010-smooth-grid';
 const layoutCache=new WeakMap();
 const normalCache=new WeakMap();
 const spanCache=new WeakMap();

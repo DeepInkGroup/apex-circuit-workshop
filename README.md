@@ -8,6 +8,8 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Fixed elevated corner-edge folds and made bridge/tunnel ramps gentler through tight corners, with independent entry/exit lengths. Structural grades above 12% are blocked; unsafe new height edits leave the existing circuit intact. **Normalize height & ramps** restores a gentle setup. Race grids now support paired, staggered and single-file arrangements, pole side, row/column spacing, stagger setback and lateral positioning, with matching drawing, model markings and native spawns.
+
 - Performance update: the editor draws only when something changes, reuses a cached background for hover/cursor overlays, and batches pointer/width updates per animation frame. Full inspector refresh waits until dragging pauses or ends. Bounded geometry, road-layout, readiness and texture caches reuse unchanged results; 3D reopening reuses uploaded buffers. One generated local stylesheet replaces 16 stylesheet requests, with core modules preloaded and font connections started early. Run `npm run build:assets` after changing CSS sources; development and deployment checks do this automatically.
 
 - Choose the race grid's front row on the drawing or by lap percentage in **Assetto Corsa setup → Paddock & starting grid**. Grid markings match exported car spawns; start/finish and pit positions remain independent. Bridges now have a custom road height and tunnels a custom depth, with automatic clearance protection, recalculated ramps and a live elevation profile.

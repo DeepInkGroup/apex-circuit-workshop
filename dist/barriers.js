@@ -1,6 +1,6 @@
-import {clamp,closestOnTrack,pointOnTrack} from './engine.js?v=20261010-performance';
-import {buildingContains} from './scenery.js?v=20261010-performance';
-import {treeRadius} from './trees.js?v=20261010-performance';
+import {clamp,closestOnTrack,pointOnTrack} from './engine.js?v=20261010-smooth-grid';
+import {buildingContains} from './scenery.js?v=20261010-smooth-grid';
+import {treeRadius} from './trees.js?v=20261010-smooth-grid';
 export const BARRIER_TYPES={concrete:{label:'Concrete safety wall',width:.8,color:'#a9adb0'},tyres:{label:'Tyre wall',width:1.1,color:'#303734'},steel:{label:'Steel crash barrier',width:.8,color:'#a1b4bc'}};
 export function barrierProperties(raw={}){const type=BARRIER_TYPES[raw.type]?raw.type:'concrete';return {type,width:clamp(Number(raw.width)||BARRIER_TYPES[type].width,BARRIER_TYPES[type].width,2),height:clamp(Number(raw.height)||1.2,1,4),style:raw.style==='striped'?'striped':'concrete'};}
 export function pitOuterBarriers(track,plan,geometry,gantry=null){
