@@ -1,7 +1,9 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-grid-height';
-import {trackScale} from './coordinates.js?v=20261010-grid-height';
-import {kerbSides} from './corner-settings.js?v=20261010-grid-height';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-performance';
+import {trackScale} from './coordinates.js?v=20261010-performance';
+import {kerbSides} from './corner-settings.js?v=20261010-performance';
 
+import {boundedCache} from './performance.js?v=20261010-performance';
+const layoutCache=new WeakMap();
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};
 function intersection(a,b,c,d){
@@ -31,6 +33,12 @@ function pitOpening(p,plan,scale){
   return [plan.path,plan.parkingPath,plan.connector,plan.exitConnector,plan.entryConnection,plan.exitConnection].some(path=>path.slice(1).some((b,i)=>{const a=path[i];if(p.x<Math.min(a.x,b.x)-padding||p.x>Math.max(a.x,b.x)+padding||p.y<Math.min(a.y,b.y)-padding||p.y>Math.max(a.y,b.y)+padding)return false;const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy,t=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;const localPadding=(((a.width||plan.settings.width)*(1-t)+(b.width||plan.settings.width)*t)/2+.25)/scale;return Math.hypot(p.x-a.x-dx*t,p.y-a.y-dy*t)<localPadding&&Math.abs((p.elevation||0)-((a.elevation||0)*(1-t)+(b.elevation||0)*t))<1.5;}));
 }
 export function buildRoadLayout(track,geometry=buildGeometry(track.points||[],track.smooth,track.complete!==false,track),pit=null){
+ let entry=layoutCache.get(geometry);if(!entry){entry={road:boundedCache(4),pits:new WeakMap()};layoutCache.set(geometry,entry);}
+ let cache=entry.road;if(pit){cache=entry.pits.get(pit);if(!cache){cache=boundedCache(4);entry.pits.set(pit,cache);}}
+ const key=JSON.stringify([track.width,track.scale,track.start,track.complete]),cached=cache.get(key);
+ return cached??cache.set(key,calculateRoadLayout(track,geometry,pit));
+}
+function calculateRoadLayout(track,geometry,pit){
   const s=trackScale(track),closed=track.complete!==false,total=geometry.length,half=track.width/2;
   if(!total)return {center:[],left:[],right:[],quads:[],kerbs:[],bands:()=>[]};
   const count=clamp(Math.ceil(total*s/.75),32,7000),stations=Array.from({length:closed?count:count+1},(_,i)=>total*i/count);

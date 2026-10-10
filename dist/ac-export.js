@@ -1,33 +1,34 @@
-import {roadCrossings,CROSSING_ERROR} from './crossings.js?v=20261010-grid-height';
-import {pavementAi,validateNativeScene} from './native-ai.js?v=20261010-grid-height';
-import {pavementSampler} from './pavement-sampler.js?v=20261010-grid-height';
-import {pitStopPaint} from './pit-stop.js?v=20261010-grid-height';
-import {addStructures,terrainQuadExcluded,structureGroundRule} from './structures.js?v=20261010-grid-height';
-import {addBarrierMeshes,pitOuterBarriers} from './barriers.js?v=20261010-grid-height';
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-grid-height';
-import {BinaryWriter,zipFiles,crc32} from './binary.js?v=20261010-grid-height';
-import {ASPHALT} from './surfaces.js?v=20261010-grid-height';
-import {analyzeTrack} from './analysis.js?v=20261010-grid-height';
-import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261010-grid-height';
-import {WEATHER} from './environment.js?v=20261010-grid-height';
-import {TREE_SPECIES,treeSettings} from './trees.js?v=20261010-grid-height';
-import {buildRoadLayout} from './road-layout.js?v=20261010-grid-height';
-import {createTrackMap,mapIni} from './track-map.js?v=20261010-grid-height';
-import {createTexture,materialProperties} from './textures.js?v=20261010-grid-height';
-import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261010-grid-height';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261010-grid-height';
-import {buildTimingPlan,sectionsIni} from './timing.js?v=20261010-grid-height';
-import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261010-grid-height';
-import {gantryPlan,addGantry} from './gantry.js?v=20261010-grid-height';
+import {roadCrossings,CROSSING_ERROR} from './crossings.js?v=20261010-performance';
+import {pavementAi,validateNativeScene} from './native-ai.js?v=20261010-performance';
+import {pavementSampler} from './pavement-sampler.js?v=20261010-performance';
+import {pitStopPaint} from './pit-stop.js?v=20261010-performance';
+import {addStructures,terrainQuadExcluded,structureGroundRule} from './structures.js?v=20261010-performance';
+import {addBarrierMeshes,pitOuterBarriers} from './barriers.js?v=20261010-performance';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-performance';
+import {BinaryWriter,zipFiles,crc32} from './binary.js?v=20261010-performance';
+import {ASPHALT} from './surfaces.js?v=20261010-performance';
+import {analyzeTrack} from './analysis.js?v=20261010-performance';
+import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261010-performance';
+import {WEATHER} from './environment.js?v=20261010-performance';
+import {TREE_SPECIES,treeSettings} from './trees.js?v=20261010-performance';
+import {buildRoadLayout} from './road-layout.js?v=20261010-performance';
+import {createTrackMap,mapIni} from './track-map.js?v=20261010-performance';
+import {createTexture,materialProperties} from './textures.js?v=20261010-performance';
+import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261010-performance';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261010-performance';
+import {buildTimingPlan,sectionsIni} from './timing.js?v=20261010-performance';
+import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261010-performance';
+import {gantryPlan,addGantry} from './gantry.js?v=20261010-performance';
 
-import {buildGridPlan,gridPaintQuads} from './grid-plan.js?v=20261010-grid-height';
+import {boundedCache} from './performance.js?v=20261010-performance';
+import {buildGridPlan,gridPaintQuads} from './grid-plan.js?v=20261010-performance';
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true,trees:true,buildings:true,...surfaceSettings(),grassFx:true,gridStart:null,gridSpacing:6,wallHeight:2,gantry:true,gantryClearance:6,idealLine:false,distanceMarkers:true,distanceBoardStyle:'classic',distanceBoardSize:'standard',distanceBoardSetback:1.8};
-export {trackSlug} from './mod-identity.js?v=20261010-grid-height';
-import {trackFolder,validTrackId,serverConfig,synchronizeIdentity} from './mod-identity.js?v=20261010-grid-height';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261010-grid-height';
-import {idealLine} from './ideal-line.js?v=20261010-grid-height';
-import {createTerrain} from './terrain.js?v=20261010-grid-height';
-import {turnMarkerPlan,addTurnMarkers} from './turn-markers.js?v=20261010-grid-height';
+export {trackSlug} from './mod-identity.js?v=20261010-performance';
+import {trackFolder,validTrackId,serverConfig,synchronizeIdentity} from './mod-identity.js?v=20261010-performance';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261010-performance';
+import {idealLine} from './ideal-line.js?v=20261010-performance';
+import {createTerrain} from './terrain.js?v=20261010-performance';
+import {turnMarkerPlan,addTurnMarkers} from './turn-markers.js?v=20261010-performance';
 const unit=trackScale;
 const world=toGamePoint;
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
@@ -290,7 +291,9 @@ export function writeAi(frames,width,closed=true){
   });
   w.u32(0);return w.finish();
 }
-export function validateExport(track){
+const readinessCache=boundedCache(4);
+export function validateExport(track){const key=JSON.stringify(track),cached=readinessCache.get(key);return cached??readinessCache.set(key,calculateExportReadiness(track));}
+function calculateExportReadiness(track){
   const errors=[],warnings=[],g=buildGeometry(track.points||[],track.smooth,track.complete!==false,track),s=unit(track);
   if((track.points?.length||0)<3||g.length*s<60)errors.push('Create a closed circuit at least 60 meters long.');
   if(track.complete===false)errors.push('Use Complete circuit before exporting the track.');

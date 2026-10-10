@@ -1,8 +1,11 @@
-import {BinaryWriter,crc32} from './binary.js?v=20261010-grid-height';
-import {grassPixels} from './scenery.js?v=20261010-grid-height';
-import {boardPixels} from './board-design.js?v=20261010-grid-height';
+import {BinaryWriter,crc32} from './binary.js?v=20261010-performance';
+import {grassPixels} from './scenery.js?v=20261010-performance';
+import {boardPixels} from './board-design.js?v=20261010-performance';
+import {boundedCache} from './performance.js?v=20261010-performance';
+const pixelsCache=boundedCache(24),textureCache=boundedCache(16);
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
-export function surfacePixels(material,size){
+export function surfacePixels(material,size){const key=JSON.stringify([material,size]),cached=pixelsCache.get(key);return cached??pixelsCache.set(key,calculatePixels(material,size));}
+function calculatePixels(material,size){
   if(material.distanceBoard)return boardPixels(material.distanceBoard,size);
   if(material.name==='Grass')return grassPixels(material.grass||'mown',size);
   const pixels=new Uint8Array(size*size*3),noise=material.noise??5;let state=0x51a77;
@@ -14,7 +17,8 @@ export function surfacePixels(material,size){
     for(let k=0;k<3;k++)pixels[(y*size+x)*3+k]=clamp(material.color[k]+detail);
   }return pixels;
 }
-export function createTexture(material,size=256){
+export function createTexture(material,size=256){const key=JSON.stringify([material,size]),cached=textureCache.get(key);return cached??textureCache.set(key,calculateTexture(material,size));}
+function calculateTexture(material,size=256){
   if(size<1||size>1024||!Number.isInteger(Math.log2(size)))throw new Error('Texture size must be a power of two between 1 and 1024.');
   const levels=Math.floor(Math.log2(size))+1,w=new BinaryWriter();
   // Legacy A8R8G8B8 DDS: raw BGRA pixels avoid the custom BC1 compressor.

@@ -1,10 +1,10 @@
-import {CROSSING_ERROR} from './crossings.js?v=20261010-grid-height';
-import {crossingAction} from './crossing-action.js?v=20261010-grid-height';
-import {trackFolder,newTrackId,validTrackId,serverConfig} from './mod-identity.js?v=20261010-grid-height';
-import {exportImages} from './tracer-ui.js?v=20261010-grid-height';
-import {DEFAULT_EXPORT,validateExport,exportServerZip} from './ac-export.js?v=20261010-grid-height';
-import {GRASS} from './scenery.js?v=20261010-grid-height';
-import {buildGridPlan,lapProgress} from './grid-plan.js?v=20261010-grid-height';
+import {CROSSING_ERROR} from './crossings.js?v=20261010-performance';
+import {crossingAction} from './crossing-action.js?v=20261010-performance';
+import {trackFolder,newTrackId,validTrackId,serverConfig} from './mod-identity.js?v=20261010-performance';
+import {exportImages} from './tracer-ui.js?v=20261010-performance';
+import {DEFAULT_EXPORT,validateExport,exportServerZip} from './ac-export.js?v=20261010-performance';
+import {GRASS} from './scenery.js?v=20261010-performance';
+import {buildGridPlan,lapProgress} from './grid-plan.js?v=20261010-performance';
 const $=s=>document.querySelector(s);
 export function mountACSetup(api){const section=$('.export-settings'),body=section.querySelector('.details-body');
  const inputs=Object.fromEntries(['author','country','city','pits','kerbs','barriers','ai'].map(k=>[k,$('#export-'+k)]));

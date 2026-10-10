@@ -1,7 +1,8 @@
-import {buildGeometry,pointOnTrack} from './engine.js?v=20261010-grid-height';
-import {toGamePoint} from './coordinates.js?v=20261010-grid-height';
-import {createScene} from './ac-export.js?v=20261010-grid-height';
-import {surfacePixels} from './textures.js?v=20261010-grid-height';
+import {buildGeometry,pointOnTrack} from './engine.js?v=20261010-performance';
+import {toGamePoint} from './coordinates.js?v=20261010-performance';
+import {createScene} from './ac-export.js?v=20261010-performance';
+import {surfacePixels} from './textures.js?v=20261010-performance';
+import {frameTask} from './performance.js?v=20261010-performance';
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
 const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);
@@ -14,7 +15,7 @@ function matrix(eye,target,aspect){
 export class TrackPreview {
   constructor(canvas){
     this.canvas=canvas;this.gl=canvas.getContext('webgl',{antialias:true,alpha:false});this.buffers=[];this.textures=[];this.yaw=Math.PI/2;this.pitch=.8;this.zoom=1;this.drag=null;
-    if(!this.gl)return;
+    if(!this.gl)return;this.drawTask=frameTask(()=>this.render());
     const gl=this.gl,program=gl.createProgram();
     const shader=(type,source)=>{const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;};
     gl.attachShader(program,shader(gl.VERTEX_SHADER,'attribute vec3 aPos; attribute vec3 aNormal; attribute vec2 aUv; varying vec2 vUv; uniform mat4 uMatrix; varying float vLight; varying vec3 vPos; varying float vDepth; void main(){gl_Position=uMatrix*vec4(aPos,1.0);vDepth=gl_Position.w;vPos=aPos;vUv=aUv;vLight=.52+.48*max(dot(normalize(aNormal),normalize(vec3(.3,1.0,.4))),0.0);}'));
@@ -29,13 +30,15 @@ export class TrackPreview {
   }
   load(track){
     if(!this.gl)return false;
+    const key=JSON.stringify(track);if(this.sceneKey===key){this.target=[...this.sceneTarget];this.radius=this.sceneRadius;if(this.focusedMode==='pits')this.focusPits();else if(Number.isInteger(this.focusedIndex))this.focusStructure(track,this.focusedIndex);this.draw();return true;}
     const scene=createScene(track),gl=this.gl;
     this.buffers.forEach(b=>{gl.deleteBuffer(b.vertices);gl.deleteBuffer(b.indices);});this.buffers=[];this.textures.forEach(t=>gl.deleteTexture(t));this.textures=scene.materials.map(m=>{const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,256,256,0,gl.RGB,gl.UNSIGNED_BYTE,surfacePixels(m,256));gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.generateMipmap(gl.TEXTURE_2D);return texture;});
     this.weather=scene.weather;this.rain=track.weather==='rain';
     const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity],include=p=>{for(let i=0;i<3;i++){min[i]=Math.min(min[i],p[i]);max[i]=Math.max(max[i],p[i]);}};
     scene.frames.forEach(f=>include(f.pos));for(const m of scene.meshes)if(/^(1ROAD|1PIT|1WALL_BUILDING|1WALL_START_FINISH|1WALL_BRIDGE|1WALL_TUNNEL|SCENERY_TREE|SCENERY_TURN_DISTANCE)/.test(m.name))for(const v of m.vertices)include(v.pos);
     this.target=min.map((n,i)=>(n+max[i])/2);this.radius=Math.max(20,Math.hypot(...max.map((n,i)=>n-min[i]))*.72);
-    scene.meshes.forEach(m=>{const vertices=gl.createBuffer(),indices=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertices);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(m.vertices.flatMap(v=>[...v.pos,...v.normal,...v.uv])),gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(m.indices),gl.STATIC_DRAW);this.buffers.push({vertices,indices,count:m.indices.length,name:m.name,emissive:scene.materials[m.material].emissive||[0,0,0],texture:this.textures[m.material],wet:[0,5].includes(m.material)});});this.pitPlan=scene.pitPlan;this.hasTunnels=scene.structures.some(r=>r.type==='tunnel');if(!this.hasTunnels)this.cutaway=false;if(this.focusedMode==='pits')this.focusPits();else if(Number.isInteger(this.focusedIndex))this.focusStructure(track,this.focusedIndex);this.draw();return true;
+    this.sceneTarget=[...this.target];this.sceneRadius=this.radius;
+    scene.meshes.forEach(m=>{const packed=new Float32Array(m.vertices.length*8);for(let i=0;i<m.vertices.length;i++){const v=m.vertices[i];packed.set(v.pos,i*8);packed.set(v.normal,i*8+3);packed.set(v.uv,i*8+6);}const vertices=gl.createBuffer(),indices=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vertices);gl.bufferData(gl.ARRAY_BUFFER,packed,gl.STATIC_DRAW);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,indices);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(m.indices),gl.STATIC_DRAW);this.buffers.push({vertices,indices,count:m.indices.length,name:m.name,emissive:scene.materials[m.material].emissive||[0,0,0],texture:this.textures[m.material],wet:[0,5].includes(m.material)});});this.sceneKey=key;this.pitPlan=scene.pitPlan;this.hasTunnels=scene.structures.some(r=>r.type==='tunnel');if(!this.hasTunnels)this.cutaway=false;if(this.focusedMode==='pits')this.focusPits();else if(Number.isInteger(this.focusedIndex))this.focusStructure(track,this.focusedIndex);this.draw();return true;
   }
   focusPits(){
     const plan=this.pitPlan;if(!plan)return;this.focusedMode='pits';this.focusedIndex=undefined;const points=[...plan.path,...plan.entryConnection,...plan.exitConnection,...plan.apron.flat()],s=plan.scale,minX=Math.min(...points.map(p=>p.x)),maxX=Math.max(...points.map(p=>p.x)),minZ=Math.min(...points.map(p=>p.y)),maxZ=Math.max(...points.map(p=>p.y));this.target=[((minX+maxX)/2-500)*s,plan.heightAt(plan.stalls[0]||plan.path[0])+1,((minZ+maxZ)/2-370)*s];this.radius=Math.max(26,Math.hypot(maxX-minX,maxZ-minZ)*s*.9);this.pitch=.62;this.yaw=(plan.path[0].angle||0)+Math.PI*.6;this.zoom=1;this.draw();
@@ -46,10 +49,11 @@ export class TrackPreview {
   }
   setCutaway(enabled){this.cutaway=!!enabled&&this.hasTunnels;this.draw();return this.cutaway;}
   setView(top=false){this.yaw=Math.PI/2;this.pitch=top?Math.PI/2-.01:.8;this.zoom=1;this.draw();}
-  draw(){
+  draw(){this.drawTask?.schedule();}
+  render(){
     if(!this.gl||!this.target||this.canvas.hidden)return;
     const gl=this.gl,r=this.canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);if(!r.width||!r.height)return;
-    this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);gl.viewport(0,0,this.canvas.width,this.canvas.height);gl.clearColor(...this.weather.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.useProgram(this.program);
+    const width=Math.round(r.width*dpr),height=Math.round(r.height*dpr);if(this.canvas.width!==width)this.canvas.width=width;if(this.canvas.height!==height)this.canvas.height=height;gl.viewport(0,0,this.canvas.width,this.canvas.height);gl.clearColor(...this.weather.sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.useProgram(this.program);
     gl.uniform3fv(this.environment.uTint,this.weather.tint);gl.uniform1f(this.environment.uAmbient,this.weather.ambient);gl.uniform3fv(this.environment.uFogColor,this.weather.sky);gl.uniform1f(this.environment.uFogAmount,this.weather.fog);gl.uniform1f(this.environment.uFogDistance,this.radius*this.zoom);
     const distance=this.radius*this.zoom,eye=[this.target[0]+Math.cos(this.yaw)*Math.cos(this.pitch)*distance,this.target[1]+Math.sin(this.pitch)*distance,this.target[2]+Math.sin(this.yaw)*Math.cos(this.pitch)*distance];gl.uniformMatrix4fv(this.matrix,false,new Float32Array(matrix(eye,this.target,r.width/r.height)));
     this.buffers.forEach(b=>{if(this.cutaway&&/^1(GRASS|WALL_TUNNEL_(ROOF|PORTAL_ROOF))/.test(b.name))return;gl.uniform3fv(this.environment.uEmissive,b.emissive);gl.bindBuffer(gl.ARRAY_BUFFER,b.vertices);gl.enableVertexAttribArray(this.pos);gl.vertexAttribPointer(this.pos,3,gl.FLOAT,false,32,0);gl.enableVertexAttribArray(this.normal);gl.vertexAttribPointer(this.normal,3,gl.FLOAT,false,32,12);gl.enableVertexAttribArray(this.uv);gl.vertexAttribPointer(this.uv,2,gl.FLOAT,false,32,24);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,b.indices);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,b.texture);gl.uniform1i(this.sampler,0);gl.uniform1f(this.environment.uWet,b.wet&&this.rain?1:0);gl.drawElements(gl.TRIANGLES,b.count,gl.UNSIGNED_SHORT,0);});

@@ -1,5 +1,7 @@
-import {heightProfile,profileAt} from './height-profile.js?v=20261010-grid-height';
-import {createStructureProfile} from './structure-profile.js?v=20261010-grid-height';
+import {heightProfile,profileAt} from './height-profile.js?v=20261010-performance';
+import {createStructureProfile} from './structure-profile.js?v=20261010-performance';
+import {boundedCache} from './performance.js?v=20261010-performance';
+const geometryCache=boundedCache(6);
 export const METERS_PER_UNIT = 0.2;
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -12,7 +14,11 @@ function spline(a, b, c, d, t) {
   return Object.fromEntries(['x','y'].map(k=>[k,(2*t3-3*t2+1)*b[k]+(t3-2*t2+t)*departure[k]*.5*start+(-2*t3+3*t2)*c[k]+(t3-t2)*approach[k]*.5*end]));
 }
 
-export function buildGeometry(points, smooth = true, closed = true, options = {}) {
+export function buildGeometry(points,smooth=true,closed=true,options={}){
+ const key=JSON.stringify([points,smooth,closed,options.scale,options.width,options.start,options.export?.kerbs]),cached=geometryCache.get(key);
+ return cached??geometryCache.set(key,calculateGeometry(points,smooth,closed,options));
+}
+function calculateGeometry(points, smooth = true, closed = true, options = {}) {
   const samples = [], segments = [], cumulative = [];
   let length = 0;
   if (points.length < (closed ? 3 : 2)) return { samples: points.map(p => ({...p})), segments, cumulative, length, closed };
