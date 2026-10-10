@@ -1,12 +1,12 @@
-import {pitConnection as connection,pitFillet} from './pit-curve.js?v=20261009-ai-crash-fix';
-import {pavementSampler,pitHeightField} from './pavement-sampler.js?v=20261009-ai-crash-fix';
-import {pitStopApron} from './pit-stop.js?v=20261009-ai-crash-fix';
-import {BARRIER_TYPES} from './barriers.js?v=20261009-ai-crash-fix';
-import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261009-ai-crash-fix';
-import {buildRoadLayout} from './road-layout.js?v=20261009-ai-crash-fix';
-import {heightProfile,profileAt} from './height-profile.js?v=20261009-ai-crash-fix';
-import {buildingContains} from './scenery.js?v=20261009-ai-crash-fix';
-import {treeRadius} from './trees.js?v=20261009-ai-crash-fix';
+import {pitConnection as connection,pitFillet} from './pit-curve.js?v=20261010-grid-height';
+import {pavementSampler,pitHeightField} from './pavement-sampler.js?v=20261010-grid-height';
+import {pitStopApron} from './pit-stop.js?v=20261010-grid-height';
+import {BARRIER_TYPES} from './barriers.js?v=20261010-grid-height';
+import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261010-grid-height';
+import {buildRoadLayout} from './road-layout.js?v=20261010-grid-height';
+import {heightProfile,profileAt} from './height-profile.js?v=20261010-grid-height';
+import {buildingContains} from './scenery.js?v=20261010-grid-height';
+import {treeRadius} from './trees.js?v=20261010-grid-height';
 const lerp=(a,b,t)=>a+(b-a)*t;
 export const PIT_STYLES={blue:{label:'Blue pit lane',color:[60,89,108],line:'#81c1d4'},classic:{label:'Classic asphalt',color:[61,65,69],line:'#e3d79c'}};
 export function pitSettings(track){return {boxWidth:clamp(Number(track.pitSettings?.boxWidth)||3.4,2.8,5),boxSpacing:clamp(Number(track.pitSettings?.boxSpacing)||6.5,6,12),parking:['inline','separate'].includes(track.pitSettings?.parking)?track.pitSettings.parking:'auto',width:clamp(Number(track.pitSettings?.width)||6,4,10),setback:clamp(Number(track.pitSettings?.setback)||5,3,30),mergeLength:clamp(Number(track.pitSettings?.mergeLength)||28,12,60),bendRadius:clamp(Number(track.pitSettings?.bendRadius)||14,4,30),autoElevation:track.pitSettings?.autoElevation!==false,style:PIT_STYLES[track.pitSettings?.style]?track.pitSettings.style:'blue',side:['left','right'].includes(track.pitSettings?.side)?track.pitSettings.side:'auto',outerBarriers:track.pitSettings?.outerBarriers!==false,barrierType:BARRIER_TYPES[track.pitSettings?.barrierType]?track.pitSettings.barrierType:'concrete',barrierHeight:clamp(Number(track.pitSettings?.barrierHeight)||1.2,1,4),autoConnect:track.pitSettings?.autoConnect!==false};}

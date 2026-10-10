@@ -1,5 +1,5 @@
-import {toGamePoint,trackScale} from './coordinates.js?v=20261009-ai-crash-fix';
-import {clamp} from './engine.js?v=20261009-ai-crash-fix';
+import {toGamePoint,trackScale} from './coordinates.js?v=20261010-grid-height';
+import {clamp} from './engine.js?v=20261010-grid-height';
 
 export function gantryPlan(track,timing,pit,ground=0){
  if(track.complete===false||track.export?.gantry===false||!timing.gates.length)return null;

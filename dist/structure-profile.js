@@ -1,5 +1,5 @@
-import {profileAt} from './height-profile.js?v=20261009-ai-crash-fix';
-import {structureSettings} from './structure-settings.js?v=20261009-ai-crash-fix';
+import {profileAt} from './height-profile.js?v=20261010-grid-height';
+import {structureSettings} from './structure-settings.js?v=20261010-grid-height';
 // Seventh-order easing has zero grade, curvature and curvature change at
 // both ramp ends. Reserve extra approach length rather than compressing it.
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),smooth=t=>t**4*(35+t*(-84+t*(70-20*t))),PEAK=2.1875;
@@ -11,10 +11,10 @@ export function createStructureProfile(g,controls,points,options){
   const center=normalize((Number.isFinite(settings.anchorProgress)?settings.anchorProgress*total:control.station*scale)+settings.offset),span=Math.min(settings.length,total*.35),half=span/2,core=g.samples.filter((p,i)=>distance(g.cumulative[i]*scale,center)<=half);let low=original(center),high=low;for(const p of core){low=Math.min(low,p.elevation||0);high=Math.max(high,p.elevation||0);}
   // Account for the height of another road passing beneath/above the span.
   for(const p of core.filter((p,i)=>i%4===0))for(const q of g.samples)if(Math.hypot(p.x-q.x,p.y-q.y)*scale<width+2){const h=(q.elevation||0)+(settings.type==='bridge'?1:-1)*width/2*Math.abs(Math.tan((q.bank||0)*Math.PI/180));low=Math.min(low,h);high=Math.max(high,h);}
-  const roofRise=settings.type==='tunnel'&&settings.tunnelStyle==='arch'?Math.min(1.6,(width/2+1.8)*.18):0,level=settings.type==='bridge'?high+settings.clearance+.6:low-settings.clearance-roofRise-1.8;
+  const roofRise=settings.type==='tunnel'&&settings.tunnelStyle==='arch'?Math.min(1.6,(width/2+1.8)*.18):0,minimumHeight=settings.clearance+(settings.type==='bridge'?.6:roofRise+1.8),height=Math.max(minimumHeight,settings.height??minimumHeight),level=settings.type==='bridge'?high+height:low-height;
   const rise=Math.max(Math.abs(level-low),Math.abs(level-high)),desired=PEAK*rise/(settings.grade/100)*settings.approach,available=closed?total/2-half-1:Math.min(center-half,total-center-half),ramp=Math.max(.5,Math.min(desired,available)),estimatedGrade=PEAK*rise/ramp*100;
   if(!closed&&(center-half<0||center+half>total))issues.push(`Handle ${control.index+1}: move the ${settings.type} away from the road endpoint.`);
-  ranges.push({index:control.index,type:settings.type,center,span,ramp,desiredRamp:desired,limited:ramp+1<desired,level,clearance:settings.clearance,roofRise,bridgeStyle:settings.bridgeStyle,tunnelStyle:settings.tunnelStyle,targetGrade:settings.grade,estimatedGrade,ground:original(center)});
+  ranges.push({index:control.index,type:settings.type,center,span,ramp,desiredRamp:desired,limited:ramp+1<desired,level,height,minimumHeight,requestedHeight:settings.height,heightAdjusted:settings.height!==null&&settings.height<minimumHeight,clearance:settings.clearance,roofRise,bridgeStyle:settings.bridgeStyle,tunnelStyle:settings.tunnelStyle,targetGrade:settings.grade,estimatedGrade,ground:original(center)});
  }
  for(let i=0;i<ranges.length;i++)for(let j=i+1;j<ranges.length;j++)if(distance(ranges[i].center,ranges[j].center)<(ranges[i].span+ranges[j].span)/2+2)issues.push(`Structures at handles ${ranges[i].index+1} and ${ranges[j].index+1} overlap. Separate their covered spans.`);
  const ordered=[...ranges].sort((a,b)=>a.center-b.center),links=[];

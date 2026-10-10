@@ -1,38 +1,39 @@
-import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261009-ai-crash-fix';
-import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261009-ai-crash-fix';
-import {pitStopPaint} from './pit-stop.js?v=20261009-ai-crash-fix';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261009-ai-crash-fix';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261009-ai-crash-fix';
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261009-ai-crash-fix';
-import {ReferenceLayer} from './tracing.js?v=20261009-ai-crash-fix';
-import {mountTracer} from './tracer-ui.js?v=20261009-ai-crash-fix';
-import {TrackPreview} from './preview3d.js?v=20261009-ai-crash-fix';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261009-ai-crash-fix';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261009-ai-crash-fix';
-import {mountAnalysis} from './analysis-ui.js?v=20261009-ai-crash-fix';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261009-ai-crash-fix';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261009-ai-crash-fix';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261009-ai-crash-fix';
-import {toGamePoint} from './coordinates.js?v=20261009-ai-crash-fix';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261009-ai-crash-fix';
-import {mountDrawStudio} from './studio-ui.js?v=20261009-ai-crash-fix';
-import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261009-ai-crash-fix';
-import {repairCrossings} from './crossing-repair.js?v=20261009-ai-crash-fix';
-import {drawStructures} from './structures.js?v=20261009-ai-crash-fix';
-import {mountStructures} from './structure-ui.js?v=20261009-ai-crash-fix';
-import {mountCorners} from './corner-ui.js?v=20261009-ai-crash-fix';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261009-ai-crash-fix';
-import {mountScenery} from './scenery-ui.js?v=20261009-ai-crash-fix';
-import {mountACSetup} from './ac-setup-ui.js?v=20261009-ai-crash-fix';
-import {mountSharing} from './sharing.js?v=20261009-ai-crash-fix';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261009-ai-crash-fix';
-import {timingSettings,buildTimingPlan} from './timing.js?v=20261009-ai-crash-fix';
-import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261009-ai-crash-fix';
-import {mountTiming} from './timing-ui.js?v=20261009-ai-crash-fix';
-import {mountSurfaces} from './surface-ui.js?v=20261009-ai-crash-fix';
-import {surfaceSettings} from './surface-settings.js?v=20261009-ai-crash-fix';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261009-ai-crash-fix';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261009-ai-crash-fix';
+import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261010-grid-height';
+import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261010-grid-height';
+import {pitStopPaint} from './pit-stop.js?v=20261010-grid-height';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261010-grid-height';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261010-grid-height';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261010-grid-height';
+import {ReferenceLayer} from './tracing.js?v=20261010-grid-height';
+import {mountTracer} from './tracer-ui.js?v=20261010-grid-height';
+import {TrackPreview} from './preview3d.js?v=20261010-grid-height';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261010-grid-height';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261010-grid-height';
+import {mountAnalysis} from './analysis-ui.js?v=20261010-grid-height';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261010-grid-height';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261010-grid-height';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261010-grid-height';
+import {toGamePoint} from './coordinates.js?v=20261010-grid-height';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261010-grid-height';
+import {mountDrawStudio} from './studio-ui.js?v=20261010-grid-height';
+import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261010-grid-height';
+import {repairCrossings} from './crossing-repair.js?v=20261010-grid-height';
+import {drawStructures} from './structures.js?v=20261010-grid-height';
+import {mountStructures} from './structure-ui.js?v=20261010-grid-height';
+import {mountCorners} from './corner-ui.js?v=20261010-grid-height';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261010-grid-height';
+import {mountScenery} from './scenery-ui.js?v=20261010-grid-height';
+import {mountACSetup} from './ac-setup-ui.js?v=20261010-grid-height';
+import {mountSharing} from './sharing.js?v=20261010-grid-height';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261010-grid-height';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261010-grid-height';
+import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261010-grid-height';
+import {mountTiming} from './timing-ui.js?v=20261010-grid-height';
+import {mountSurfaces} from './surface-ui.js?v=20261010-grid-height';
+import {surfaceSettings} from './surface-settings.js?v=20261010-grid-height';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261010-grid-height';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261010-grid-height';
+import {buildGridPlan,drawGrid,gridStartSetting} from './grid-plan.js?v=20261010-grid-height';
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 const icons = {
@@ -83,6 +84,7 @@ function validateTrack(data) {
   exportOptions.pitboxes=clamp(Math.round(Number(data.export?.pitboxes)||8),1,16);
   ['kerbs','barriers','ai','trees','buildings','grassFx','gantry','distanceMarkers'].forEach(k=>exportOptions[k]=data.export?.[k]!==false);
   for(const [key,min,max] of [['gridSpacing',4,12],['wallHeight',1,4],['gantryClearance',4.5,8]])exportOptions[key]=clamp(Number(data.export?.[key])||DEFAULT_EXPORT[key],min,max);
+  exportOptions.gridStart=gridStartSetting(data.export?.gridStart);
   Object.assign(exportOptions,surfaceSettings(data.export));
   exportOptions.trackId=trackFolder(data);exportOptions.trackIdName=circuitName(data.name);exportOptions.trackIdMode=data.export?.trackIdMode==='manual'?'manual':'auto';exportOptions.idealLine=data.export?.idealLine===true;exportOptions.distanceBoardStyle=data.export?.distanceBoardStyle==='contrast'?'contrast':'classic';exportOptions.distanceBoardSize=data.export?.distanceBoardSize==='large'?'large':'standard';exportOptions.distanceBoardSetback=clamp(Number(data.export?.distanceBoardSetback)||1.8,1,8);
   const buildings=Array.isArray(data.buildings)?data.buildings.filter(b=>b&&Number.isFinite(b.x)&&Number.isFinite(b.y)).slice(0,60).map(b=>({x:clamp(b.x,0,1000),y:clamp(b.y,0,740),...buildingSettings(b)})):[];
@@ -168,7 +170,7 @@ function syncUI() {
   updateUndo();tracerUI?.refresh();analysisUI?.refresh();studioUI?.refresh();cornerUI?.refresh();structureUI?.refresh();sceneryUI?.refresh();acSetupUI?.refresh();surfaceUI?.refresh();timingUI?.refresh();shareUI?.refresh();workspaceUI?.refresh();
   if(referenceLayer && referenceLayer.currentKey!==referenceLayer.key(track.background))referenceLayer.ensure(track.background);
 }
-function setTool(value) {if(mode==='preview')stopPreview();if(value==='measure')measurement=[];if(value!=='barrier')activeBarrier=-1;tool=value;$$('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===value));canvas.style.cursor=value==='pan'?'grab':value==='move'?'default':'crosshair';$('#canvas-hint span').textContent=({move:'Shift-click road points to select several; release Shift and drag to move them together.',draw:track.complete!==false?'Click to insert a point. Shift snaps to the grid.':'Click road points. Click START to close the circuit.',sketch:'Drag to sketch a road section. Release to create editable points.',erase:'Click a road, pit, barrier, or tree to remove it.',start:'Click the road to place your start line.',pan:'Drag to move your canvas.',measure:'Click two reference points to calibrate the scale.',pit:'Click a pit route. Parking bays are fitted automatically.',barrier:'Click to draw a barrier path. Finish barrier ends this path.',building:'Click clear ground to place a building. Use Move to edit it.',tree:'Click beside the circuit to plant a tree.'})[value];studioUI?.refresh();cornerUI?.refresh();}
+function setTool(value) {if(mode==='preview')stopPreview();if(value==='measure')measurement=[];if(value!=='barrier')activeBarrier=-1;tool=value;$$('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===value));canvas.style.cursor=value==='pan'?'grab':value==='move'?'default':'crosshair';$('#canvas-hint span').textContent=({move:'Shift-click road points to select several; release Shift and drag to move them together.',draw:track.complete!==false?'Click to insert a point. Shift snaps to the grid.':'Click road points. Click START to close the circuit.',sketch:'Drag to sketch a road section. Release to create editable points.',erase:'Click a road, pit, barrier, or tree to remove it.',grid:'Click the road to place the front row of the starting grid.',start:'Click the road to place your start line.',pan:'Drag to move your canvas.',measure:'Click two reference points to calibrate the scale.',pit:'Click a pit route. Parking bays are fitted automatically.',barrier:'Click to draw a barrier path. Finish barrier ends this path.',building:'Click clear ground to place a building. Use Move to edit it.',tree:'Click beside the circuit to plant a tree.'})[value];studioUI?.refresh();cornerUI?.refresh();}
 function updateTransform() {
   scale=Math.min(cssW/WORLD.w,cssH/WORLD.h)*view.zoom;
   offsetX=(cssW-WORLD.w*scale)/2+view.panX;offsetY=(cssH-WORLD.h*scale)/2+view.panY;
@@ -201,6 +203,7 @@ function drawTrack() {
   drawRoadLayout(ctx,roadLayout,asphaltTextures.get(style),track.export?.kerbs!==false);
   if(track.line){ctx.setLineDash([7,9]);strokePath('#aee0a16b',1.6);ctx.setLineDash([]);}
   if(track.complete===false){const a=track.points[0],b=track.points[track.points.length-1];[a,b].forEach((p,i)=>{ctx.fillStyle=i?'#ec7c44':'#4c9d86';ctx.beginPath();ctx.arc(p.x,p.y,6/scale,0,Math.PI*2);ctx.fill();ctx.fillStyle='#38443b';ctx.font=`${10/scale}px sans-serif`;ctx.textAlign='center';ctx.fillText(i?'END':'START',p.x,p.y-14/scale);});return;}
+  drawGrid(ctx,buildGridPlan(track,geometry),scale,track.scale||.2);
   const s=pointAt(track.start),w=roadWidth;
   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.angle);
   ctx.fillStyle='#efebdb';ctx.fillRect(-6,-w/2,12,w);
@@ -324,6 +327,7 @@ canvas.addEventListener('pointerdown',e=>{
   if(tool==='move' && hit>=0){if(!selectedPoints.has(track.points[hit])){selectedPoints.clear();selectedPoints.add(track.points[hit]);}selectedPoint=hit;drag={kind:'point',index:hit,start:screenToWorld(e,false),origins:selectedPointIndices().map(index=>({index,x:track.points[index].x,y:track.points[index].y})),before:snapshot(),changed:false};activePoint=hit;selectedBarrier=-1;syncUI();return;}
   if(tool==='move'&&hit<0){selectedPoint=-1;selectedPoints.clear();syncUI();return;}
   if(tool==='erase' && hit>=0){remember();track.points.splice(hit,1);selectedPoints.clear();selectedPoint=-1;track.start=0;commit();return;}
+  if(tool==='grid'){if(track.points.length<3||track.complete===false){toast('Complete the circuit before placing its grid.');return;}const near=nearest(p);if(near.distance<roadWidth/2){remember();track.export={...DEFAULT_EXPORT,...track.export,gridStart:near.progress};commit();setTool('move');toast('Starting grid moved. Numbered boxes show the exported car positions.');}else toast('Click on the road to place the front grid row.');return;}
   if(tool==='start' && track.points.length>=3){const near=nearest(p);if(near.distance<roadWidth){remember();track.start=near.progress;commit();toast('Start line moved. Follow the arrow to begin a lap.');}else toast('Click on the road to place the start line.');return;}
   if(tool==='draw'){
     if(track.complete===false&&track.points.length>=3&&hit===0){editorApi.setComplete(true);return;}
@@ -457,7 +461,7 @@ const editorApi={
   validateTrack,
   openShared(candidate,onOpen){const imported=validateTrack(candidate);if(!imported||imported.points.length<2)throw new Error('Invalid shared circuit.');changeLayout(()=>{if(mode==='preview')stopPreview();finishDrag();remember();track={...imported,id:null};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;measurement=[];commit();setTool('move');fitView();toast('Shared circuit opened. Every point is editable.');workspaceUI?.activateSection('.circuit-settings');onOpen?.();});},
   selectPoint(index){if(!track.points[index])return;selectedPoints.clear();selectedPoints.add(track.points[index]);if(mode==='preview')stopPreview();selectedPoint=index;selectedBarrier=selectedTree=selectedBuilding=-1;setTool('move');syncUI();},
-  useGenerated(candidate){changeLayout(()=>{const previous=snapshot();remember();track={...emptyTrack(),...clone(candidate),complete:true,width:previous.width,weather:previous.weather,asphalt:previous.asphalt,grass:previous.grass,export:previous.export};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;analysisFocus=null;measurement=[];commit();setTool('move');fitView();toast('Generated circuit loaded. Every point is editable.');});},
+  useGenerated(candidate){changeLayout(()=>{const previous=snapshot();remember();track={...emptyTrack(),...clone(candidate),complete:true,width:previous.width,weather:previous.weather,asphalt:previous.asphalt,grass:previous.grass,export:{...previous.export,gridStart:null}};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;analysisFocus=null;measurement=[];commit();setTool('move');fitView();toast('Generated circuit loaded. Every point is editable.');});},
   getSelectedPoints:()=>{settleSelection();return selectedPointIndices();},
   updateSelectedPoints(change){const indices=selectedPointIndices();if(!indices.length)return;editorApi.updateTrack(t=>indices.forEach(i=>change(t.points[i],i,t)));},
   deleteSelectedPoints(){const indices=selectedPointIndices();if(!indices.length)return;finishDrag();remember();for(const i of indices.sort((a,b)=>b-a))track.points.splice(i,1);selectedPoint=-1;selectedPoints.clear();track.start=0;commit();toast(`${indices.length} road points removed. Undo restores them.`);},
@@ -487,8 +491,8 @@ const editorApi={
   setComplete(value){if(mode==='preview')stopPreview();finishDrag();remember();track.complete=value;selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;measurement=[];commit();setTool('move');toast(value?'Circuit closed. Keep editing or inspect the analysis.':'Road opened. You can extend its ends.');},
   editView(){if(mode==='preview')stopPreview();},
   updateTrack(fn){const previousName=track.name;remember();fn(track);commit(previousName);updateTransform();},
-  clear(scope){if(mode==='preview')stopPreview();finishDrag();remember();if(scope==='geometry'||scope==='road'){track.points=[];track.complete=false;track.start=0;}if(scope==='geometry'||scope==='pits')track.pit=[];if(scope==='geometry'||scope==='barriers')track.barriers=[];if(scope==='geometry'||scope==='trees')track.trees=[];if(scope==='geometry'||scope==='buildings')track.buildings=[];selectedBuilding=-1;if(scope==='reference'){track.background=null;}selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;analysisData=null;measurement=[];commit();setTool(track.points.length?'move':'draw');toast('Selected items cleared. Undo restores them.');},
-  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start);remember();const reverseAnchorOrigin=geometry.closed?(geometry.cumulative[geometry.segments.indexOf(track.points.length-1)]||0)/geometry.length:1,previousCorners=track.points.map(cornerSettings).reverse(),boardCounts=new Map();for(const turn of turnMarkers.turns){if(!boardCounts.has(turn.controlIndex))boardCounts.set(turn.controlIndex,{});const counts=boardCounts.get(turn.controlIndex);counts[turn.direction]=(counts[turn.direction]||0)+1;}track.points.reverse();track.points.forEach((p,i)=>{p.turnBoards=reverseTurnBoards(p,boardCounts.get(track.points.length-1-i));if(p.structure)p.structure={...p.structure,offset:-(p.structure.offset||0),...(Number.isFinite(p.structure.anchorProgress)?{anchorProgress:geometry.closed?((reverseAnchorOrigin-p.structure.anchorProgress)%1+1)%1:1-p.structure.anchorProgress}:{})};p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
+  clear(scope){if(mode==='preview')stopPreview();finishDrag();remember();if(scope==='geometry'||scope==='road'){track.points=[];track.complete=false;track.start=0;track.export.gridStart=null;}if(scope==='geometry'||scope==='pits')track.pit=[];if(scope==='geometry'||scope==='barriers')track.barriers=[];if(scope==='geometry'||scope==='trees')track.trees=[];if(scope==='geometry'||scope==='buildings')track.buildings=[];selectedBuilding=-1;if(scope==='reference'){track.background=null;}selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;analysisData=null;measurement=[];commit();setTool(track.points.length?'move':'draw');toast('Selected items cleared. Undo restores them.');},
+  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start),customGrid=gridStartSetting(track.export?.gridStart),gridAnchor=customGrid===null?null:pointAt(customGrid);remember();const reverseAnchorOrigin=geometry.closed?(geometry.cumulative[geometry.segments.indexOf(track.points.length-1)]||0)/geometry.length:1,previousCorners=track.points.map(cornerSettings).reverse(),boardCounts=new Map();for(const turn of turnMarkers.turns){if(!boardCounts.has(turn.controlIndex))boardCounts.set(turn.controlIndex,{});const counts=boardCounts.get(turn.controlIndex);counts[turn.direction]=(counts[turn.direction]||0)+1;}track.points.reverse();track.points.forEach((p,i)=>{p.turnBoards=reverseTurnBoards(p,boardCounts.get(track.points.length-1-i));if(p.structure)p.structure={...p.structure,offset:-(p.structure.offset||0),...(Number.isFinite(p.structure.anchorProgress)?{anchorProgress:geometry.closed?((reverseAnchorOrigin-p.structure.anchorProgress)%1+1)%1:1-p.structure.anchorProgress}:{})};p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;if(gridAnchor)track.export.gridStart=nearest(gridAnchor).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
   onAnalysis(data){analysisData=data;},getOverlay:()=>analysisOverlay,setOverlay(value){analysisOverlay=value;analysisFocus=null;},
   focusProgress(progress){if(mode==='preview')stopPreview();analysisFocus=progress;const p=pointAt(progress);view.zoom=2.4;const base=Math.min(cssW/1000,cssH/740)*view.zoom;view.panX=(500-p.x)*base;view.panY=(370-p.y)*base;updateTransform();},
   setOpacity(value){referenceOpacity=value;},setTraceOverlay(value){traceOverlay=value;},

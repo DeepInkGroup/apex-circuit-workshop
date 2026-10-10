@@ -1,4 +1,4 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261009-ai-crash-fix';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-grid-height';
 
 export const CROSSING_ERROR='The road crosses itself without enough vertical clearance. Add a bridge/tunnel at the crossing or separate the roads.';
 const wrap=n=>((n%1)+1)%1;

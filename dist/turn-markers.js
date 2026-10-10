@@ -1,13 +1,13 @@
-import {pointOnTrack,closestOnTrack} from './engine.js?v=20261009-ai-crash-fix';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261009-ai-crash-fix';
-import {buildingContains,buildingSettings,buildingCorners} from './scenery.js?v=20261009-ai-crash-fix';
-import {treeRadius} from './trees.js?v=20261009-ai-crash-fix';
-import {barrierProperties} from './barriers.js?v=20261009-ai-crash-fix';
-import {boardSettings,boardCard,BOARD_COLORS} from './board-design.js?v=20261009-ai-crash-fix';
+import {pointOnTrack,closestOnTrack} from './engine.js?v=20261010-grid-height';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261010-grid-height';
+import {buildingContains,buildingSettings,buildingCorners} from './scenery.js?v=20261010-grid-height';
+import {treeRadius} from './trees.js?v=20261010-grid-height';
+import {barrierProperties} from './barriers.js?v=20261010-grid-height';
+import {boardSettings,boardCard,BOARD_COLORS} from './board-design.js?v=20261010-grid-height';
 
-import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261009-ai-crash-fix';
-import {kerbSides} from './corner-settings.js?v=20261009-ai-crash-fix';
-export {detectTurns} from './corner-analysis.js?v=20261009-ai-crash-fix';
+import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261010-grid-height';
+import {kerbSides} from './corner-settings.js?v=20261010-grid-height';
+export {detectTurns} from './corner-analysis.js?v=20261010-grid-height';
 const segmentDistance=(p,a,b,s)=>{const x=b.x-a.x,y=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*x+(p.y-a.y)*y)/(x*x+y*y||1)));return Math.hypot(p.x-a.x-x*t,p.y-a.y-y*t)*s;};
 function segmentCross(a,b,c,d){const dx=b.x-a.x,dy=b.y-a.y,ux=d.x-c.x,uy=d.y-c.y,den=dx*uy-dy*ux;if(Math.abs(den)<1e-9)return null;const t=((c.x-a.x)*uy-(c.y-a.y)*ux)/den,u=((c.x-a.x)*dy-(c.y-a.y)*dx)/den;return t>=0&&t<=1&&u>=0&&u<=1?{t,u}:null;}
 export function turnMarkerPlan(track,g,pit,pitWalls=[]){

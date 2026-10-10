@@ -8,6 +8,8 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Choose the race grid's front row on the drawing or by lap percentage in **Assetto Corsa setup → Paddock & starting grid**. Grid markings match exported car spawns; start/finish and pit positions remain independent. Bridges now have a custom road height and tunnels a custom depth, with automatic clearance protection, recalculated ramps and a live elevation profile.
+
 - Fixed a reproduced `AISpline::calculateNormals` loading crash on a generated bridge track with CSP 0.2.11. Native AI is projected above collision triangles and sampled inside pavement faces; its center and 0.6 m side probes are checked before export. Fixed ambiguous ROAD/PIT and WALL/PIT mesh names and duplicate terrain chunk names. KN5 export validates mesh names, vertices, indices and required spawns. A fresh ZIP replaces affected exports.
 
 - Click the crossing-clearance warning to **Resolve crossing automatically**. The fitter compares bridge/tunnel placements on both branches, checks road-width overlap clearance, and applies a complete result only when every crossing clears and structural grades remain at or below 12%. One Undo restores the original layout. The action is available in Export, Full analysis and Assetto Corsa setup; fitted spans remain editable and shareable.

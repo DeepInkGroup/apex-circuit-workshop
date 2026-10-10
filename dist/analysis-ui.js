@@ -1,8 +1,8 @@
-import {CROSSING_ERROR} from './crossings.js?v=20261009-ai-crash-fix';
-import {crossingAction} from './crossing-action.js?v=20261009-ai-crash-fix';
-import {analyzeTrack} from './analysis.js?v=20261009-ai-crash-fix';
-import {validateExport} from './ac-export.js?v=20261009-ai-crash-fix';
-import {trackFolder} from './mod-identity.js?v=20261009-ai-crash-fix';
+import {CROSSING_ERROR} from './crossings.js?v=20261010-grid-height';
+import {crossingAction} from './crossing-action.js?v=20261010-grid-height';
+import {analyzeTrack} from './analysis.js?v=20261010-grid-height';
+import {validateExport} from './ac-export.js?v=20261010-grid-height';
+import {trackFolder} from './mod-identity.js?v=20261010-grid-height';
 
 const $=s=>document.querySelector(s),num=(n,d=0)=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:d}):'—';
 function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}

@@ -1,5 +1,11 @@
 # Native Assetto Corsa export
 
+## Grid position and structure height
+
+In **Assetto Corsa setup → 02 / Paddock & starting grid**, choose **Choose front row position** and enter the percentage of the lap after start/finish, or use **Choose on drawing** and click the road. Rows extend backwards in driving order. **Follow start / finish** restores the front row 8 m before the line. The drawing shows numbered slots; matching flat markings appear in 3D and the native model. `AC_START_n` race spawns use this position, while pit spawns, hotlap start, timing gates and the gantry keep their own positions. `apex_grid.json` records the exported setup. Grid position is included in saved circuits, shared snapshots and client/server exports.
+
+Select a span under **Bridges & tunnels**, set **Road height control → Custom height / depth**, then use the slider or number input. Bridge road height is measured above the highest original road in the covered area; tunnel depth is measured below the lowest, including nearby crossing roads. The allowed request is 4.5–80 m. Minimum clearance is a separate control. The effective height/depth increases when necessary to fit the deck or roof and required clearance; the profile and status show the result. Approaches, collision road, surrounding terrain and structural geometry follow the new profile. Insufficient approach space still produces grade warnings or blocks export. Choose **Automatic safe height** to restore automatic sizing.
+
 ## AI loading crash repair
 
 The October 9, 2026 crash report for Vinana Circuit failed in `AISpline::calculateNormals`. Inspection found AI heights below road triangles and a failed side probe at a bridge seam. The exporter now projects fast/ideal/pit AI onto the actual collision pavement, adds 15 cm of raycast clearance, and samples slightly inside pavement faces. It checks the center and both 0.6 m side probes before writing AI; unsupported generated routes stop export with a location in the message. Generated forward vectors include slope, surface normals follow the triangles, and duplicate points/seams are rejected.

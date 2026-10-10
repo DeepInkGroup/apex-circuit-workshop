@@ -1,6 +1,6 @@
-import {buildGeometry,clamp} from './engine.js?v=20261009-ai-crash-fix';
-import {roadCrossings} from './crossings.js?v=20261009-ai-crash-fix';
-import {structureSettings} from './structure-settings.js?v=20261009-ai-crash-fix';
+import {buildGeometry,clamp} from './engine.js?v=20261010-grid-height';
+import {roadCrossings} from './crossings.js?v=20261010-grid-height';
+import {structureSettings} from './structure-settings.js?v=20261010-grid-height';
 
 const geometry=t=>buildGeometry(t.points||[],t.smooth,t.complete!==false,t),yieldFrame=()=>new Promise(resolve=>setTimeout(resolve,0));
 const maxGrade=g=>Math.max(0,...(g.structureProfile?.ranges||[]).map(r=>r.actualGrade));
@@ -22,7 +22,7 @@ export async function repairCrossings(track,onProgress=()=>{}){
     const existing=current.g.structureProfile?.sectionAt(branch.progress*total),owner=existing?.core?existing.index:controls.filter(c=>structureSettings(current.track.points[c.index].structure).type==='none').sort((a,b)=>distance(a.progress,branch.progress)-distance(b.progress,branch.progress))[0]?.index;if(owner===undefined)continue;
     if(!existing?.core&&(current.g.structureProfile?.ranges.length||0)>=16)continue;
     for(const type of ['bridge','tunnel'])for(const clearance of [6,5])for(const [grade,approach] of [[8,1.15],[12,1]]){
-     const draft={...current.track,points:current.track.points.map((p,i)=>i===owner?{...p,structure:structureSettings({...p.structure,type,length:Math.ceil(crossing.spanNeeded/2)*2,clearance,grade,approach,offset:0,anchorProgress:branch.progress,tunnelStyle:'box'})}:p)},candidate=state(draft,[...current.changes,{index:owner,type,progress:branch.progress}]);
+     const draft={...current.track,points:current.track.points.map((p,i)=>i===owner?{...p,structure:structureSettings({...p.structure,type,height:null,length:Math.ceil(crossing.spanNeeded/2)*2,clearance,grade,approach,offset:0,anchorProgress:branch.progress,tunnelStyle:'box'})}:p)},candidate=state(draft,[...current.changes,{index:owner,type,progress:branch.progress}]);
      evaluated++;if(evaluated%4===0){onProgress({remaining:best.remaining,evaluated});await yieldFrame();}
      if(candidate.remaining>=current.remaining||candidate.grade>12||candidate.g.structureProfile?.issues.length)continue;
      // Never undo clearance already achieved at a different crossing.

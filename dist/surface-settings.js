@@ -1,4 +1,4 @@
-import {clamp} from './engine.js?v=20261009-ai-crash-fix';
+import {clamp} from './engine.js?v=20261010-grid-height';
 
 export const SURFACE_FIELDS={
  roadGrip:{label:'Road grip',min:.8,max:1.2,step:.01,value:1},

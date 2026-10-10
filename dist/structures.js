@@ -1,7 +1,7 @@
-import {pointOnTrack} from './engine.js?v=20261009-ai-crash-fix';
-import {toGamePoint,gameDirection,trackScale} from './coordinates.js?v=20261009-ai-crash-fix';
-import {buildRoadLayout} from './road-layout.js?v=20261009-ai-crash-fix';
-import {kerbSides} from './corner-settings.js?v=20261009-ai-crash-fix';
+import {pointOnTrack} from './engine.js?v=20261010-grid-height';
+import {toGamePoint,gameDirection,trackScale} from './coordinates.js?v=20261010-grid-height';
+import {buildRoadLayout} from './road-layout.js?v=20261010-grid-height';
+import {kerbSides} from './corner-settings.js?v=20261010-grid-height';
 const layoutCache=new WeakMap();
 const normalCache=new WeakMap();
 const spanCache=new WeakMap();

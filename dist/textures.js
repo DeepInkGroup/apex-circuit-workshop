@@ -1,6 +1,6 @@
-import {BinaryWriter,crc32} from './binary.js?v=20261009-ai-crash-fix';
-import {grassPixels} from './scenery.js?v=20261009-ai-crash-fix';
-import {boardPixels} from './board-design.js?v=20261009-ai-crash-fix';
+import {BinaryWriter,crc32} from './binary.js?v=20261010-grid-height';
+import {grassPixels} from './scenery.js?v=20261010-grid-height';
+import {boardPixels} from './board-design.js?v=20261010-grid-height';
 const clamp=n=>Math.max(0,Math.min(255,Math.round(n)));
 export function surfacePixels(material,size){
   if(material.distanceBoard)return boardPixels(material.distanceBoard,size);
