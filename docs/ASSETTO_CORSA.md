@@ -1,5 +1,15 @@
 # Native Assetto Corsa export
 
+## Reopen an exported ZIP
+
+Click **Import ZIP** in the top navigation, or open **My circuits**. Drop one APEX track ZIP into the import area or choose **Choose ZIP or JSON**. Both the Content Manager package and the single-folder track package include `apex_source.json`. New server packages include it too. Repacked ZIPs using standard Store or Deflate compression are supported; archives containing several APEX circuits offer a circuit selector.
+
+The circuit opens for editing with its name, mod ID, road points, corner customization, elevations, structures, pits, scenery, surface settings and starting grid. The existing unsaved-layout dialog protects your current work. Click **Save circuit** to add the imported layout to your browser garage. Reference imagery is not embedded in mod ZIPs; upload it again if needed. Editor JSON imports still work.
+
+The importer reads only the ZIP directory and chosen editor source, validates its uncompressed size and CRC32, and applies the editor's existing data validation. It does not upload the archive or unpack models/textures. Encrypted, split and ZIP64 archives are unsupported; third-party mods without `apex_source.json` cannot be reconstructed. Editor source is limited to 4 MB, the archive directory to 16 MB and 10,000 entries.
+
+Model generation and ZIP packaging now run in a reusable background worker for client and server downloads. The completed ZIP buffer is transferred back without cloning. ZIP packing allocates its final buffer once; binary float batches reserve space together. Preview images are still generated on the main thread. Older browsers without workers use the existing direct-export fallback.
+
 ## Grid arrangements and smooth structural corners
 
 **Paddock & starting grid** supports side-by-side, staggered and single-file starts. Choose the front-row location on the drawing or by lap percentage. Select pole side, row spacing (4–20 m), center-to-center column gap, the staggered second-car setback and lateral offset. A blank column gap uses automatic spacing. The effective layout is fitted to road width and shown as numbered slots; exported markings and `AC_START_n` use the same plan. Export rejects a slot with no collision pavement beneath it. Layout settings are saved, shared and recorded in client/server grid metadata.

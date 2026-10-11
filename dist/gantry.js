@@ -1,5 +1,5 @@
-import {toGamePoint,trackScale} from './coordinates.js?v=20261010-smooth-grid';
-import {clamp} from './engine.js?v=20261010-smooth-grid';
+import {toGamePoint,trackScale} from './coordinates.js?v=20261011-zip-import';
+import {clamp} from './engine.js?v=20261011-zip-import';
 
 export function gantryPlan(track,timing,pit,ground=0){
  if(track.complete===false||track.export?.gantry===false||!timing.gates.length)return null;

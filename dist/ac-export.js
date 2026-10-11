@@ -1,34 +1,34 @@
-import {roadCrossings,CROSSING_ERROR} from './crossings.js?v=20261010-smooth-grid';
-import {pavementAi,validateNativeScene} from './native-ai.js?v=20261010-smooth-grid';
-import {pavementSampler} from './pavement-sampler.js?v=20261010-smooth-grid';
-import {pitStopPaint} from './pit-stop.js?v=20261010-smooth-grid';
-import {addStructures,terrainQuadExcluded,structureGroundRule} from './structures.js?v=20261010-smooth-grid';
-import {addBarrierMeshes,pitOuterBarriers} from './barriers.js?v=20261010-smooth-grid';
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-smooth-grid';
-import {BinaryWriter,zipFiles,crc32} from './binary.js?v=20261010-smooth-grid';
-import {ASPHALT} from './surfaces.js?v=20261010-smooth-grid';
-import {analyzeTrack} from './analysis.js?v=20261010-smooth-grid';
-import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261010-smooth-grid';
-import {WEATHER} from './environment.js?v=20261010-smooth-grid';
-import {TREE_SPECIES,treeSettings} from './trees.js?v=20261010-smooth-grid';
-import {buildRoadLayout} from './road-layout.js?v=20261010-smooth-grid';
-import {createTrackMap,mapIni} from './track-map.js?v=20261010-smooth-grid';
-import {createTexture,materialProperties} from './textures.js?v=20261010-smooth-grid';
-import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261010-smooth-grid';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261010-smooth-grid';
-import {buildTimingPlan,sectionsIni} from './timing.js?v=20261010-smooth-grid';
-import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261010-smooth-grid';
-import {gantryPlan,addGantry} from './gantry.js?v=20261010-smooth-grid';
+import {roadCrossings,CROSSING_ERROR} from './crossings.js?v=20261011-zip-import';
+import {pavementAi,validateNativeScene} from './native-ai.js?v=20261011-zip-import';
+import {pavementSampler} from './pavement-sampler.js?v=20261011-zip-import';
+import {pitStopPaint} from './pit-stop.js?v=20261011-zip-import';
+import {addStructures,terrainQuadExcluded,structureGroundRule} from './structures.js?v=20261011-zip-import';
+import {addBarrierMeshes,pitOuterBarriers} from './barriers.js?v=20261011-zip-import';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261011-zip-import';
+import {BinaryWriter,zipFiles,crc32} from './binary.js?v=20261011-zip-import';
+import {ASPHALT} from './surfaces.js?v=20261011-zip-import';
+import {analyzeTrack} from './analysis.js?v=20261011-zip-import';
+import {buildPitPlan,PIT_STYLES,resamplePath} from './pit-plan.js?v=20261011-zip-import';
+import {WEATHER} from './environment.js?v=20261011-zip-import';
+import {TREE_SPECIES,treeSettings} from './trees.js?v=20261011-zip-import';
+import {buildRoadLayout} from './road-layout.js?v=20261011-zip-import';
+import {createTrackMap,mapIni} from './track-map.js?v=20261011-zip-import';
+import {createTexture,materialProperties} from './textures.js?v=20261011-zip-import';
+import {GRASS,BUILDING_FACADES,BUILDING_ROOFS,buildingSettings,buildingCorners,buildingContains} from './scenery.js?v=20261011-zip-import';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261011-zip-import';
+import {buildTimingPlan,sectionsIni} from './timing.js?v=20261011-zip-import';
+import {surfaceSettings,surfaceRecord} from './surface-settings.js?v=20261011-zip-import';
+import {gantryPlan,addGantry} from './gantry.js?v=20261011-zip-import';
 
-import {boundedCache} from './performance.js?v=20261010-smooth-grid';
-import {buildGridPlan,gridPaintQuads,gridSettings} from './grid-plan.js?v=20261010-smooth-grid';
+import {boundedCache} from './performance.js?v=20261011-zip-import';
+import {buildGridPlan,gridPaintQuads,gridSettings} from './grid-plan.js?v=20261011-zip-import';
 export const DEFAULT_EXPORT={author:'APEX creator',country:'Unknown',city:'',pitboxes:8,kerbs:true,barriers:true,ai:true,trees:true,buildings:true,...surfaceSettings(),grassFx:true,gridStart:null,...gridSettings(),wallHeight:2,gantry:true,gantryClearance:6,idealLine:false,distanceMarkers:true,distanceBoardStyle:'classic',distanceBoardSize:'standard',distanceBoardSetback:1.8};
-export {trackSlug} from './mod-identity.js?v=20261010-smooth-grid';
-import {trackFolder,validTrackId,serverConfig,synchronizeIdentity} from './mod-identity.js?v=20261010-smooth-grid';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261010-smooth-grid';
-import {idealLine} from './ideal-line.js?v=20261010-smooth-grid';
-import {createTerrain} from './terrain.js?v=20261010-smooth-grid';
-import {turnMarkerPlan,addTurnMarkers} from './turn-markers.js?v=20261010-smooth-grid';
+export {trackSlug} from './mod-identity.js?v=20261011-zip-import';
+import {trackFolder,validTrackId,serverConfig,synchronizeIdentity} from './mod-identity.js?v=20261011-zip-import';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261011-zip-import';
+import {idealLine} from './ideal-line.js?v=20261011-zip-import';
+import {createTerrain} from './terrain.js?v=20261011-zip-import';
+import {turnMarkerPlan,addTurnMarkers} from './turn-markers.js?v=20261011-zip-import';
 const unit=trackScale;
 const world=toGamePoint;
 const normalize=v=>{const l=Math.hypot(...v)||1;return v.map(n=>n/l);};
@@ -322,7 +322,7 @@ function calculateExportReadiness(track){
   return {errors,warnings,length:g.length*s,crossings};
 }
 function sceneExtension(scene,track){
-  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=27.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
+  const lines=['[ABOUT]','AUTHOR=APEX Circuit Workshop','VERSION=28.0','DESCRIPTION=Explicit opaque material bindings and grass scenery',''];
   scene.materials.forEach((m,index)=>{lines.push(`[SHADER_REPLACEMENT_${index}]`,`MATERIALS=${m.name}`,'SHADER=ksPerPixel','RESOURCE_0=txDiffuse',`RESOURCE_TEXTURE_0=${scene.textures[index].name}`);Object.entries(materialProperties(m)).forEach(([key,value],i)=>lines.push(`PROP_${i}=${key}, ${Array.isArray(value)?value.join(', '):value}`));lines.push('');});
   const grass=GRASS[track.grass]||GRASS.mown;lines.push('[GRASS_FX]',`ACTIVE=${scene.options.grassFx?1:0}`,`GRASS_MESHES=${scene.meshes.filter(m=>m.name.startsWith('1GRASS_TERRAIN')).map(m=>m.name).join(', ')}`,'GRASS_MATERIALS=Grass',`OCCLUDING_MATERIALS=${scene.materials.filter(m=>m.name!=='Grass'&&!m.tree).map(m=>m.name).join(', ')}`,'ORIGINAL_GRASS_MATERIALS=','MASK_MAIN_THRESHOLD=-1','MASK_RED_THRESHOLD=0','MASK_MIN_LUMINANCE=-1','MASK_MAX_LUMINANCE=1',`SHAPE_SIZE=${grass.size}`,`SHAPE_TIDY=${grass.tidy}`,`SHAPE_CUT=${grass.cut}`,'SHAPE_WIDTH=1','');return lines.join('\n');
 }
@@ -346,7 +346,7 @@ export function exportFiles(track,images={}){
   if(scene.options.ai||scene.options.idealLine){const scale=unit(track),roadPavement=pavementSampler(scene.roadLayout.quads,scale),pitPavement=pavementSampler([...scene.roadLayout.quads,...pitRibbons(scene.pitPlan).map(r=>r.corners),...scene.pitPlan.apron],scale);scene.aiFrames=pavementAi(scene.idealFrames.length?scene.idealFrames:scene.frames,roadPavement,scale,'Fast lane');scene.pitAiFrames=pavementAi(scene.pitFrames,pitPavement,scale,'Pit lane',false);put('ai/fast_lane.ai',writeAi(scene.aiFrames,track.width));if(scene.options.idealLine)put('data/ideal_line.ai',writeAi(scene.aiFrames,track.width));put('ai/pit_lane.ai',writeAi(scene.pitAiFrames,scene.pitPlan.settings.width,false));}
   for(const [name,bytes] of Object.entries(images))put(name,bytes);
   if(images['map.png'])put('data/map.ini',mapIni(createTrackMap(track,undefined,scene.pitPlan,scene.roadLayout)));
-  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:27,export:{...track.export,trackId:slug},background:null},null,2));
+  put('apex_source.json',JSON.stringify({...track,format:'apex-circuit',version:28,export:{...track.export,trackId:slug},background:null},null,2));
   put('apex_structures.json',JSON.stringify({structures:scene.structures,automaticElevation:true,method:'Level spans with seventh-order approaches and direct blends between nearby spans; clearance includes deck thickness or tunnel cover.'},null,2));
   put('apex_analysis.json',JSON.stringify({...analyzeTrack(track),exportReadiness:report},null,2));
   files['INSTALL.txt']=`APEX / ${track.name}\n\nINSTALL\nDrag this ZIP into Content Manager and install the detected track.\nOr extract the content folder into your Assetto Corsa installation.\nResult: assettocorsa/content/tracks/${slug}/${slug}.kn5\nSelect ${track.name} in Practice and choose one car first.\n\nYOUR PACKAGE\n${scene.pitCount} pit boxes and grid slots · ${scene.gridPlan.spacing} m row spacing · ${scene.gridPlan.layout} grid · pole on ${scene.gridPlan.poleSide}\nRoad grip ${scene.options.roadGrip} · kerb grip ${scene.options.kerbGrip} · pit grip ${scene.options.pitGrip} · grass grip ${scene.options.grassGrip}\nGrass drag ${scene.options.grassDrag} · dirt pickup ${scene.options.grassDirt}\nStart/Finish Gantry: ${scene.gantry?"included":"off"}\nGrass: ${(GRASS[track.grass]||GRASS.mown).label} · Buildings: ${scene.options.buildings?(track.buildings||[]).length:0} · Trees: ${scene.options.trees?(track.trees||[]).length:0}\n\nABOUT THIS EXPORT\nBridge decks, guard rails and pillars, and below-ground tunnel walls, ceilings and portals are native collision geometry. Bridge end faces stop below the asphalt, preserving a single continuous driving surface. Nearby structural spans blend directly instead of adding an intermediate crest or dip. Pit mouths conform to the road triangles with a smooth shoulder blend, and pit stops use one continuous apron with painted bay lines.
@@ -378,6 +378,6 @@ export function exportTrackFolderZip(track,images={}){const result=exportFiles(t
 // the model or preview can import the complete client ZIP instead.
 export function exportServerZip(track,images={}){
   const result=exportFiles(track,images),root=`${result.slug}/`,files={};
-  for(const [path,value] of Object.entries(trackFolderFiles(result)))if(path.startsWith(root+'data/')||path.startsWith(root+'ui/')||path===root+'map.png'||path===root+'models.ini'||['SERVER_CONFIG.txt','SERVER_INSTALL.txt','APEX_MANIFEST.json','apex_grid.json'].some(name=>path===root+name))files[path]=value;
+  for(const [path,value] of Object.entries(trackFolderFiles(result)))if(path.startsWith(root+'data/')||path.startsWith(root+'ui/')||path===root+'map.png'||path===root+'models.ini'||['SERVER_CONFIG.txt','SERVER_INSTALL.txt','APEX_MANIFEST.json','apex_grid.json','apex_source.json'].some(name=>path===root+name))files[path]=value;
   return {slug:result.slug,files,bytes:zipFiles(files)};
 }

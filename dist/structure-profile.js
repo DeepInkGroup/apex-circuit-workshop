@@ -1,6 +1,6 @@
-import {profileAt} from './height-profile.js?v=20261010-smooth-grid';
-import {structureSettings} from './structure-settings.js?v=20261010-smooth-grid';
-import {rampDistance} from './ramp-distance.js?v=20261010-smooth-grid';
+import {profileAt} from './height-profile.js?v=20261011-zip-import';
+import {structureSettings} from './structure-settings.js?v=20261011-zip-import';
+import {rampDistance} from './ramp-distance.js?v=20261011-zip-import';
 // Seventh-order easing has zero grade, curvature and curvature change at
 // both ramp ends. Reserve extra approach length rather than compressing it.
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),smooth=t=>t**4*(35+t*(-84+t*(70-20*t))),PEAK=2.1875;

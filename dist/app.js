@@ -1,40 +1,41 @@
-import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261010-smooth-grid';
-import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261010-smooth-grid';
-import {pitStopPaint} from './pit-stop.js?v=20261010-smooth-grid';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261010-smooth-grid';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261010-smooth-grid';
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261010-smooth-grid';
-import {ReferenceLayer} from './tracing.js?v=20261010-smooth-grid';
-import {mountTracer} from './tracer-ui.js?v=20261010-smooth-grid';
-import {TrackPreview} from './preview3d.js?v=20261010-smooth-grid';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261010-smooth-grid';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261010-smooth-grid';
-import {mountAnalysis} from './analysis-ui.js?v=20261010-smooth-grid';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261010-smooth-grid';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261010-smooth-grid';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261010-smooth-grid';
-import {toGamePoint} from './coordinates.js?v=20261010-smooth-grid';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261010-smooth-grid';
-import {mountDrawStudio} from './studio-ui.js?v=20261010-smooth-grid';
-import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261010-smooth-grid';
-import {repairCrossings} from './crossing-repair.js?v=20261010-smooth-grid';
-import {drawStructures} from './structures.js?v=20261010-smooth-grid';
-import {mountStructures} from './structure-ui.js?v=20261010-smooth-grid';
-import {mountCorners} from './corner-ui.js?v=20261010-smooth-grid';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261010-smooth-grid';
-import {mountScenery} from './scenery-ui.js?v=20261010-smooth-grid';
-import {mountACSetup} from './ac-setup-ui.js?v=20261010-smooth-grid';
-import {mountSharing} from './sharing.js?v=20261010-smooth-grid';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261010-smooth-grid';
-import {timingSettings,buildTimingPlan} from './timing.js?v=20261010-smooth-grid';
-import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261010-smooth-grid';
-import {mountTiming} from './timing-ui.js?v=20261010-smooth-grid';
-import {mountSurfaces} from './surface-ui.js?v=20261010-smooth-grid';
-import {surfaceSettings} from './surface-settings.js?v=20261010-smooth-grid';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261010-smooth-grid';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261010-smooth-grid';
-import {buildGridPlan,drawGrid,gridStartSetting,gridSettings} from './grid-plan.js?v=20261010-smooth-grid';
-import {frameTask} from './performance.js?v=20261010-smooth-grid';
+import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261011-zip-import';
+import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261011-zip-import';
+import {pitStopPaint} from './pit-stop.js?v=20261011-zip-import';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261011-zip-import';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261011-zip-import';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261011-zip-import';
+import {ReferenceLayer} from './tracing.js?v=20261011-zip-import';
+import {mountTracer} from './tracer-ui.js?v=20261011-zip-import';
+import {TrackPreview} from './preview3d.js?v=20261011-zip-import';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261011-zip-import';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261011-zip-import';
+import {mountAnalysis} from './analysis-ui.js?v=20261011-zip-import';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261011-zip-import';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261011-zip-import';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261011-zip-import';
+import {toGamePoint} from './coordinates.js?v=20261011-zip-import';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261011-zip-import';
+import {mountDrawStudio} from './studio-ui.js?v=20261011-zip-import';
+import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261011-zip-import';
+import {repairCrossings} from './crossing-repair.js?v=20261011-zip-import';
+import {drawStructures} from './structures.js?v=20261011-zip-import';
+import {mountStructures} from './structure-ui.js?v=20261011-zip-import';
+import {mountCorners} from './corner-ui.js?v=20261011-zip-import';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261011-zip-import';
+import {mountScenery} from './scenery-ui.js?v=20261011-zip-import';
+import {mountACSetup} from './ac-setup-ui.js?v=20261011-zip-import';
+import {mountSharing} from './sharing.js?v=20261011-zip-import';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261011-zip-import';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261011-zip-import';
+import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261011-zip-import';
+import {mountTiming} from './timing-ui.js?v=20261011-zip-import';
+import {mountSurfaces} from './surface-ui.js?v=20261011-zip-import';
+import {surfaceSettings} from './surface-settings.js?v=20261011-zip-import';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261011-zip-import';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261011-zip-import';
+import {buildGridPlan,drawGrid,gridStartSetting,gridSettings} from './grid-plan.js?v=20261011-zip-import';
+import {frameTask} from './performance.js?v=20261011-zip-import';
+import {mountCircuitImport} from './circuit-import.js?v=20261011-zip-import';
 let drawFrame=0,canvasDirty=true,canvasBaseDirty=true,panelTimer;
 function requestRender(full=false){canvasDirty=true;if(full)canvasBaseDirty=true;if(drawFrame||document.hidden)return;drawFrame=requestAnimationFrame(()=>{drawFrame=0;if(document.hidden||!canvasDirty)return;canvasDirty=false;draw();});}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)requestRender();});
@@ -434,12 +435,16 @@ function renderLibrary(){
   });
 }
 $('#library-btn').onclick=()=>{renderLibrary();$('#library-dialog').showModal();};
-$('#import-btn').onclick=()=>$('#import-file').click();
-$('#import-file').onchange=async()=>{
-  const file=$('#import-file').files[0];if(!file)return;
-  if(file.size>150000){toast('That file is too large. Choose an APEX circuit JSON file.');$('#import-file').value='';return;}
-  try{const imported=validateTrack(JSON.parse(await file.text()));if(!imported||!imported.points.length)throw new Error();imported.id=crypto.randomUUID?crypto.randomUUID():String(Date.now());imported.updatedAt=new Date().toISOString();if(library.length>=100){toast('Your garage is full. Remove a circuit before importing.');return;}const next=[imported,...library];if(writeStorage(STORAGE,next)){library=next;renderLibrary();syncUI();toast('Circuit imported. Open it to continue editing.');}}catch{toast('Invalid circuit file. Choose an exported APEX circuit JSON.');}finally{$('#import-file').value='';}
-};
+$('#import-zip-nav').onclick=()=>{renderLibrary();$('#library-dialog').showModal();$('#import-btn').focus();};
+function openImportedCircuit(imported,message,onOpen){
+  finishDrag();
+  changeLayout(()=>{
+    remember();track={...imported,id:null};selectedPoints.clear();
+    selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;measurement=[];
+    commit();setTool('move');fitView();toast(message);workspaceUI?.activateSection('.circuit-settings');onOpen?.();
+  });
+}
+mountCircuitImport({validate:validateTrack,open:imported=>openImportedCircuit(imported,'Circuit imported. Edit it here, or Save circuit to keep it in your garage.')});
 $('#fullscreen-btn').onclick=()=>{const expanded=$('.studio').classList.toggle('expanded');$('#fullscreen-btn').setAttribute('aria-label',expanded?'Exit expanded canvas':'Expand canvas');$('#fullscreen-btn').title=expanded?'Exit expanded canvas':'Expand canvas';};
 $('#export-current').onclick=()=>{
   if(!track.points.length){toast('Add a point before exporting a draft.');return;}
@@ -486,7 +491,7 @@ const editorApi={
   toggleTunnelCutaway(){if(mode!=='preview')showPreview();if(mode==='preview'){preview3D.setCutaway(!preview3D.cutaway);syncUI();}},
   showPanel(section){workspaceUI?.activateSection(section);$('.studio').classList.remove('panel-hidden','drawing-focus','expanded');$('#hide-panel-btn').textContent='Hide panel';$('#hide-panel-btn').setAttribute('aria-pressed','false');$('#focus-drawing').textContent='Focus canvas ↗';$('#focus-drawing').setAttribute('aria-pressed','false');$('#fullscreen-btn').setAttribute('aria-label','Expand canvas');$('#fullscreen-btn').title='Expand canvas';requestAnimationFrame(()=>$(section)?.scrollIntoView({block:'nearest',behavior:'smooth'}));},
   validateTrack,
-  openShared(candidate,onOpen){const imported=validateTrack(candidate);if(!imported||imported.points.length<2)throw new Error('Invalid shared circuit.');changeLayout(()=>{if(mode==='preview')stopPreview();finishDrag();remember();track={...imported,id:null};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;measurement=[];commit();setTool('move');fitView();toast('Shared circuit opened. Every point is editable.');workspaceUI?.activateSection('.circuit-settings');onOpen?.();});},
+  openShared(candidate,onOpen){const imported=validateTrack(candidate);if(!imported||imported.points.length<2)throw new Error('Invalid shared circuit.');openImportedCircuit(imported,'Shared circuit opened. Every point is editable.',onOpen);},
   selectPoint(index){if(!track.points[index])return;selectedPoints.clear();selectedPoints.add(track.points[index]);if(mode==='preview')stopPreview();selectedPoint=index;selectedBarrier=selectedTree=selectedBuilding=-1;setTool('move');syncUI();},
   useGenerated(candidate){changeLayout(()=>{const previous=snapshot();remember();track={...emptyTrack(),...clone(candidate),complete:true,width:previous.width,weather:previous.weather,asphalt:previous.asphalt,grass:previous.grass,export:{...previous.export,gridStart:null}};selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;analysisFocus=null;measurement=[];commit();setTool('move');fitView();toast('Generated circuit loaded. Every point is editable.');});},
   getSelectedPoints:()=>{settleSelection();return selectedPointIndices();},

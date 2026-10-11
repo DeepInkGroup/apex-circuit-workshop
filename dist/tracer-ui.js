@@ -1,26 +1,27 @@
-import {CROSSING_ERROR} from './crossings.js?v=20261010-smooth-grid';
-import {crossingAction} from './crossing-action.js?v=20261010-smooth-grid';
-import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261010-smooth-grid';
-import {barrierSettings} from './auto-barriers.js?v=20261010-smooth-grid';
-import {pitStopPaint} from './pit-stop.js?v=20261010-smooth-grid';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261010-smooth-grid';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261010-smooth-grid';
-import {drawStructures} from './structures.js?v=20261010-smooth-grid';
-import {trackFolder} from './mod-identity.js?v=20261010-smooth-grid';
-import {buildGeometry} from './engine.js?v=20261010-smooth-grid';
-import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261010-smooth-grid';
-import {DEFAULT_EXPORT,exportZip,exportTrackFolderZip,validateExport} from './ac-export.js?v=20261010-smooth-grid';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261010-smooth-grid';
-import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261010-smooth-grid';
-import {WEATHER} from './environment.js?v=20261010-smooth-grid';
-import {drawTree} from './trees.js?v=20261010-smooth-grid';
-import {parseCoordinates,tilePlan} from './tracing.js?v=20261010-smooth-grid';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261010-smooth-grid';
-import {createTrackMap,worldToMap} from './track-map.js?v=20261010-smooth-grid';
-import {toGamePoint} from './coordinates.js?v=20261010-smooth-grid';
-import {buildTimingPlan} from './timing.js?v=20261010-smooth-grid';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261010-smooth-grid';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261010-smooth-grid';
+import {CROSSING_ERROR} from './crossings.js?v=20261011-zip-import';
+import {crossingAction} from './crossing-action.js?v=20261011-zip-import';
+import {BARRIER_TYPES,barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261011-zip-import';
+import {barrierSettings} from './auto-barriers.js?v=20261011-zip-import';
+import {pitStopPaint} from './pit-stop.js?v=20261011-zip-import';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261011-zip-import';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261011-zip-import';
+import {drawStructures} from './structures.js?v=20261011-zip-import';
+import {trackFolder} from './mod-identity.js?v=20261011-zip-import';
+import {buildGeometry} from './engine.js?v=20261011-zip-import';
+import {grassPattern,buildingCorners,drawBuilding} from './scenery.js?v=20261011-zip-import';
+import {DEFAULT_EXPORT,validateExport} from './ac-export.js?v=20261011-zip-import';
+import {buildPackage} from './package-builder.js?v=20261011-zip-import';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261011-zip-import';
+import {buildPitPlan,PIT_STYLES} from './pit-plan.js?v=20261011-zip-import';
+import {WEATHER} from './environment.js?v=20261011-zip-import';
+import {drawTree} from './trees.js?v=20261011-zip-import';
+import {parseCoordinates,tilePlan} from './tracing.js?v=20261011-zip-import';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261011-zip-import';
+import {createTrackMap,worldToMap} from './track-map.js?v=20261011-zip-import';
+import {toGamePoint} from './coordinates.js?v=20261011-zip-import';
+import {buildTimingPlan} from './timing.js?v=20261011-zip-import';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261011-zip-import';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261011-zip-import';
 
 const $=s=>document.querySelector(s);
 function dialog(id,content){const d=document.createElement('dialog');d.id=id;d.className='tracer-dialog';d.innerHTML=content;document.body.append(d);d.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>d.close());d.addEventListener('click',e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();});return d;}
@@ -165,14 +166,16 @@ export function mountTracer(api){
   function openExport(){
     stopForDialog();const track=api.getTrack(),report=validateExport(track);$('#export-track-title').textContent=track.name;$('#export-track-details').textContent=`${Math.round(report.length)} m · ${track.width} m wide · ${track.export?.pitboxes||8} pit boxes · ${track.export?.buildings!==false?(track.buildings||[]).length:0} buildings · ${track.export?.trees!==false?(track.trees||[]).length:0} trees`;
     const reportEl=$('#export-report');reportEl.replaceChildren();[...report.errors.map(text=>({text,error:true})),...report.warnings.map(text=>({text,error:false}))].forEach(item=>{if(item.text===CROSSING_ERROR){reportEl.append(crossingAction(api,'× '+item.text,{className:'export-issue error',after:(result,message)=>{crossingReceipt={key:JSON.stringify(api.getTrack()),message};openExport();}}));return;}const p=document.createElement('p');p.className=item.error?'export-issue error':'export-issue';p.textContent=(item.error?'× ':'↳ ')+item.text;reportEl.append(p);});
-    if(crossingReceipt?.key===JSON.stringify(track)){const receipt=document.createElement('p');receipt.className='export-repair-receipt';receipt.textContent=crossingReceipt.message+' Inspect in 3D before installing.';reportEl.prepend(receipt);}else crossingReceipt=null;$('#download-ac').disabled=$('#download-ac-cm').disabled=!!report.errors.length;$('#ai-included').hidden=track.export?.ai===false&&!track.export?.idealLine;$('#export-error').textContent='';if(!exporter.open)exporter.showModal();preparePreview();
+    if(crossingReceipt?.key===JSON.stringify(track)){const receipt=document.createElement('p');receipt.className='export-repair-receipt';receipt.textContent=crossingReceipt.message+' Inspect in 3D before installing.';reportEl.prepend(receipt);}else crossingReceipt=null;$('#download-ac').disabled=$('#download-ac-cm').disabled=packageBuilding||!!report.errors.length;$('#ai-included').hidden=track.export?.ai===false&&!track.export?.idealLine;$('#export-error').textContent='';if(!exporter.open)exporter.showModal();preparePreview();
   }
   $('#ac-export-btn').onclick=openExport;$('#export-inspect').onclick=()=>{exporter.close();api.preview();};
+  let packageBuilding=false;
   async function downloadPackage(contentManager){
+    if(packageBuilding)return;packageBuilding=true;
     const button=$(contentManager?'#download-ac-cm':'#download-ac'),track=structuredClone(api.getTrack());
     $('#download-ac').disabled=$('#download-ac-cm').disabled=true;button.textContent='Building your track…';$('#export-error').textContent='';
-    try{await new Promise(requestAnimationFrame);const images=cachedKey===JSON.stringify(track)&&cachedImages?cachedImages:await exportImages(track),result=(contentManager?exportZip:exportTrackFolderZip)(track,images),url=URL.createObjectURL(new Blob([result.bytes],{type:'application/zip'})),a=document.createElement('a');a.href=url;a.download=contentManager?`${result.slug}_content_manager.zip`:`${result.slug}.zip`;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);api.toast(contentManager?'Content Manager ZIP downloaded. Drop it into the installer.':'Track folder ZIP downloaded. Choose Extract Here in WinRAR.');}
-    catch(error){$('#export-error').textContent=error.message;}finally{$('#download-ac').disabled=$('#download-ac-cm').disabled=!!validateExport(api.getTrack()).errors.length;$('#download-ac').textContent='↓ Download track folder ZIP';$('#download-ac-cm').textContent='Content Manager ZIP';}
+    try{await new Promise(requestAnimationFrame);const images=cachedKey===JSON.stringify(track)&&cachedImages?cachedImages:await exportImages(track),result=await buildPackage(track,images,contentManager?'cm':'track',status=>button.textContent=status),url=URL.createObjectURL(new Blob([result.bytes],{type:'application/zip'})),a=document.createElement('a');a.href=url;a.download=contentManager?`${result.slug}_content_manager.zip`:`${result.slug}.zip`;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);api.toast(contentManager?'Content Manager ZIP downloaded. Drop it into the installer.':'Track folder ZIP downloaded. Choose Extract Here in WinRAR.');}
+    catch(error){$('#export-error').textContent=error.message;}finally{packageBuilding=false;$('#download-ac').disabled=$('#download-ac-cm').disabled=!!validateExport(api.getTrack()).errors.length;$('#download-ac').textContent='↓ Download track folder ZIP';$('#download-ac-cm').textContent='Content Manager ZIP';}
   }
   $('#download-ac').onclick=()=>downloadPackage(false);$('#download-ac-cm').onclick=()=>downloadPackage(true);
   let measureDistance=0;

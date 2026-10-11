@@ -1,8 +1,8 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261010-smooth-grid';
-import {trackScale} from './coordinates.js?v=20261010-smooth-grid';
-import {kerbSides} from './corner-settings.js?v=20261010-smooth-grid';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261011-zip-import';
+import {trackScale} from './coordinates.js?v=20261011-zip-import';
+import {kerbSides} from './corner-settings.js?v=20261011-zip-import';
 
-import {boundedCache} from './performance.js?v=20261010-smooth-grid';
+import {boundedCache} from './performance.js?v=20261011-zip-import';
 const layoutCache=new WeakMap();
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};

@@ -6,20 +6,27 @@ export class BinaryWriter {
   u16(v){this.reserve(2);this.view.setUint16(this.offset,v,true);this.offset+=2;return this;}
   u32(v){this.reserve(4);this.view.setUint32(this.offset,v,true);this.offset+=4;return this;}
   f32(v){if(!Number.isFinite(v))throw new Error('Non-finite geometry value');this.reserve(4);this.view.setFloat32(this.offset,v,true);this.offset+=4;return this;}
-  floats(a){a.forEach(v=>this.f32(v));return this;}
+  floats(a){this.reserve(a.length*4);for(const v of a){if(!Number.isFinite(v))throw new Error('Non-finite geometry value');this.view.setFloat32(this.offset,v,true);this.offset+=4;}return this;}
   bytes(a){const b=typeof a==='string'?encoder.encode(a):a;this.reserve(b.length);new Uint8Array(this.buffer,this.offset,b.length).set(b);this.offset+=b.length;return this;}
   string(s){const b=encoder.encode(s);return this.u32(b.length).bytes(b);}
-  finish(){return new Uint8Array(this.buffer.slice(0,this.offset));}
+  finish(){return new Uint8Array(this.offset===this.buffer.byteLength?this.buffer:this.buffer.slice(0,this.offset));}
 }
 const crcTable=Uint32Array.from({length:256},(_,i)=>{for(let n=0;n<8;n++)i=(i&1)?0xedb88320^(i>>>1):i>>>1;return i>>>0;});
 export function crc32(bytes){let crc=0xffffffff;for(const b of bytes)crc=crcTable[(crc^b)&255]^(crc>>>8);return (crc^0xffffffff)>>>0;}
 export function zipFiles(files){
-  const out=new BinaryWriter(),entries=[];
+  const entries=[];let total=22;
   for(const [name,value] of Object.entries(files)){
     if(name.startsWith('/')||name.includes('..')||name.includes('\\'))throw new Error('Invalid archive path');
-    const path=encoder.encode(name),data=typeof value==='string'?encoder.encode(value):value,crc=crc32(data),offset=out.offset;
+    const path=encoder.encode(name),data=typeof value==='string'?encoder.encode(value):value;
+    if(path.length>65535||!(data instanceof Uint8Array)||data.length>=0xffffffff)throw new Error('Invalid ZIP entry');
+    total+=76+path.length*2+data.length;entries.push({path,data,crc:crc32(data),offset:0});
+  }
+  if(entries.length>=65535||total>=0xffffffff)throw new Error('Track package exceeds the standard ZIP size limit');
+  // Allocate once instead of repeatedly copying the entire model and textures.
+  const out=new BinaryWriter(total);
+  for(const entry of entries){
+    const {path,data,crc}=entry;entry.offset=out.offset;
     out.u32(0x04034b50).u16(20).u16(0x800).u16(0).u16(0).u16(0x21).u32(crc).u32(data.length).u32(data.length).u16(path.length).u16(0).bytes(path).bytes(data);
-    entries.push({path,data,crc,offset});
   }
   const centralOffset=out.offset;
   entries.forEach(({path,data,crc,offset})=>out.u32(0x02014b50).u16(20).u16(20).u16(0x800).u16(0).u16(0).u16(0x21).u32(crc).u32(data.length).u32(data.length).u16(path.length).u16(0).u16(0).u16(0).u16(0).u32(0).u32(offset).bytes(path));

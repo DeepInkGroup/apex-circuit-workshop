@@ -1,5 +1,5 @@
-import {pointOnTrack} from './engine.js?v=20261010-smooth-grid';
-import {trackScale} from './coordinates.js?v=20261010-smooth-grid';
+import {pointOnTrack} from './engine.js?v=20261011-zip-import';
+import {trackScale} from './coordinates.js?v=20261011-zip-import';
 
 export const lapProgress=value=>((value%1)+1)%1;
 export const gridStartSetting=value=>Number.isFinite(value)?lapProgress(value):null;
