@@ -1,6 +1,6 @@
-import {heightProfile,profileAt} from './height-profile.js?v=20261011-zip-import';
-import {createStructureProfile} from './structure-profile.js?v=20261011-zip-import';
-import {boundedCache} from './performance.js?v=20261011-zip-import';
+import {heightProfile,profileAt} from './height-profile.js?v=20261011-pit-kerbs';
+import {createStructureProfile} from './structure-profile.js?v=20261011-pit-kerbs';
+import {boundedCache} from './performance.js?v=20261011-pit-kerbs';
 const geometryCache=boundedCache(6);
 export const METERS_PER_UNIT = 0.2;
 export const clamp = (n, min, max) => Math.max(min, Math.min(max, n));

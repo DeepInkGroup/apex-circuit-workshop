@@ -1,6 +1,6 @@
-import {buildGeometry,clamp} from './engine.js?v=20261011-zip-import';
-import {roadCrossings} from './crossings.js?v=20261011-zip-import';
-import {structureSettings} from './structure-settings.js?v=20261011-zip-import';
+import {buildGeometry,clamp} from './engine.js?v=20261011-pit-kerbs';
+import {roadCrossings} from './crossings.js?v=20261011-pit-kerbs';
+import {structureSettings} from './structure-settings.js?v=20261011-pit-kerbs';
 
 const geometry=t=>buildGeometry(t.points||[],t.smooth,t.complete!==false,t),yieldFrame=()=>new Promise(resolve=>setTimeout(resolve,0));
 const maxGrade=g=>Math.max(0,...(g.structureProfile?.ranges||[]).map(r=>r.actualGrade));

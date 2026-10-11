@@ -39,3 +39,4 @@ footer.apex-footer{display:grid;grid-template-columns:1fr auto 1fr;align-items:c
 .import-choices{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.import-choices label{width:100%;font-weight:600}.import-choices select{flex:1;min-width:0;padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--paper);color:var(--ink);font:inherit}
 .import-choices select:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
 @media(max-width:600px){.import-dropzone{grid-template-columns:1fr;padding:16px}.import-badge{width:48px}.import-choices select{flex-basis:100%}}
+.pit-merge-controls{margin:16px 0;padding:14px;border:1px solid #d5dfcf;border-radius:10px;background:#eef2e8}.pit-merge-controls .field-hint{margin-bottom:0}.pit-merge-controls .pit-stop-status{grid-template-columns:repeat(2,minmax(0,1fr))}.pit-merge-controls .pit-stop-status small{display:block;font-size:10px;color:#6d7c68;line-height:1.5;margin-top:5px}

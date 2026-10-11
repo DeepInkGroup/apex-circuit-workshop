@@ -1,4 +1,4 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261011-zip-import';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261011-pit-kerbs';
 
 export const CROSSING_ERROR='The road crosses itself without enough vertical clearance. Add a bridge/tunnel at the crossing or separate the roads.';
 const wrap=n=>((n%1)+1)%1;

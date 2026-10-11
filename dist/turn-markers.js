@@ -1,17 +1,17 @@
-import {pointOnTrack,closestOnTrack} from './engine.js?v=20261011-zip-import';
-import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261011-zip-import';
-import {buildingContains,buildingSettings,buildingCorners} from './scenery.js?v=20261011-zip-import';
-import {treeRadius} from './trees.js?v=20261011-zip-import';
-import {barrierProperties} from './barriers.js?v=20261011-zip-import';
-import {boardSettings,boardCard,BOARD_COLORS} from './board-design.js?v=20261011-zip-import';
+import {pointOnTrack,closestOnTrack} from './engine.js?v=20261011-pit-kerbs';
+import {trackScale,toGamePoint,gameDirection} from './coordinates.js?v=20261011-pit-kerbs';
+import {buildingContains,buildingSettings,buildingCorners} from './scenery.js?v=20261011-pit-kerbs';
+import {treeRadius} from './trees.js?v=20261011-pit-kerbs';
+import {barrierProperties} from './barriers.js?v=20261011-pit-kerbs';
+import {boardSettings,boardCard,BOARD_COLORS} from './board-design.js?v=20261011-pit-kerbs';
 
-import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261011-zip-import';
-import {kerbSides} from './corner-settings.js?v=20261011-zip-import';
-export {detectTurns} from './corner-analysis.js?v=20261011-zip-import';
+import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261011-pit-kerbs';
+import {cornerKerbProfile} from './kerb-profile.js?v=20261011-pit-kerbs';
+export {detectTurns} from './corner-analysis.js?v=20261011-pit-kerbs';
 const segmentDistance=(p,a,b,s)=>{const x=b.x-a.x,y=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*x+(p.y-a.y)*y)/(x*x+y*y||1)));return Math.hypot(p.x-a.x-x*t,p.y-a.y-y*t)*s;};
 function segmentCross(a,b,c,d){const dx=b.x-a.x,dy=b.y-a.y,ux=d.x-c.x,uy=d.y-c.y,den=dx*uy-dy*ux;if(Math.abs(den)<1e-9)return null;const t=((c.x-a.x)*uy-(c.y-a.y)*ux)/den,u=((c.x-a.x)*dy-(c.y-a.y)*dx)/den;return t>=0&&t<=1&&u>=0&&u<=1?{t,u}:null;}
 export function turnMarkerPlan(track,g,pit,pitWalls=[]){
- const turns=detectTurns(track,g),markers=[],s=trackScale(track),total=g.length*s,closed=g.closed!==false,settings=boardSettings(track),radius=settings.width/2+.25,issues=[],selectedTurns=turns.filter(turn=>turn.boards.ten||turn.boards.five).length;let skipped=0,requested=0;
+ const turns=detectTurns(track,g),markers=[],s=trackScale(track),total=g.length*s,closed=g.closed!==false,settings=boardSettings(track),radius=settings.width/2+.25,issues=[],selectedTurns=turns.filter(turn=>turn.boards.ten||turn.boards.five).length,kerbProfile=cornerKerbProfile(track,g);let skipped=0,requested=0;
  if(track.export?.distanceMarkers===false||!total)return {turns,markers,skipped,settings,selectedTurns,requested,issues};
  // Distances follow the 3D road centerline, including hills, rather than a
  // straight chord or the shorter overhead projection.
@@ -33,7 +33,7 @@ export function turnMarkerPlan(track,g,pit,pitWalls=[]){
   const entryArc=path.atStation(turn.entry),desired=[],distances=[...(turn.boards.ten?[10]:[]),...(turn.boards.five?[5]:[])];requested+=distances.length;
   for(const distance of distances){if((!closed&&entryArc<distance)||(closed&&path.length<=distance)){skipped++;issues.push({turn:turn.number,distance,reason:'Not enough road before this turn'});continue;}const target=entryArc-distance,station=stationAtArc(target),p=pointOnTrack(g,station/total),viewer=pointOnTrack(g,stationAtArc(target-15)/total);desired.push({distance,station,p,viewer});}
   const preferred=turn.boards.side==='left'?1:turn.boards.side==='right'?-1:turn.sign>0?1:-1,sides=turn.boards.side==='auto'?[preferred,-preferred]:[preferred],gaps=[...new Set([settings.setback,settings.setback+1,settings.setback+2.5,settings.setback+4.5,settings.setback+7])];
-  const candidate=(item,side,gap)=>{const {p,viewer}=item,offset=side*(track.width/2+(track.export?.kerbs===false||!kerbSides(p.kerbs||'inherit').includes(side)?0:p.kerbWidth||.7)+gap),location={...p,x:p.x+Math.sin(p.angle)*offset/s,y:p.y-Math.cos(p.angle)*offset/s};if(!clear(location)||!visible(location,viewer))return null;return {...location,distance:item.distance,station:item.station,turnNumber:turn.number,turnName:turn.name,turnEntry:turn.entry,direction:turn.direction,side,setback:gap,roadPoint:p,roadEdge:{x:p.x+Math.sin(p.angle)*side*track.width/2/s,y:p.y-Math.cos(p.angle)*side*track.width/2/s},viewer,facingAngle:Math.atan2(location.y-viewer.y,location.x-viewer.x)};};
+  const candidate=(item,side,gap)=>{const {p,viewer}=item,offset=side*(track.width/2+(track.export?.kerbs===false?0:kerbProfile.widthAt(p,item.station,side))+gap),location={...p,x:p.x+Math.sin(p.angle)*offset/s,y:p.y-Math.cos(p.angle)*offset/s};if(!clear(location)||!visible(location,viewer))return null;return {...location,distance:item.distance,station:item.station,turnNumber:turn.number,turnName:turn.name,turnEntry:turn.entry,direction:turn.direction,side,setback:gap,roadPoint:p,roadEdge:{x:p.x+Math.sin(p.angle)*side*track.width/2/s,y:p.y-Math.cos(p.angle)*side*track.width/2/s},viewer,facingAngle:Math.atan2(location.y-viewer.y,location.x-viewer.x)};};
   let pair=null;for(const side of sides){for(const gap of gaps){const choices=desired.map(item=>candidate(item,side,gap));if(choices.length&&choices.every(Boolean)&&(choices.length===1||Math.hypot(choices[0].x-choices[1].x,choices[0].y-choices[1].y)*s>settings.width+.7)){pair=choices;break;}}if(pair)break;}
   if(pair)markers.push(...pair);else for(const item of desired){let choice=null;for(const side of sides){for(const gap of gaps){choice=candidate(item,side,gap);if(choice)break;}if(choice)break;}if(choice)markers.push(choice);else {skipped++;issues.push({turn:turn.number,distance:item.distance,reason:turn.boards.side==='auto'?'No clear, visible trackside position':'Chosen side is obstructed; move scenery or choose Auto side'});}}
  }

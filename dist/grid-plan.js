@@ -1,5 +1,5 @@
-import {pointOnTrack} from './engine.js?v=20261011-zip-import';
-import {trackScale} from './coordinates.js?v=20261011-zip-import';
+import {pointOnTrack} from './engine.js?v=20261011-pit-kerbs';
+import {trackScale} from './coordinates.js?v=20261011-pit-kerbs';
 
 export const lapProgress=value=>((value%1)+1)%1;
 export const gridStartSetting=value=>Number.isFinite(value)?lapProgress(value):null;

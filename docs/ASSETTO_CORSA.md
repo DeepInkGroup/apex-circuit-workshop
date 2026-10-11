@@ -1,5 +1,15 @@
 # Native Assetto Corsa export
 
+## Pit merges and longer kerb sections
+
+Pit fitting now scores bend radius, driving direction and road curvature alongside crossings, scenery and grade. Connections use matched endpoint tangents, curvature, elevation and banking; tangent reach adapts when the initial curve is too tight. Mouths use 3–4.2 m of width, capped by service-lane width, at the outside driving lane. Approach search can lengthen the joins to avoid abrupt bends. **Entry / exit approach** supports 12–100 m; actual lengths depend on available road and service-lane placement. The pit panel reports each approach's length, mouth width and minimum bend radius. A connection that doubles back or is too tight is marked for review.
+
+**Automatic pit merge kerbs** adds long red/white strips along the outside of both connections, with a configurable 0.6–2 m width. Width eases to zero at the ends. Kerbs share the pit pavement edge and elevation, stay flush, and skip overlapping road/pit pavement, scenery or walls. Unconnected routes do not receive merge kerbs. Enable **Generate kerbs** in Assetto Corsa setup to include them in the mod.
+
+In **Corners**, automatic widening extends wider kerb sections before detected turn entry and after turn exit. The default reaches are 18 m before and 24 m after, limited proportionally on small circuits. Width grows to 1.7 times the selected corner's base kerb width, capped at 2 m, with smooth tapers. Set **Kerb before turn / after turn** per handle; Shift-select handles to apply together. Existing base kerbs, side selections and **No kerbs** remain respected. Disable automatic widening to keep base widths throughout. Distance-board setback uses the widened kerb edge.
+
+Editor drawing, color export preview, 3D scene and native collision surfaces use the same panels. Surrounding terrain follows their outer edges. Export a fresh ZIP and replace the installed revision to receive these changes; existing downloads cannot update themselves.
+
 ## Reopen an exported ZIP
 
 Click **Import ZIP** in the top navigation, or open **My circuits**. Drop one APEX track ZIP into the import area or choose **Choose ZIP or JSON**. Both the Content Manager package and the single-folder track package include `apex_source.json`. New server packages include it too. Repacked ZIPs using standard Store or Deflate compression are supported; archives containing several APEX circuits offer a circuit selector.

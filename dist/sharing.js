@@ -1,5 +1,5 @@
-import {buildGeometry} from './engine.js?v=20261011-zip-import';
-import {readImage,saveImage} from './tracing.js?v=20261011-zip-import';
+import {buildGeometry} from './engine.js?v=20261011-pit-kerbs';
+import {readImage,saveImage} from './tracing.js?v=20261011-pit-kerbs';
 const SERVICE='https://apex-circuit-sharing.art-zomorodian.chatgpt.site';
 const $=s=>document.querySelector(s);
 const format=code=>code.slice(0,4)+' '+code.slice(4,9)+' '+code.slice(9);

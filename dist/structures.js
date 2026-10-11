@@ -1,7 +1,7 @@
-import {pointOnTrack} from './engine.js?v=20261011-zip-import';
-import {toGamePoint,gameDirection,trackScale} from './coordinates.js?v=20261011-zip-import';
-import {buildRoadLayout} from './road-layout.js?v=20261011-zip-import';
-import {kerbSides} from './corner-settings.js?v=20261011-zip-import';
+import {pointOnTrack} from './engine.js?v=20261011-pit-kerbs';
+import {toGamePoint,gameDirection,trackScale} from './coordinates.js?v=20261011-pit-kerbs';
+import {buildRoadLayout} from './road-layout.js?v=20261011-pit-kerbs';
+import {kerbSides} from './corner-settings.js?v=20261011-pit-kerbs';
 const layoutCache=new WeakMap();
 const normalCache=new WeakMap();
 const spanCache=new WeakMap();

@@ -8,6 +8,8 @@ Trace a racing circuit over satellite imagery or an uploaded reference, refine i
 
 ## Latest fixes
 
+- Pit joins now favor gentler bend radii and driving direction, with wider road-edge mouths and longer adaptive approaches. Increase **Entry / exit approach** up to 100 m; the pit panel shows actual entry/exit lengths, mouth widths and minimum radii. Automatic, flush pit merge kerbs follow the outside of both connections with tapered ends and overlap/scenery checks. Detected corners receive wider, smoothly tapered kerb sections; customize **Kerb before turn / after turn** in Corners or disable automatic widening. Editor, 3D and native exports share the updated geometry. Export a fresh ZIP to update an installed track.
+
 - **Import ZIP** reopens exported APEX track packages directly in the editor. Choose a file or drop it in **My circuits**; Content Manager, single-folder and new server ZIPs work, alongside editor JSON. Archives containing several circuits offer a selector. Circuit geometry, corners, pit settings, scenery, bridges/tunnels, grid arrangement and mod identity remain editable. Imports read only the archive directory and selected `apex_source.json`, with size and CRC checks, instead of loading the entire model/textures. Arbitrary third-party KN5 mods without APEX source data cannot be reconstructed.
 - Native client/server packages now build in a reusable module worker and transfer the ZIP buffer back to the editor. ZIP packing preallocates one exact-size buffer, and binary float batches reserve memory once. These changes reduce repeated large copies and keep model generation/packaging off the UI thread. Browsers without Web Workers retain the synchronous export fallback.
 

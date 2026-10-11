@@ -1,4 +1,4 @@
-import {crc32} from './binary.js?v=20261011-zip-import';
+import {crc32} from './binary.js?v=20261011-pit-kerbs';
 
 const SOURCE_LIMIT=4*1024*1024,DIRECTORY_LIMIT=16*1024*1024;
 const decoder=new TextDecoder('utf-8',{fatal:true});

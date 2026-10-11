@@ -1,15 +1,15 @@
-import {pitConnection as connection,pitFillet} from './pit-curve.js?v=20261011-zip-import';
-import {pavementSampler,pitHeightField} from './pavement-sampler.js?v=20261011-zip-import';
-import {pitStopApron} from './pit-stop.js?v=20261011-zip-import';
-import {BARRIER_TYPES} from './barriers.js?v=20261011-zip-import';
-import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261011-zip-import';
-import {buildRoadLayout} from './road-layout.js?v=20261011-zip-import';
-import {heightProfile,profileAt} from './height-profile.js?v=20261011-zip-import';
-import {buildingContains} from './scenery.js?v=20261011-zip-import';
-import {treeRadius} from './trees.js?v=20261011-zip-import';
+import {pitConnection as connection,pitFillet,pitCurveStats} from './pit-curve.js?v=20261011-pit-kerbs';
+import {pavementSampler,pitHeightField} from './pavement-sampler.js?v=20261011-pit-kerbs';
+import {pitStopApron} from './pit-stop.js?v=20261011-pit-kerbs';
+import {BARRIER_TYPES} from './barriers.js?v=20261011-pit-kerbs';
+import {buildGeometry,pointOnTrack,closestOnTrack,clamp} from './engine.js?v=20261011-pit-kerbs';
+import {buildRoadLayout} from './road-layout.js?v=20261011-pit-kerbs';
+import {heightProfile,profileAt} from './height-profile.js?v=20261011-pit-kerbs';
+import {buildingContains} from './scenery.js?v=20261011-pit-kerbs';
+import {treeRadius} from './trees.js?v=20261011-pit-kerbs';
 const lerp=(a,b,t)=>a+(b-a)*t;
 export const PIT_STYLES={blue:{label:'Blue pit lane',color:[60,89,108],line:'#81c1d4'},classic:{label:'Classic asphalt',color:[61,65,69],line:'#e3d79c'}};
-export function pitSettings(track){return {boxWidth:clamp(Number(track.pitSettings?.boxWidth)||3.4,2.8,5),boxSpacing:clamp(Number(track.pitSettings?.boxSpacing)||6.5,6,12),parking:['inline','separate'].includes(track.pitSettings?.parking)?track.pitSettings.parking:'auto',width:clamp(Number(track.pitSettings?.width)||6,4,10),setback:clamp(Number(track.pitSettings?.setback)||5,3,30),mergeLength:clamp(Number(track.pitSettings?.mergeLength)||28,12,60),bendRadius:clamp(Number(track.pitSettings?.bendRadius)||14,4,30),autoElevation:track.pitSettings?.autoElevation!==false,style:PIT_STYLES[track.pitSettings?.style]?track.pitSettings.style:'blue',side:['left','right'].includes(track.pitSettings?.side)?track.pitSettings.side:'auto',outerBarriers:track.pitSettings?.outerBarriers!==false,barrierType:BARRIER_TYPES[track.pitSettings?.barrierType]?track.pitSettings.barrierType:'concrete',barrierHeight:clamp(Number(track.pitSettings?.barrierHeight)||1.2,1,4),autoConnect:track.pitSettings?.autoConnect!==false};}
+export function pitSettings(track){return {boxWidth:clamp(Number(track.pitSettings?.boxWidth)||3.4,2.8,5),boxSpacing:clamp(Number(track.pitSettings?.boxSpacing)||6.5,6,12),parking:['inline','separate'].includes(track.pitSettings?.parking)?track.pitSettings.parking:'auto',width:clamp(Number(track.pitSettings?.width)||6,4,10),setback:clamp(Number(track.pitSettings?.setback)||5,3,30),mergeLength:clamp(Number(track.pitSettings?.mergeLength)||36,12,100),mergeKerbs:track.pitSettings?.mergeKerbs!==false,mergeKerbWidth:clamp(Number(track.pitSettings?.mergeKerbWidth)||1.2,.6,2),bendRadius:clamp(Number(track.pitSettings?.bendRadius)||14,4,30),autoElevation:track.pitSettings?.autoElevation!==false,style:PIT_STYLES[track.pitSettings?.style]?track.pitSettings.style:'blue',side:['left','right'].includes(track.pitSettings?.side)?track.pitSettings.side:'auto',outerBarriers:track.pitSettings?.outerBarriers!==false,barrierType:BARRIER_TYPES[track.pitSettings?.barrierType]?track.pitSettings.barrierType:'concrete',barrierHeight:clamp(Number(track.pitSettings?.barrierHeight)||1.2,1,4),autoConnect:track.pitSettings?.autoConnect!==false};}
 export function resamplePath(points,scale){
   if(points.length<2)return points.map(p=>({...p}));
   const stat=stations(points,scale),count=clamp(Math.ceil(stat.length/.75),1,3500),result=[],plan={path:points,...stat,elevationProfile:heightProfile(stat.distances,points.map(p=>p.elevation),stat.length),bankProfile:heightProfile(stat.distances,points.map(p=>p.bank),stat.length),scale};for(let i=0;i<=count;i++)result.push(pointOnPit(plan,stat.length*i/count));return result;
@@ -38,7 +38,7 @@ export function pointOnPit(plan,distance){
 export function shifted(p,offsetMeters,scale){return {...p,x:p.x+Math.sin(p.angle)*offsetMeters/scale,y:p.y-Math.cos(p.angle)*offsetMeters/scale,elevation:(p.elevation||0)+offsetMeters*Math.tan((p.bank||0)*Math.PI/180),grade:(p.grade||0)+offsetMeters*(p.bankGrade||0)*Math.PI/180/Math.cos((p.bank||0)*Math.PI/180)**2};}
 // Narrow mouths overlap the outer driving lane, then widen toward the service road.
 // Joined road edges keep merge points correct on banked and sharp corners.
-function shoulder(g,progress,track,settings,scale,side,road){const p=pointOnTrack(g,progress),h=.5/(g.length*scale),before=pointOnTrack(g,progress-h),after=pointOnTrack(g,progress+h);p.curvature=Math.atan2(Math.sin(after.angle-before.angle),Math.cos(after.angle-before.angle))*scale;p.gradeCurvature=((after.grade||0)-(before.grade||0))*scale;const rail=side>0?road.left:road.right,n=rail.length,mouth=Math.min(settings.width,Math.max(2.2,Math.min(3.2,track.width*.5))),station=(g.closed===false?clamp(progress,0,1):((progress%1)+1)%1)*g.length*scale;if(!n)return {...shifted(p,side*(track.width/2-mouth/2+.25),scale),width:mouth};let i=0;while(i<n-1&&road.center[i+1].station<=station)i++;const j=(i+1)%n,span=(j===0?g.length*scale:road.center[j].station)-road.center[i].station,t=span?clamp((station-road.center[i].station)/span,0,1):0;return {...shifted({...p,x:lerp(rail[i].x,rail[j].x,t),y:lerp(rail[i].y,rail[j].y,t),elevation:lerp(rail[i].elevation,rail[j].elevation,t),grade:(p.grade||0)+side*track.width/2*(p.bankGrade||0)*Math.PI/180/Math.cos((p.bank||0)*Math.PI/180)**2},side*(-mouth/2+.25),scale),width:mouth};}
+function shoulder(g,progress,track,settings,scale,side,road){const p=pointOnTrack(g,progress),h=.5/(g.length*scale),before=pointOnTrack(g,progress-h),after=pointOnTrack(g,progress+h);p.curvature=Math.atan2(Math.sin(after.angle-before.angle),Math.cos(after.angle-before.angle))*scale;p.gradeCurvature=((after.grade||0)-(before.grade||0))*scale;const rail=side>0?road.left:road.right,n=rail.length,mouth=Math.min(settings.width,Math.max(3,Math.min(4.2,track.width*.45))),station=(g.closed===false?clamp(progress,0,1):((progress%1)+1)%1)*g.length*scale;if(!n)return {...shifted(p,side*(track.width/2-mouth/2+.25),scale),width:mouth,mergeSide:side,roadProgress:progress};let i=0;while(i<n-1&&road.center[i+1].station<=station)i++;const j=(i+1)%n,span=(j===0?g.length*scale:road.center[j].station)-road.center[i].station,t=span?clamp((station-road.center[i].station)/span,0,1):0;return {...shifted({...p,x:lerp(rail[i].x,rail[j].x,t),y:lerp(rail[i].y,rail[j].y,t),elevation:lerp(rail[i].elevation,rail[j].elevation,t),grade:(p.grade||0)+side*track.width/2*(p.bankGrade||0)*Math.PI/180/Math.cos((p.bank||0)*Math.PI/180)**2},side*(-mouth/2+.25),scale),width:mouth,mergeSide:side,roadProgress:progress};}
 function endpointSide(g,p){const near=closestOnTrack(g,p),road=pointOnTrack(g,near.progress);return (p.x-road.x)*Math.sin(road.angle)-(p.y-road.y)*Math.cos(road.angle)>=0?1:-1;}
 export function bayCorners(p,length,width,scale){
   const point=(forward,left)=>({x:p.x+(Math.cos(p.angle)*forward+Math.sin(p.angle)*left)/scale,y:p.y+(Math.sin(p.angle)*forward-Math.cos(p.angle)*left)/scale,elevation:(p.elevation||0)+left*Math.tan((p.bank||0)*Math.PI/180)+forward*(p.grade||0)/scale});
@@ -53,10 +53,12 @@ function sceneryClear(track,p,radius,scale){
  if(track.export?.trees!==false&&(track.trees||[]).some(t=>Math.hypot(t.x-p.x,t.y-p.y)*scale<treeRadius(t)+radius))return false;
  for(const wall of (track.barriers||[]).filter(w=>!w.automatic))for(let i=1;i<wall.points.length;i++){const a=wall.points[i-1],b=wall.points[i],dx=b.x-a.x,dy=b.y-a.y,t=clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1),0,1);if(Math.hypot(p.x-a.x-dx*t,p.y-a.y-dy*t)*scale<radius+(wall.width||.8)/2)return false;}return true;
 }
-function joinProblems(track,g,join,entry,scale,settings){let crossings=0,blocked=0,maxGrade=0;const half=track.width/2;for(let j=0;j<join.length;j++){const p=join[j],t=j/(join.length-1),mouth=(entry?join[0]:join.at(-1)).width,allowance=mouth*(entry?1-t:t);if(roadDistance(g,p,scale)<Math.max(.05,half+(p.width||settings.width)/2-.4-allowance))crossings++;if(j%4===0&&!sceneryClear(track,p,(p.width||settings.width)/2,scale))blocked++;maxGrade=Math.max(maxGrade,Math.abs(p.grade||0)/scale*100);}return {crossings,blocked,maxGrade};}
+function joinProblems(track,g,join,entry,scale,settings){let crossings=0,blocked=0,maxGrade=0;const half=track.width/2;for(let j=0;j<join.length;j++){const p=join[j],t=j/(join.length-1),mouth=(entry?join[0]:join.at(-1)).width,allowance=mouth*(entry?1-t:t);if(roadDistance(g,p,scale)<Math.max(.05,half+(p.width||settings.width)/2-.4-allowance))crossings++;if(j%4===0&&!sceneryClear(track,p,(p.width||settings.width)/2,scale))blocked++;maxGrade=Math.max(maxGrade,Math.abs(p.grade||0)/scale*100);}return {crossings,blocked,maxGrade,...pitCurveStats(join,scale)};}
+const safeJoin=(quality,settings)=>!quality.crossings&&!quality.blocked&&!quality.reversals&&quality.minRadius>=settings.width*.65&&quality.maxGrade<=18;
+const flowPenalty=(quality,settings)=>quality.reversals*10000+Math.max(0,Math.max(12,settings.bendRadius)-quality.minRadius)*15;
 function bestJoin(track,g,settings,scale,road,p,angle,entry){
- const near=closestOnTrack(g,p,true),total=g.length*scale,side=endpointSide(g,p),base=Math.max(settings.mergeLength,Math.min(60,near.distance*scale*.5));let best=null;
- for(const reach of [...new Set([base,base*1.35,base*1.8,base*2.4])]){const progress=near.progress+(entry?-1:1)*Math.min(total*.22,reach)/total,section=g.structureProfile?.sectionAt((g.closed?((progress%1)+1)%1:clamp(progress,0,1))*total);if(section?.core)continue;const mouth=shoulder(g,progress,track,settings,scale,side,road),path=entry?connection(mouth,p,mouth.angle,angle,scale,settings.width):connection(p,mouth,angle,mouth.angle,scale,settings.width),quality=joinProblems(track,g,path,entry,scale,settings),score=quality.crossings*10000+quality.blocked*10000+Math.max(0,quality.maxGrade-12)*100+reach;if(!best||score<best.score)best={path,score,...quality};}
+ const near=closestOnTrack(g,p,true),total=g.length*scale,side=endpointSide(g,p),base=Math.max(settings.mergeLength,Math.min(100,near.distance*scale*1.5),settings.width*4);let best=null;
+ for(const reach of [...new Set([base,base*1.35,base*1.8,base*2.4].map(value=>Math.min(total*.22,value)))]){const progress=near.progress+(entry?-1:1)*reach/total,section=g.structureProfile?.sectionAt((g.closed?((progress%1)+1)%1:clamp(progress,0,1))*total);if(section?.core)continue;const mouth=shoulder(g,progress,track,settings,scale,side,road),path=entry?connection(mouth,p,mouth.angle,angle,scale,settings.width):connection(p,mouth,angle,mouth.angle,scale,settings.width),quality=joinProblems(track,g,path,entry,scale,settings),score=quality.crossings*10000+quality.blocked*10000+Math.max(0,quality.maxGrade-12)*100+flowPenalty(quality,settings)+Math.abs(mouth.curvature||0)/scale*settings.width*100+reach*.4;if(!best||score<best.score)best={path,score,...quality};}
  if(!best){const mouth=shoulder(g,near.progress,track,settings,scale,side,road),path=entry?connection(mouth,p,mouth.angle,angle,scale,settings.width):connection(p,mouth,angle,mouth.angle,scale,settings.width);best={path,score:Infinity,...joinProblems(track,g,path,entry,scale,settings)};}return best;
 }
 function workingWindow(plan,need){
@@ -64,7 +66,7 @@ function workingWindow(plan,need){
 }
 const pitCache=new Map();
 function automaticLane(track,g,settings,scale,count,side,road){
-  const total=g.length*scale,rowLength=count*settings.boxSpacing+12,half=track.width/2,lead=Math.min(settings.mergeLength,total*.12),roadClear=half+settings.width/2+1.5;
+  const total=g.length*scale,rowLength=count*settings.boxSpacing+12,half=track.width/2,lead=Math.min(Math.max(settings.mergeLength,settings.width*4),total*.16),roadClear=half+settings.width/2+1.5;
   let best=null;
   for(let i=0;i<64;i++){
     const progress=g.closed?(track.start||0)+i/64:(i+.5)/64,center=pointOnTrack(g,progress),angle=center.angle;if(g.structureProfile?.sectionAt(((progress%1)+1)%1*total)?.core)continue;
@@ -77,15 +79,15 @@ function automaticLane(track,g,settings,scale,count,side,road){
       offset+=Math.max(8,rowLength*.18);
     }
     if(!points.every(p=>roadDistance(g,p,scale)>=roadClear&&sceneryClear(track,p,settings.width/2+1,scale)&&roadDistance(g,shifted({...p,angle},side*(settings.width/2+settings.boxWidth),scale),scale)>=half+1&&sceneryClear(track,shifted({...p,angle},side*(settings.width/2+settings.boxWidth),scale),settings.boxWidth/2+1,scale)&&(!g.closed||settings.side!=='auto'||!inside(p,g.samples))))continue;
-    const first=points[0],last=points.at(-1),fraction=Math.min((rowLength/2+lead)/total,.22),entry=shoulder(g,progress-fraction,track,settings,scale,side,road),exit=shoulder(g,progress+fraction,track,settings,scale,side,road);
+    const first=points[0],last=points.at(-1),fraction=Math.min((rowLength/2+Math.max(lead,offset*1.4))/total,.22),entry=shoulder(g,progress-fraction,track,settings,scale,side,road),exit=shoulder(g,progress+fraction,track,settings,scale,side,road);
     if([progress-fraction,progress+fraction].some(value=>g.structureProfile?.sectionAt(((value%1)+1)%1*total)?.core))continue;
     const entryConnection=connection(entry,first,entry.angle,angle,scale,settings.width),exitConnection=connection(last,exit,angle,exit.angle,scale,settings.width);
     // Reject joins that cross racing asphalt instead of branching beside it.
-    const checks=[joinProblems(track,g,entryConnection,true,scale,settings),joinProblems(track,g,exitConnection,false,scale,settings)];if(checks.some(check=>check.crossings||check.blocked||check.maxGrade>18))continue;
+    const checks=[joinProblems(track,g,entryConnection,true,scale,settings),joinProblems(track,g,exitConnection,false,scale,settings)];if(checks.some(check=>!safeJoin(check,settings)))continue;
     const crossings=0;
     const bend=1-Math.cos(entry.angle-angle)+1-Math.cos(exit.angle-angle),distance=(Math.hypot(entry.x-first.x,entry.y-first.y)+Math.hypot(exit.x-last.x,exit.y-last.y))*scale;
     const outside=points.reduce((n,p)=>n+Math.max(0,-p.x,p.x-1000,-p.y,p.y-740)*scale,0)/points.length;
-    const score=offset*2+distance+bend*rowLength+crossings*rowLength*4+outside*.8+i*.12+Math.max(...checks.map(check=>check.maxGrade))*2;
+    const score=offset*2+distance*.65+bend*rowLength+crossings*rowLength*4+outside*.8+i*.12+Math.max(...checks.map(check=>check.maxGrade))*2+checks.reduce((sum,check)=>sum+flowPenalty(check,settings),0);
     if(!best||score<best.score)best={score,side,safe:true,path:resamplePath([first,last],scale),entryConnection,exitConnection,setback:offset-half-settings.width/2};
   }
   if(!best){
@@ -134,14 +136,16 @@ export function buildPitPlan(track){
     else if(settings.autoConnect||generated){
       const first=path[0],last=path.at(-1),firstAngle=Math.atan2(path[1].y-first.y,path[1].x-first.x),lastAngle=Math.atan2(last.y-path[path.length-2].y,last.x-path[path.length-2].x);
       const entry=bestJoin(track,g,settings,scale,road,first,firstAngle,true),exit=bestJoin(track,g,settings,scale,road,last,lastAngle,false);
-      plan.entryConnection=entry.path;plan.exitConnection=exit.path;plan.aiPath=[...entry.path.slice(0,-1),...plan.aiPath,...exit.path.slice(1)];plan.connected=!entry.crossings&&!exit.crossings&&!entry.blocked&&!exit.blocked&&Math.max(entry.maxGrade,exit.maxGrade)<=18;
+      plan.entryConnection=entry.path;plan.exitConnection=exit.path;plan.aiPath=[...entry.path.slice(0,-1),...plan.aiPath,...exit.path.slice(1)];plan.connected=safeJoin(entry,settings)&&safeJoin(exit,settings);
       if(entry.crossings||exit.crossings)plan.connectionIssues.push('A merge crosses racing asphalt outside its mouth. Move pit handles farther out or fit automatically.');
       if(entry.blocked||exit.blocked)plan.connectionIssues.push('Scenery blocks a pit merge. Move trees, buildings or custom walls.');
       if(Math.max(entry.maxGrade,exit.maxGrade)>18)plan.connectionIssues.push('Pit approach exceeds 18% grade. Lengthen the merge or adjust the route elevation.');
+      if(entry.reversals||exit.reversals||Math.min(entry.minRadius,exit.minRadius)<settings.width*.65)plan.connectionIssues.push('A pit merge turns too tightly or doubles back. Lengthen the approach or align the end handles with the driving direction.');
     }
   }
   plan.heightAt=pitHeightField(pavementSampler(road.quads,scale),Math.max(6,settings.width));plan.apron=pitStopApron(plan);if(!plan.expanded&&working.bend>Math.PI/5)plan.connectionIssues.push('The pit stop row follows a tight bend. Choose Separate straight row for easier parking.');if(plan.setback===undefined&&total>0)plan.setback=Math.max(0,Math.min(...path.map(p=>roadDistance(g,p,scale)))-track.width/2-settings.width/2);
   plan.entry=plan.entryConnection[0]||path[0];plan.exit=plan.exitConnection.at(-1)||path.at(-1);
+  plan.mergeStats={entry:{...pitCurveStats(plan.entryConnection,scale),mouthWidth:plan.entry.width||settings.width},exit:{...pitCurveStats(plan.exitConnection,scale),mouthWidth:plan.exit.width||settings.width}};
   plan.connectionLength=stations(plan.entryConnection,scale).length+stations(plan.exitConnection,scale).length;
   plan.overlapsRoad=total>0&&([...path,...plan.parkingPath,...plan.connector,...plan.exitConnector].some(p=>roadDistance(g,p,scale)<track.width/2+settings.width/2-.2)||plan.apron.flat().some(p=>roadDistance(g,p,scale)<track.width/2-.2));
   const all=[...path,...plan.parkingPath,...plan.connector,...plan.exitConnector,...plan.entryConnection,...plan.exitConnection,...plan.bays.flatMap(b=>b.corners),...plan.apron.flat()];plan.bounds={minX:Math.min(...all.map(p=>p.x)),maxX:Math.max(...all.map(p=>p.x)),minY:Math.min(...all.map(p=>p.y)),maxY:Math.max(...all.map(p=>p.y))};

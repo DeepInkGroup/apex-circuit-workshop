@@ -1,8 +1,10 @@
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261011-zip-import';
-import {trackScale} from './coordinates.js?v=20261011-zip-import';
-import {kerbSides} from './corner-settings.js?v=20261011-zip-import';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261011-pit-kerbs';
+import {trackScale} from './coordinates.js?v=20261011-pit-kerbs';
+import {kerbSides} from './corner-settings.js?v=20261011-pit-kerbs';
+import {cornerKerbProfile} from './kerb-profile.js?v=20261011-pit-kerbs';
+import {pitKerbs} from './pit-ribbon.js?v=20261011-pit-kerbs';
 
-import {boundedCache} from './performance.js?v=20261011-zip-import';
+import {boundedCache} from './performance.js?v=20261011-pit-kerbs';
 const layoutCache=new WeakMap();
 const distance=(a,b)=>Math.hypot(b.x-a.x,b.y-a.y);
 const direction=(a,b)=>{const l=distance(a,b)||1;return {x:(b.x-a.x)/l,y:(b.y-a.y)/l};};
@@ -38,7 +40,7 @@ function pitOpening(p,plan,scale){
 export function buildRoadLayout(track,geometry=buildGeometry(track.points||[],track.smooth,track.complete!==false,track),pit=null){
  let entry=layoutCache.get(geometry);if(!entry){entry={road:boundedCache(4),pits:new WeakMap()};layoutCache.set(geometry,entry);}
  let cache=entry.road;if(pit){cache=entry.pits.get(pit);if(!cache){cache=boundedCache(4);entry.pits.set(pit,cache);}}
- const key=JSON.stringify([track.width,track.scale,track.start,track.complete]),cached=cache.get(key);
+ const key=JSON.stringify([track.width,track.scale,track.start,track.complete,track.export?.autoKerbs,track.export?.kerbs]),cached=cache.get(key);
  return cached??cache.set(key,calculateRoadLayout(track,geometry,pit));
 }
 function calculateRoadLayout(track,geometry,pit){
@@ -60,17 +62,19 @@ function calculateRoadLayout(track,geometry,pit){
   });
   center.forEach((p,i)=>p.edgeNormal=joins[i]);
   const rail=offset=>trimLoops(center.map((p,i)=>{const off=typeof offset==='function'?offset(p):offset;return {station:p.station,x:p.x+joins[i].x*off/s,y:p.y+joins[i].y*off/s,elevation:(p.elevation||0)+off*Math.tan((p.bank||0)*Math.PI/180)};}),center,closed,(half+2)/s,s);
-  const left=rail(half),right=rail(-half),outerLeft=rail(p=>half+(p.kerbWidth||.7)),outerRight=rail(p=>-half-(p.kerbWidth||.7)),segments=closed?n:n-1,quads=[],kerbs=[];
+  const profile=cornerKerbProfile(track,geometry);
+  const left=rail(half),right=rail(-half),outerLeft=rail(p=>half+profile.widthAt(p,p.station,1)),outerRight=rail(p=>-half-profile.widthAt(p,p.station,-1)),segments=closed?n:n-1,quads=[],kerbs=[];
   for(let i=0;i<segments;i++){
     const j=(i+1)%n;quads.push([left[i],left[j],right[j],right[i]]);
     for(const side of kerbSides(center[i].kerbs)){
-      const inner=side>0?left:right,outer=side>0?outerLeft:outerRight;if(pitOpening(inner[i],pit,s)||pitOpening(inner[j],pit,s))continue;
+      const inner=side>0?left:right,outer=side>0?outerLeft:outerRight;if([inner[i],inner[j],outer[i],outer[j]].some(p=>pitOpening(p,pit,s)))continue;
       const corners=[outer[i],outer[j],inner[j],inner[i]],area=corners.reduce((v,p,k)=>{const q=corners[(k+1)%4];return v+p.x*q.y-q.x*p.y;},0);
       if(Math.abs(area)<1e-7)continue;kerbs.push({corners,side,white:Math.floor(center[i].station/1.5)%2===1});
     }
   }
   const cache=new Map(),bands=(a,b)=>{const key=a+','+b;if(cache.has(key))return cache.get(key);const inner=rail(a),outer=rail(b),result=Array.from({length:segments},(_,i)=>{const j=(i+1)%n;return [inner[i],inner[j],outer[j],outer[i]];});cache.set(key,result);return result;};
   const edgeMarkings=[...bands(half-.15,half-.28),...bands(-half+.28,-half+.15)].filter(corners=>!corners.some(p=>pitOpening(p,pit,s)));
+  if(pit)kerbs.push(...pitKerbs(track,pit,quads));
   return {center,left,right,quads,kerbs,bands,half,edgeMarkings,totalMeters:total*s,whiteKerbs:kerbs.filter(p=>p.white).map(p=>p.corners),redKerbs:kerbs.filter(p=>!p.white).map(p=>p.corners)};
 }
 export function fillRoadPolygons(ctx,polygons,color){ctx.beginPath();for(const corners of polygons){corners.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.closePath();}ctx.fillStyle=color;ctx.fill();}

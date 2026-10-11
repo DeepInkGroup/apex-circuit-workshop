@@ -1,4 +1,4 @@
-import {exportZip,exportTrackFolderZip,exportServerZip} from './ac-export.js?v=20261011-zip-import';
+import {exportZip,exportTrackFolderZip,exportServerZip} from './ac-export.js?v=20261011-pit-kerbs';
 
 const exporters={cm:exportZip,track:exportTrackFolderZip,server:exportServerZip};
 self.onmessage=({data:{id,track,images,format}})=>{

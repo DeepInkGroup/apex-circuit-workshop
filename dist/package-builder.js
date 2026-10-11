@@ -3,14 +3,14 @@ const jobs=new Map();
 
 export async function buildPackage(track,images,format,onProgress=()=>{}){
   if(typeof Worker==='undefined'){
-    const {exportZip,exportTrackFolderZip,exportServerZip}=await import('./ac-export.js?v=20261011-zip-import');
+    const {exportZip,exportTrackFolderZip,exportServerZip}=await import('./ac-export.js?v=20261011-pit-kerbs');
     const build={cm:exportZip,track:exportTrackFolderZip,server:exportServerZip}[format];
     if(!build)throw new Error('Unknown package format.');
     onProgress('Building track geometry and ZIP…');
     const {slug,bytes}=build(track,images);return {slug,bytes};
   }
   if(!worker){
-    worker=new Worker(new URL('./export-worker.js?v=20261011-zip-import',import.meta.url),{type:'module'});
+    worker=new Worker(new URL('./export-worker.js?v=20261011-pit-kerbs',import.meta.url),{type:'module'});
     worker.onmessage=({data})=>{
       const job=jobs.get(data.id);if(!job)return;
       if(data.status){job.progress(data.status);return;}

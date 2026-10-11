@@ -1,10 +1,10 @@
-import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261011-zip-import';
-import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261011-zip-import';
-import {buildPitPlan} from './pit-plan.js?v=20261011-zip-import';
-import {WEATHER} from './environment.js?v=20261011-zip-import';
-import {buildTimingPlan} from './timing.js?v=20261011-zip-import';
-import {surfaceSettings} from './surface-settings.js?v=20261011-zip-import';
-import {GRASS,buildingSettings} from './scenery.js?v=20261011-zip-import';
+import {detectTurns,roadDistanceProfile} from './corner-analysis.js?v=20261011-pit-kerbs';
+import {buildGeometry,pointOnTrack,clamp} from './engine.js?v=20261011-pit-kerbs';
+import {buildPitPlan} from './pit-plan.js?v=20261011-pit-kerbs';
+import {WEATHER} from './environment.js?v=20261011-pit-kerbs';
+import {buildTimingPlan} from './timing.js?v=20261011-pit-kerbs';
+import {surfaceSettings} from './surface-settings.js?v=20261011-pit-kerbs';
+import {GRASS,buildingSettings} from './scenery.js?v=20261011-pit-kerbs';
 
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const pathLength=(points,s)=>points.slice(1).reduce((n,p,i)=>n+distance(p,points[i])*s,0);

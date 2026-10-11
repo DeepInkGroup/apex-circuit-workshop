@@ -1,41 +1,41 @@
-import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261011-zip-import';
-import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261011-zip-import';
-import {pitStopPaint} from './pit-stop.js?v=20261011-zip-import';
-import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261011-zip-import';
-import {idealLine,drawIdealLine} from './ideal-line.js?v=20261011-zip-import';
-import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261011-zip-import';
-import {ReferenceLayer} from './tracing.js?v=20261011-zip-import';
-import {mountTracer} from './tracer-ui.js?v=20261011-zip-import';
-import {TrackPreview} from './preview3d.js?v=20261011-zip-import';
-import {DEFAULT_EXPORT} from './ac-export.js?v=20261011-zip-import';
-import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261011-zip-import';
-import {mountAnalysis} from './analysis-ui.js?v=20261011-zip-import';
-import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261011-zip-import';
-import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261011-zip-import';
-import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261011-zip-import';
-import {toGamePoint} from './coordinates.js?v=20261011-zip-import';
-import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261011-zip-import';
-import {mountDrawStudio} from './studio-ui.js?v=20261011-zip-import';
-import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261011-zip-import';
-import {repairCrossings} from './crossing-repair.js?v=20261011-zip-import';
-import {drawStructures} from './structures.js?v=20261011-zip-import';
-import {mountStructures} from './structure-ui.js?v=20261011-zip-import';
-import {mountCorners} from './corner-ui.js?v=20261011-zip-import';
-import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261011-zip-import';
-import {mountScenery} from './scenery-ui.js?v=20261011-zip-import';
-import {mountACSetup} from './ac-setup-ui.js?v=20261011-zip-import';
-import {mountSharing} from './sharing.js?v=20261011-zip-import';
-import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261011-zip-import';
-import {timingSettings,buildTimingPlan} from './timing.js?v=20261011-zip-import';
-import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261011-zip-import';
-import {mountTiming} from './timing-ui.js?v=20261011-zip-import';
-import {mountSurfaces} from './surface-ui.js?v=20261011-zip-import';
-import {surfaceSettings} from './surface-settings.js?v=20261011-zip-import';
-import {gantryPlan,drawGantry} from './gantry.js?v=20261011-zip-import';
-import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261011-zip-import';
-import {buildGridPlan,drawGrid,gridStartSetting,gridSettings} from './grid-plan.js?v=20261011-zip-import';
-import {frameTask} from './performance.js?v=20261011-zip-import';
-import {mountCircuitImport} from './circuit-import.js?v=20261011-zip-import';
+import {barrierProperties,pitOuterBarriers,drawBarrier} from './barriers.js?v=20261011-pit-kerbs';
+import {trackFolder,newTrackId,circuitName,synchronizeIdentity} from './mod-identity.js?v=20261011-pit-kerbs';
+import {pitStopPaint} from './pit-stop.js?v=20261011-pit-kerbs';
+import {pitRibbons,pitArrows} from './pit-ribbon.js?v=20261011-pit-kerbs';
+import {idealLine,drawIdealLine} from './ideal-line.js?v=20261011-pit-kerbs';
+import {buildGeometry, pointOnTrack, closestOnTrack} from './engine.js?v=20261011-pit-kerbs';
+import {ReferenceLayer} from './tracing.js?v=20261011-pit-kerbs';
+import {mountTracer} from './tracer-ui.js?v=20261011-pit-kerbs';
+import {TrackPreview} from './preview3d.js?v=20261011-pit-kerbs';
+import {DEFAULT_EXPORT} from './ac-export.js?v=20261011-pit-kerbs';
+import {ASPHALT,asphaltPattern} from './surfaces.js?v=20261011-pit-kerbs';
+import {mountAnalysis} from './analysis-ui.js?v=20261011-pit-kerbs';
+import {buildPitPlan,PIT_STYLES,pitSettings} from './pit-plan.js?v=20261011-pit-kerbs';
+import {WEATHER,TREE_TYPES,simplifyStroke} from './environment.js?v=20261011-pit-kerbs';
+import {treeSettings,treeRadius,drawTree,treeClear,randomTrees} from './trees.js?v=20261011-pit-kerbs';
+import {toGamePoint} from './coordinates.js?v=20261011-pit-kerbs';
+import {buildRoadLayout,drawRoadLayout,fillRoadPolygons} from './road-layout.js?v=20261011-pit-kerbs';
+import {mountDrawStudio} from './studio-ui.js?v=20261011-pit-kerbs';
+import {cornerSettings,reverseTurnBoards} from './corner-settings.js?v=20261011-pit-kerbs';
+import {repairCrossings} from './crossing-repair.js?v=20261011-pit-kerbs';
+import {drawStructures} from './structures.js?v=20261011-pit-kerbs';
+import {mountStructures} from './structure-ui.js?v=20261011-pit-kerbs';
+import {mountCorners} from './corner-ui.js?v=20261011-pit-kerbs';
+import {GRASS,buildingSettings,buildingCorners,buildingContains,buildingsOverlap,buildingRotationHandle,drawBuilding,grassPattern} from './scenery.js?v=20261011-pit-kerbs';
+import {mountScenery} from './scenery-ui.js?v=20261011-pit-kerbs';
+import {mountACSetup} from './ac-setup-ui.js?v=20261011-pit-kerbs';
+import {mountSharing} from './sharing.js?v=20261011-pit-kerbs';
+import {mountWorkspaceNavigation} from './workspace-ui.js?v=20261011-pit-kerbs';
+import {timingSettings,buildTimingPlan} from './timing.js?v=20261011-pit-kerbs';
+import {automaticBarriers,barrierSettings,cutBarrierOpening} from './auto-barriers.js?v=20261011-pit-kerbs';
+import {mountTiming} from './timing-ui.js?v=20261011-pit-kerbs';
+import {mountSurfaces} from './surface-ui.js?v=20261011-pit-kerbs';
+import {surfaceSettings} from './surface-settings.js?v=20261011-pit-kerbs';
+import {gantryPlan,drawGantry} from './gantry.js?v=20261011-pit-kerbs';
+import {turnMarkerPlan,drawTurnMarkers} from './turn-markers.js?v=20261011-pit-kerbs';
+import {buildGridPlan,drawGrid,gridStartSetting,gridSettings} from './grid-plan.js?v=20261011-pit-kerbs';
+import {frameTask} from './performance.js?v=20261011-pit-kerbs';
+import {mountCircuitImport} from './circuit-import.js?v=20261011-pit-kerbs';
 let drawFrame=0,canvasDirty=true,canvasBaseDirty=true,panelTimer;
 function requestRender(full=false){canvasDirty=true;if(full)canvasBaseDirty=true;if(drawFrame||document.hidden)return;drawFrame=requestAnimationFrame(()=>{drawFrame=0;if(document.hidden||!canvasDirty)return;canvasDirty=false;draw();});}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)requestRender();});
@@ -88,7 +88,7 @@ function validateTrack(data) {
   const exportOptions={...DEFAULT_EXPORT};
   ['author','country','city'].forEach(k=>{if(typeof data.export?.[k]==='string')exportOptions[k]=data.export[k].slice(0,60);});
   exportOptions.pitboxes=clamp(Math.round(Number(data.export?.pitboxes)||8),1,16);
-  ['kerbs','barriers','ai','trees','buildings','grassFx','gantry','distanceMarkers'].forEach(k=>exportOptions[k]=data.export?.[k]!==false);
+  ['kerbs','autoKerbs','barriers','ai','trees','buildings','grassFx','gantry','distanceMarkers'].forEach(k=>exportOptions[k]=data.export?.[k]!==false);
   for(const [key,min,max] of [['gridSpacing',4,20],['wallHeight',1,4],['gantryClearance',4.5,8]])exportOptions[key]=clamp(Number(data.export?.[key])||DEFAULT_EXPORT[key],min,max);
   exportOptions.gridStart=gridStartSetting(data.export?.gridStart);Object.assign(exportOptions,gridSettings(data.export));
   Object.assign(exportOptions,surfaceSettings(data.export));
@@ -524,7 +524,7 @@ const editorApi={
   editView(){if(mode==='preview')stopPreview();},
   updateTrack(fn){const previousName=track.name;remember();fn(track);commit(previousName);updateTransform();},
   clear(scope){if(mode==='preview')stopPreview();finishDrag();remember();if(scope==='geometry'||scope==='road'){track.points=[];track.complete=false;track.start=0;track.export.gridStart=null;}if(scope==='geometry'||scope==='pits')track.pit=[];if(scope==='geometry'||scope==='barriers')track.barriers=[];if(scope==='geometry'||scope==='trees')track.trees=[];if(scope==='geometry'||scope==='buildings')track.buildings=[];selectedBuilding=-1;if(scope==='reference'){track.background=null;}selectedPoint=selectedBarrier=selectedTree=selectedBuilding=-1;activeBarrier=-1;analysisFocus=null;analysisData=null;measurement=[];commit();setTool(track.points.length?'move':'draw');toast('Selected items cleared. Undo restores them.');},
-  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start),customGrid=gridStartSetting(track.export?.gridStart),gridAnchor=customGrid===null?null:pointAt(customGrid);remember();const reverseAnchorOrigin=geometry.closed?(geometry.cumulative[geometry.segments.indexOf(track.points.length-1)]||0)/geometry.length:1,previousCorners=track.points.map(cornerSettings).reverse(),boardCounts=new Map();for(const turn of turnMarkers.turns){if(!boardCounts.has(turn.controlIndex))boardCounts.set(turn.controlIndex,{});const counts=boardCounts.get(turn.controlIndex);counts[turn.direction]=(counts[turn.direction]||0)+1;}track.points.reverse();track.points.forEach((p,i)=>{p.turnBoards=reverseTurnBoards(p,boardCounts.get(track.points.length-1-i));if(p.structure)p.structure={...p.structure,offset:-(p.structure.offset||0),...(Number.isFinite(p.structure.anchorProgress)?{anchorProgress:geometry.closed?((reverseAnchorOrigin-p.structure.anchorProgress)%1+1)%1:1-p.structure.anchorProgress}:{})};p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;if(gridAnchor)track.export.gridStart=nearest(gridAnchor).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
+  reverseCircuit(){if(track.points.length<2)return;if(mode==='preview')stopPreview();finishDrag();const start=pointAt(track.start),customGrid=gridStartSetting(track.export?.gridStart),gridAnchor=customGrid===null?null:pointAt(customGrid);remember();const reverseAnchorOrigin=geometry.closed?(geometry.cumulative[geometry.segments.indexOf(track.points.length-1)]||0)/geometry.length:1,previousCorners=track.points.map(cornerSettings).reverse(),boardCounts=new Map();for(const turn of turnMarkers.turns){if(!boardCounts.has(turn.controlIndex))boardCounts.set(turn.controlIndex,{});const counts=boardCounts.get(turn.controlIndex);counts[turn.direction]=(counts[turn.direction]||0)+1;}track.points.reverse();track.points.forEach((p,i)=>{p.turnBoards=reverseTurnBoards(p,boardCounts.get(track.points.length-1-i));if(p.structure)p.structure={...p.structure,offset:-(p.structure.offset||0),...(Number.isFinite(p.structure.anchorProgress)?{anchorProgress:geometry.closed?((reverseAnchorOrigin-p.structure.anchorProgress)%1+1)%1:1-p.structure.anchorProgress}:{})};p.bank=-(p.bank||0);const entry=p.entryStrength;p.entryStrength=p.exitStrength;p.exitStrength=entry;const {kerbEntry,kerbExit}=cornerSettings(p);p.kerbEntry=kerbExit;p.kerbExit=kerbEntry;const previous=previousCorners[(i+1)%previousCorners.length];p.kerbs=previous.kerbs==='left'?'right':previous.kerbs==='right'?'left':previous.kerbs;p.kerbWidth=previous.kerbWidth;});track.pit.reverse();const timing=timingSettings(track);track.timing={...timing,split1:1-timing.split2,split2:1-timing.split1};rebuild();track.start=nearest(start).progress;if(gridAnchor)track.export.gridStart=nearest(gridAnchor).progress;analysisFocus=null;commit();setTool('move');toast('Direction reversed. Road banking and pit direction updated.');},
   onAnalysis(data){analysisData=data;requestRender();},getOverlay:()=>analysisOverlay,setOverlay(value){analysisOverlay=value;analysisFocus=null;requestRender();},
   focusProgress(progress){if(mode==='preview')stopPreview();analysisFocus=progress;const p=pointAt(progress);view.zoom=2.4;const base=Math.min(cssW/1000,cssH/740)*view.zoom;view.panX=(500-p.x)*base;view.panY=(370-p.y)*base;updateTransform();},
   setOpacity(value){referenceOpacity=value;requestRender(true);},setTraceOverlay(value){traceOverlay=value;requestRender(true);},
